@@ -56,6 +56,12 @@ The RAD Traffic Monitor was built to solve a critical problem: After migrating R
 
 ## 🚀 Quick Start
 
+### Prerequisites
+- Python 3.x
+- Git
+- Web browser
+- Elasticsearch/Kibana access with valid cookie
+
 ### Local Development
 
 1. **Clone the repository**
@@ -78,19 +84,13 @@ The RAD Traffic Monitor was built to solve a critical problem: After migrating R
    - Start CORS proxy on http://localhost:8889
    - Generate dashboard with latest data
    - Open dashboard at http://localhost:8888
+   - Enable real-time API calls without CORS errors
 
-### Alternative Local Methods
-
-**Quick test without proxy:**
+### Alternative: Quick Test
 ```bash
+# Generate static dashboard and view
 ./test_locally.sh
 # Then manually open index.html in your browser
-```
-
-**Direct run with system paths:**
-```bash
-./run_with_cors_direct.sh
-# Uses absolute paths, helpful if you have PATH issues
 ```
 
 ## 🔐 Authentication
@@ -117,65 +117,65 @@ export ELASTIC_COOKIE="Fe26.2**your_cookie_here**"
 2. Add a new secret named `ELASTIC_COOKIE`
 3. Paste your cookie value
 
-## 📦 Installation
+**In the dashboard UI:**
+1. Click the ⚙️ gear icon
+2. Click '🔑 Set Cookie for Real-time'
+3. Paste your Elastic cookie
+4. Click 'Test Connection' to verify
 
-### Prerequisites
-- Python 3.x
-- Node.js (for running tests)
-- Git
-- Web browser
+## 🏗️ Project Structure
+
+```
+rad_monitor/
+├── index.html                   # Main dashboard (generated)
+├── src/
+│   └── dashboard.js            # Dashboard JavaScript modules
+├── scripts/
+│   ├── generate_dashboard.sh   # Dashboard generation script
+│   └── legacy/                 # Archived scripts for reference
+├── tests/                      # Comprehensive test suite
+│   ├── *.test.js              # JavaScript tests (Vitest)
+│   ├── test_*.py              # Python tests (pytest)
+│   ├── test_*.bats            # Bash tests (bats)
+│   └── requirements.txt       # Test dependencies
+├── data/
+│   └── raw_response.json      # Latest API response (generated)
+├── .github/
+│   └── workflows/
+│       ├── update-dashboard.yml # Auto-update workflow
+│       └── test.yml            # CI test workflow
+├── cors_proxy.py              # Local CORS proxy server
+├── run_with_cors.sh          # Primary local development script
+├── test_locally.sh           # Quick test script
+├── run_all_tests.sh          # Comprehensive test runner
+├── package.json              # Node.js dependencies
+├── vitest.config.js          # JavaScript test configuration
+├── .gitignore                # Git ignore patterns
+└── README.md                 # This file
+```
+
+## 📦 Installation
 
 ### Full Setup
 
 1. **Install dependencies**
    ```bash
-   # For tests (optional)
+   # For JavaScript tests (optional)
    npm install
+   
+   # For Python tests (optional)
    pip install -r tests/requirements.txt
+   
+   # For Bash tests (optional)
+   brew install bats-core  # macOS
+   sudo apt-get install bats  # Linux
    ```
 
 2. **Make scripts executable**
    ```bash
-   chmod +x run_with_cors.sh test_locally.sh run_with_cors_direct.sh
+   chmod +x run_with_cors.sh test_locally.sh run_all_tests.sh
    chmod +x scripts/generate_dashboard.sh
    ```
-
-## 🏗️ Architecture
-
-### Components
-
-1. **Dashboard (index.html)**
-   - Pure JavaScript, no framework dependencies
-   - Fetches data via CORS proxy (local) or direct API (GitHub Pages)
-   - Updates UI dynamically with traffic data
-
-2. **CORS Proxy (cors_proxy.py)**
-   - Local proxy server for development
-   - Handles authentication headers
-   - Bypasses CORS restrictions
-   - SSL certificate handling for self-signed certs
-
-3. **Data Generator (scripts/generate_dashboard.sh)**
-   - Fetches latest traffic data from Elasticsearch
-   - Processes aggregations
-   - Updates dashboard HTML
-
-4. **GitHub Actions (.github/workflows/update-dashboard.yml)**
-   - Runs every 10 minutes
-   - Updates dashboard with fresh data
-   - Commits changes to GitHub Pages
-
-### Data Flow
-
-```
-Elasticsearch/Kibana
-        ↓
-[Local: CORS Proxy / Production: Direct API]
-        ↓
-Dashboard JavaScript
-        ↓
-Visual Display (HTML/CSS)
-```
 
 ## 🧪 Testing
 
@@ -186,28 +186,58 @@ The project includes comprehensive test coverage across all components.
 ./run_all_tests.sh
 ```
 
-### JavaScript Tests (Vitest)
+### Test Categories
+
+#### JavaScript Tests (Vitest) - 150+ tests
 ```bash
 npm test                    # Run tests
 npm run test:coverage      # With coverage
 npm run test:watch         # Watch mode
 ```
 
-### Python Tests (pytest)
+**Coverage includes:**
+- Cookie management
+- Authentication flow
+- Score calculations
+- Data processing
+- UI updates
+- Search and filtering
+- Integration scenarios
+
+#### Python Tests (pytest) - 40+ tests
 ```bash
 pytest tests/ -v           # Run all Python tests
 pytest tests/test_cors_proxy.py -v --cov=cors_proxy
 ```
 
-### Bash Tests (bats)
-```bash
-# Install bats first
-brew install bats-core     # macOS
-sudo apt-get install bats  # Linux
+**Coverage includes:**
+- CORS proxy functionality
+- SSL handling
+- Error responses
+- GitHub Pages integration
 
-# Run tests
+#### Bash Tests (bats) - 20+ tests
+```bash
 bats tests/test_bash_scripts.bats
 ```
+
+**Coverage includes:**
+- Script execution
+- Server management
+- Error handling
+- Process control
+
+### CI/CD
+
+Tests run automatically on:
+- Push to main branch
+- Pull requests
+- Manual workflow dispatch
+
+Test matrix covers:
+- Node.js: 18.x, 20.x
+- Python: 3.9, 3.10, 3.11
+- OS: Ubuntu latest
 
 ## 🌐 Deployment
 
@@ -233,6 +263,8 @@ bats tests/test_bash_scripts.bats
    - Wait for Actions to complete
    - Visit: https://yourusername.github.io/rad_monitor/
 
+The dashboard will automatically update every 10 minutes via GitHub Actions.
+
 ### Manual Deployment
 
 You can also host the static files on any web server:
@@ -248,31 +280,13 @@ scp -r index.html data/ user@server:/path/to/webroot/
 
 ### Dashboard Settings
 
-The dashboard now includes a Control Panel for real-time configuration without code changes:
+Use the Control Panel (⚙️ icon) for real-time configuration:
 
-1. **Using the Control Panel**
-   - Critical Threshold: Set the percentage drop for critical alerts
-   - Warning Threshold: Set the percentage drop for warnings
-   - Min Daily Volume: Filter out low-traffic cards
-   - Time Range: Select data window (1h to 48h)
-   - Auto Refresh: Toggle and set interval
-
-2. **Search and Filter**
-   - Use the search box to find specific cards
-   - Click status cards to filter by category
-   - Use checkboxes to hide normal traffic
-   - Save preferences for future sessions
-
-3. **Programmatic Configuration** (optional)
-   ```javascript
-   // In src/dashboard.js
-   export const config = {
-     criticalThreshold: -80,
-     warningThreshold: -50,
-     minDailyVolume: 100,
-     autoRefreshInterval: 60000 // milliseconds
-   };
-   ```
+- **Critical Threshold**: Percentage drop for critical alerts (-80% default)
+- **Warning Threshold**: Percentage drop for warnings (-50% default)
+- **Min Daily Volume**: Filter out low-traffic cards (100 default)
+- **Time Range**: Data window from 1h to 48h (12h default)
+- **Auto Refresh**: Toggle and set interval (60s default)
 
 ### CORS Proxy Settings
 
@@ -289,41 +303,6 @@ In `.github/workflows/update-dashboard.yml`:
 schedule:
   - cron: '*/10 * * * *'  # Every 10 minutes
 ```
-
-## 🛠️ Maintenance
-
-### Cookie Rotation
-
-Elastic cookies expire periodically. When authentication fails:
-
-1. Get a new cookie from Kibana (see Authentication section)
-2. Update locally: `export ELASTIC_COOKIE="new_cookie"`
-3. Update GitHub Secret for automated updates
-
-### Monitoring the Monitor
-
-- Check GitHub Actions for update failures
-- Dashboard shows "Authentication Error" if cookie expired
-- Enable GitHub notifications for Action failures
-
-### Troubleshooting
-
-**502 Bad Gateway Error:**
-- Usually means cookie has expired
-- Get a fresh cookie from Kibana
-
-**CORS Errors (local only):**
-- Ensure CORS proxy is running on port 8889
-- Check `ps aux | grep cors_proxy`
-
-**No Data Showing:**
-- Verify Elasticsearch query in `generate_dashboard.sh`
-- Check browser console for errors
-- Ensure time range is appropriate
-
-**PATH Issues (macOS):**
-- Use `run_with_cors_direct.sh` which uses absolute paths
-- Or add `/usr/bin` to your PATH
 
 ## 📊 How It Works
 
@@ -344,68 +323,78 @@ const score = (percentChange * 0.7) + (zScore * 10 * 0.3);
 
 ### Status Determination
 
-- **CRITICAL**: Significant drop requiring immediate attention
-- **WARNING**: Notable decrease worth investigating  
-- **NORMAL**: Expected variation
-- **INCREASED**: Positive traffic spike
+- **CRITICAL**: Score < -80 (significant drop)
+- **WARNING**: Score < -50 (notable decrease)
+- **NORMAL**: -50 ≤ Score ≤ 20 (expected variation)
+- **INCREASED**: Score > 20 (positive spike)
 
-### Thresholds
+### Data Flow
 
-Dynamic thresholds based on traffic volume:
-- High-volume types: More sensitive to changes
-- Low-volume types: Higher tolerance for variation
+```
+Elasticsearch/Kibana API
+        ↓
+[Local: CORS Proxy / Production: Direct API]
+        ↓
+Dashboard JavaScript
+        ↓
+Visual Display (HTML/CSS)
+```
+
+## 🛠️ Troubleshooting
+
+### Common Issues
+
+**502 Bad Gateway / Authentication Error:**
+- Cookie has expired
+- Get a fresh cookie from Kibana
+- Update locally: `export ELASTIC_COOKIE="new_cookie"`
+- Update GitHub Secret for automated updates
+
+**CORS Errors (local only):**
+- Ensure CORS proxy is running: `ps aux | grep cors_proxy`
+- Use `./run_with_cors.sh` for local development
+- Check proxy health: `curl http://localhost:8889/health`
+
+**No Data Showing:**
+- Verify Elasticsearch query in `scripts/generate_dashboard.sh`
+- Check browser console for errors
+- Ensure time range is appropriate
+- Verify cookie is valid
+
+**Port Already in Use:**
+```bash
+# Kill existing processes
+kill -9 $(lsof -ti:8888) 2>/dev/null
+kill -9 $(lsof -ti:8889) 2>/dev/null
+```
+
+**PATH Issues (macOS):**
+If commands aren't found, the project includes fallback scripts in `scripts/legacy/` that use absolute paths.
+
+## 🚨 Monitoring Best Practices
+
+1. **Keep the dashboard open** during critical periods
+2. **Set up browser notifications** for visual alerts
+3. **Check GitHub Actions** for update failures
+4. **Monitor the monitor** - ensure automated updates are working
+5. **Rotate cookies regularly** before they expire
 
 ## 🤝 Contributing
 
 1. Fork the repository
-2. Create a feature branch
+2. Create a feature branch: `git checkout -b feature-name`
 3. Run tests: `./run_all_tests.sh`
-4. Submit a pull request
+4. Commit changes: `git commit -m "Add feature"`
+5. Push: `git push origin feature-name`
+6. Submit a pull request
 
-### Development Workflow
+### Development Guidelines
 
-1. Make changes locally
-2. Test with `./run_with_cors.sh`
-3. Run test suite
-4. Commit and push
-5. Verify GitHub Actions pass
-
-## 📄 Project Structure
-
-```
-rad_monitor/
-├── index.html                 # Main dashboard
-├── cors_proxy.py             # Local CORS proxy server
-├── scripts/
-│   └── generate_dashboard.sh # Data fetching script
-├── tests/                    # Comprehensive test suite
-│   ├── *.test.js            # JavaScript tests
-│   ├── test_*.py            # Python tests
-│   └── *.bats               # Bash tests
-├── src/
-│   └── dashboard.js         # Extracted JS modules
-├── .github/
-│   └── workflows/
-│       ├── update-dashboard.yml  # Auto-update workflow
-│       └── test.yml             # CI test workflow
-├── run_with_cors.sh         # Local development script
-├── test_locally.sh          # Quick test script
-├── run_all_tests.sh         # Test runner
-└── README.md               # This file
-```
-
-## 🐛 Known Issues
-
-1. **Cookie Expiration**: Elastic cookies expire every few weeks
-2. **Rate Limiting**: Excessive API calls may trigger Kibana limits
-3. **Time Zones**: All times shown in UTC
-
-## 🚨 Alerting
-
-While the dashboard provides visual alerts, for critical monitoring consider:
-- Setting up browser notifications
-- Integrating with monitoring tools via the data API
-- Creating email alerts through GitHub Actions
+- Write tests for new features
+- Maintain test coverage above 80%
+- Follow existing code style
+- Update documentation as needed
+- Test both local and GitHub Pages scenarios
 
 ## 📝 License
 

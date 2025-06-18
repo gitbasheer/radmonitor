@@ -131,7 +131,7 @@ echo "Checking script permissions..."
 SCRIPTS=(
     "run_with_cors.sh"
     "test_locally.sh"
-    "run_with_cors_direct.sh"
+    "scripts/legacy/run_with_cors_direct.sh"
     "scripts/generate_dashboard.sh"
 )
 

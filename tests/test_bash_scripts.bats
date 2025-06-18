@@ -75,10 +75,10 @@ EOF
     
     # Copy scripts to test directory
     cp "$PROJECT_DIR/run_with_cors.sh" .
-    cp "$PROJECT_DIR/run_local.sh" . 2>/dev/null || true
-    cp "$PROJECT_DIR/run_local_auto.sh" . 2>/dev/null || true
+    cp "$PROJECT_DIR/scripts/legacy/run_local.sh" . 2>/dev/null || true
+    cp "$PROJECT_DIR/scripts/legacy/run_local_auto.sh" . 2>/dev/null || true
     cp "$PROJECT_DIR/test_locally.sh" .
-    cp "$PROJECT_DIR/run_with_cors_direct.sh" .
+    cp "$PROJECT_DIR/scripts/legacy/run_with_cors_direct.sh" .
     cp "$PROJECT_DIR/cors_proxy.py" . 2>/dev/null || echo "# Mock cors_proxy.py" > cors_proxy.py
 }
 
@@ -244,7 +244,7 @@ EOF
 @test "all scripts are executable" {
     [ -x "$PROJECT_DIR/run_with_cors.sh" ]
     [ -x "$PROJECT_DIR/test_locally.sh" ]
-    [ -x "$PROJECT_DIR/run_with_cors_direct.sh" ]
+    [ -x "$PROJECT_DIR/scripts/legacy/run_with_cors_direct.sh" ]
     [ -x "$PROJECT_DIR/scripts/generate_dashboard.sh" ]
 }
 
@@ -256,7 +256,7 @@ EOF
     run bash -n "$PROJECT_DIR/test_locally.sh"
     [ "$status" -eq 0 ]
     
-    run bash -n "$PROJECT_DIR/run_with_cors_direct.sh"
+    run bash -n "$PROJECT_DIR/scripts/legacy/run_with_cors_direct.sh"
     [ "$status" -eq 0 ]
     
     run bash -n "$PROJECT_DIR/scripts/generate_dashboard.sh"

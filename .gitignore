@@ -5,6 +5,8 @@
 __pycache__/
 *.py[cod]
 *$py.class
+venv/
+.pytest_cache/
 
 # Logs
 *.log
@@ -14,19 +16,24 @@ test/
 temp/
 *.tmp
 
-# Sensitive data (just in case)
+# Sensitive data
 .env
 secrets/
 
-# Node modules and test coverage
+# Node modules 
 node_modules/
+
+# Test coverage and artifacts
 coverage/
+htmlcov/
+.coverage
 .nyc_output/
 *.lcov
-
-# Test artifacts
 test-results/
 .vitest/
 
-# Project specific
+# Project specific - generated data
 data/raw_response.json
+
+# Legacy scripts (preserved but not in active use)
+scripts/legacy/

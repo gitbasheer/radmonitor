@@ -70,7 +70,7 @@ jobs:
         # Ensure all scripts are executable
         test -x run_with_cors.sh
         test -x test_locally.sh
-        test -x run_with_cors_direct.sh
+        test -x scripts/legacy/run_with_cors_direct.sh
         test -x scripts/generate_dashboard.sh
         test -x run_all_tests.sh
     
