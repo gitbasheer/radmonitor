@@ -2,7 +2,7 @@
 
 A real-time monitoring dashboard for GoDaddy's RAD (Recommendation) cards that automatically tracks traffic health, detects anomalies, and provides instant alerts for traffic drops.
 
-🔗 **Live Dashboard**: https://balkhalil.github.io/rad-traffic-monitor/
+🔗 **Live Dashboard**: https://balkhalil-godaddy.github.io/vh-rad-traffic-monitor/
 
 ## 🎯 Overview
 
