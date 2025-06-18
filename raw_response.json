@@ -1,10 +1,10 @@
 {
-  "took" : 547,
+  "took" : 755,
   "timed_out" : false,
   "_shards" : {
     "total" : 254,
     "successful" : 254,
-    "skipped" : 10,
+    "skipped" : 8,
     "failed" : 0
   },
   "hits" : {
@@ -22,9 +22,9 @@
       "buckets" : [
         {
           "key" : "pandc.vnext.recommendations.feed.feed_airo_consultant_get_started.click",
-          "doc_count" : 4791,
+          "doc_count" : 4830,
           "current" : {
-            "doc_count" : 101
+            "doc_count" : 130
           },
           "baseline" : {
             "doc_count" : 1602
@@ -32,9 +32,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_airo_consultant_get_started.impression",
-          "doc_count" : 2629463,
+          "doc_count" : 2642551,
           "current" : {
-            "doc_count" : 53287
+            "doc_count" : 58969
           },
           "baseline" : {
             "doc_count" : 901663
@@ -42,9 +42,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_airo_consultant_get_started/index_0.click",
-          "doc_count" : 4721,
+          "doc_count" : 4756,
           "current" : {
-            "doc_count" : 91
+            "doc_count" : 116
           },
           "baseline" : {
             "doc_count" : 1596
@@ -52,9 +52,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_airo_consultant_get_started/index_0.impression",
-          "doc_count" : 2961955,
+          "doc_count" : 2975963,
           "current" : {
-            "doc_count" : 56483
+            "doc_count" : 62672
           },
           "baseline" : {
             "doc_count" : 1021900
@@ -72,9 +72,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_airo_consultant_get_started/index_1.impression",
-          "doc_count" : 20722,
+          "doc_count" : 21240,
           "current" : {
-            "doc_count" : 1918
+            "doc_count" : 2126
           },
           "baseline" : {
             "doc_count" : 4365
@@ -92,9 +92,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_airo_consultant_get_started/index_2.impression",
-          "doc_count" : 5657,
+          "doc_count" : 5907,
           "current" : {
-            "doc_count" : 735
+            "doc_count" : 887
           },
           "baseline" : {
             "doc_count" : 543
@@ -112,9 +112,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_airo_consultant_get_started/index_3.impression",
-          "doc_count" : 2023,
+          "doc_count" : 2127,
           "current" : {
-            "doc_count" : 345
+            "doc_count" : 370
           },
           "baseline" : {
             "doc_count" : 281
@@ -122,19 +122,19 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_airo_consultant_get_started/index_4.click",
-          "doc_count" : 2,
-          "baseline" : {
-            "doc_count" : 0
-          },
+          "doc_count" : 6,
           "current" : {
+            "doc_count" : 4
+          },
+          "baseline" : {
             "doc_count" : 0
           }
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_airo_consultant_get_started/index_4.impression",
-          "doc_count" : 2468,
+          "doc_count" : 2496,
           "current" : {
-            "doc_count" : 254
+            "doc_count" : 248
           },
           "baseline" : {
             "doc_count" : 417
@@ -152,9 +152,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_airo_consultant_get_started/index_5.impression",
-          "doc_count" : 2510,
+          "doc_count" : 2543,
           "current" : {
-            "doc_count" : 113
+            "doc_count" : 136
           },
           "baseline" : {
             "doc_count" : 520
@@ -172,9 +172,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_airo_consultant_get_started/index_6.impression",
-          "doc_count" : 2004,
+          "doc_count" : 2046,
           "current" : {
-            "doc_count" : 57
+            "doc_count" : 98
           },
           "baseline" : {
             "doc_count" : 308
@@ -192,7 +192,7 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_airo_consultant_get_started/index_7.impression",
-          "doc_count" : 885,
+          "doc_count" : 886,
           "current" : {
             "doc_count" : 18
           },
@@ -232,9 +232,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_anotherdomain.impression",
-          "doc_count" : 1412574,
+          "doc_count" : 1413851,
           "current" : {
-            "doc_count" : 3397
+            "doc_count" : 4296
           },
           "baseline" : {
             "doc_count" : 368070
@@ -252,9 +252,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_anotherdomain/index_0.impression",
-          "doc_count" : 438056,
+          "doc_count" : 438498,
           "current" : {
-            "doc_count" : 1602
+            "doc_count" : 1827
           },
           "baseline" : {
             "doc_count" : 121925
@@ -272,9 +272,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_anotherdomain/index_1.impression",
-          "doc_count" : 544197,
+          "doc_count" : 544869,
           "current" : {
-            "doc_count" : 1654
+            "doc_count" : 2157
           },
           "baseline" : {
             "doc_count" : 129018
@@ -292,9 +292,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_anotherdomain/index_2.impression",
-          "doc_count" : 232177,
+          "doc_count" : 232346,
           "current" : {
-            "doc_count" : 440
+            "doc_count" : 594
           },
           "baseline" : {
             "doc_count" : 70456
@@ -312,9 +312,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_anotherdomain/index_3.impression",
-          "doc_count" : 144999,
+          "doc_count" : 145059,
           "current" : {
-            "doc_count" : 138
+            "doc_count" : 176
           },
           "baseline" : {
             "doc_count" : 43476
@@ -332,9 +332,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_anotherdomain/index_4.impression",
-          "doc_count" : 97502,
+          "doc_count" : 97519,
           "current" : {
-            "doc_count" : 28
+            "doc_count" : 45
           },
           "baseline" : {
             "doc_count" : 25565
@@ -352,9 +352,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_anotherdomain/index_5.impression",
-          "doc_count" : 33165,
+          "doc_count" : 33226,
           "current" : {
-            "doc_count" : 7
+            "doc_count" : 68
           },
           "baseline" : {
             "doc_count" : 10335
@@ -372,9 +372,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_anotherdomain/index_6.impression",
-          "doc_count" : 5558,
+          "doc_count" : 5565,
           "current" : {
-            "doc_count" : 0
+            "doc_count" : 7
           },
           "baseline" : {
             "doc_count" : 1152
@@ -412,9 +412,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_business_zen.impression",
-          "doc_count" : 533,
+          "doc_count" : 545,
           "current" : {
-            "doc_count" : 13
+            "doc_count" : 25
           },
           "baseline" : {
             "doc_count" : 142
@@ -442,9 +442,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_business_zen/index_1.impression",
-          "doc_count" : 371,
+          "doc_count" : 384,
           "current" : {
-            "doc_count" : 0
+            "doc_count" : 13
           },
           "baseline" : {
             "doc_count" : 101
@@ -462,9 +462,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_commerce_ps_freesmarterminaloffer_racmodal.click",
-          "doc_count" : 714,
+          "doc_count" : 720,
           "current" : {
-            "doc_count" : 7
+            "doc_count" : 13
           },
           "baseline" : {
             "doc_count" : 204
@@ -472,9 +472,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_commerce_ps_freesmarterminaloffer_racmodal.impression",
-          "doc_count" : 998765,
+          "doc_count" : 1007807,
           "current" : {
-            "doc_count" : 11280
+            "doc_count" : 19383
           },
           "baseline" : {
             "doc_count" : 261445
@@ -482,9 +482,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_commerce_ps_freesmarterminaloffer_racmodal/index_0.click",
-          "doc_count" : 123,
+          "doc_count" : 124,
           "current" : {
-            "doc_count" : 0
+            "doc_count" : 1
           },
           "baseline" : {
             "doc_count" : 52
@@ -492,9 +492,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_commerce_ps_freesmarterminaloffer_racmodal/index_0.impression",
-          "doc_count" : 316956,
+          "doc_count" : 321357,
           "current" : {
-            "doc_count" : 2972
+            "doc_count" : 7100
           },
           "baseline" : {
             "doc_count" : 95557
@@ -502,9 +502,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_commerce_ps_freesmarterminaloffer_racmodal/index_1.click",
-          "doc_count" : 295,
+          "doc_count" : 297,
           "current" : {
-            "doc_count" : 3
+            "doc_count" : 5
           },
           "baseline" : {
             "doc_count" : 76
@@ -512,9 +512,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_commerce_ps_freesmarterminaloffer_racmodal/index_1.impression",
-          "doc_count" : 495838,
+          "doc_count" : 498526,
           "current" : {
-            "doc_count" : 5073
+            "doc_count" : 7391
           },
           "baseline" : {
             "doc_count" : 127682
@@ -522,9 +522,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_commerce_ps_freesmarterminaloffer_racmodal/index_2.click",
-          "doc_count" : 270,
+          "doc_count" : 272,
           "current" : {
-            "doc_count" : 3
+            "doc_count" : 5
           },
           "baseline" : {
             "doc_count" : 74
@@ -532,9 +532,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_commerce_ps_freesmarterminaloffer_racmodal/index_2.impression",
-          "doc_count" : 251566,
+          "doc_count" : 253776,
           "current" : {
-            "doc_count" : 3393
+            "doc_count" : 5413
           },
           "baseline" : {
             "doc_count" : 62576
@@ -552,9 +552,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_commerce_ps_freesmarterminaloffer_racmodal/index_3.impression",
-          "doc_count" : 22658,
+          "doc_count" : 23061,
           "current" : {
-            "doc_count" : 849
+            "doc_count" : 1043
           },
           "baseline" : {
             "doc_count" : 2101
@@ -572,9 +572,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_commerce_ps_freesmarterminaloffer_racmodal/index_4.impression",
-          "doc_count" : 4040,
+          "doc_count" : 4149,
           "current" : {
-            "doc_count" : 200
+            "doc_count" : 298
           },
           "baseline" : {
             "doc_count" : 48
@@ -592,9 +592,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_commerce_ps_freesmarterminaloffer_racmodal/index_5.impression",
-          "doc_count" : 1374,
+          "doc_count" : 1390,
           "current" : {
-            "doc_count" : 202
+            "doc_count" : 191
           },
           "baseline" : {
             "doc_count" : 20
@@ -602,9 +602,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_commerce_ps_freesmarterminaloffer_racmodal/index_6.click",
-          "doc_count" : 2,
+          "doc_count" : 3,
           "current" : {
-            "doc_count" : 1
+            "doc_count" : 2
           },
           "baseline" : {
             "doc_count" : 0
@@ -612,9 +612,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_commerce_ps_freesmarterminaloffer_racmodal/index_6.impression",
-          "doc_count" : 505,
+          "doc_count" : 516,
           "current" : {
-            "doc_count" : 34
+            "doc_count" : 45
           },
           "baseline" : {
             "doc_count" : 10
@@ -624,7 +624,7 @@
           "key" : "pandc.vnext.recommendations.feed.feed_commerce_ps_freesmarterminaloffer_racmodal/index_7.impression",
           "doc_count" : 150,
           "current" : {
-            "doc_count" : 16
+            "doc_count" : 15
           },
           "baseline" : {
             "doc_count" : 9
@@ -632,9 +632,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_commerce_ps_freesmarterminaloffer_racmodal/index_8.impression",
-          "doc_count" : 15,
+          "doc_count" : 16,
           "current" : {
-            "doc_count" : 6
+            "doc_count" : 7
           },
           "baseline" : {
             "doc_count" : 0
@@ -644,7 +644,7 @@
           "key" : "pandc.vnext.recommendations.feed.feed_commerce_ps_generalsavings20.click",
           "doc_count" : 111,
           "current" : {
-            "doc_count" : 2
+            "doc_count" : 1
           },
           "baseline" : {
             "doc_count" : 14
@@ -652,9 +652,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_commerce_ps_generalsavings20.impression",
-          "doc_count" : 326502,
+          "doc_count" : 329579,
           "current" : {
-            "doc_count" : 3740
+            "doc_count" : 6456
           },
           "baseline" : {
             "doc_count" : 85880
@@ -672,9 +672,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_commerce_ps_generalsavings20/index_0.impression",
-          "doc_count" : 55914,
+          "doc_count" : 56878,
           "current" : {
-            "doc_count" : 778
+            "doc_count" : 1667
           },
           "baseline" : {
             "doc_count" : 16739
@@ -692,19 +692,29 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_commerce_ps_generalsavings20/index_1.impression",
-          "doc_count" : 140542,
+          "doc_count" : 141422,
           "current" : {
-            "doc_count" : 1424
+            "doc_count" : 2151
           },
           "baseline" : {
             "doc_count" : 41882
           }
         },
         {
+          "key" : "pandc.vnext.recommendations.feed.feed_commerce_ps_generalsavings20/index_10.impression",
+          "doc_count" : 1,
+          "baseline" : {
+            "doc_count" : 0
+          },
+          "current" : {
+            "doc_count" : 1
+          }
+        },
+        {
           "key" : "pandc.vnext.recommendations.feed.feed_commerce_ps_generalsavings20/index_2.click",
           "doc_count" : 43,
           "current" : {
-            "doc_count" : 1
+            "doc_count" : 0
           },
           "baseline" : {
             "doc_count" : 7
@@ -712,9 +722,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_commerce_ps_generalsavings20/index_2.impression",
-          "doc_count" : 120351,
+          "doc_count" : 120932,
           "current" : {
-            "doc_count" : 1012
+            "doc_count" : 1527
           },
           "baseline" : {
             "doc_count" : 33416
@@ -732,9 +742,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_commerce_ps_generalsavings20/index_3.impression",
-          "doc_count" : 25453,
+          "doc_count" : 25817,
           "current" : {
-            "doc_count" : 185
+            "doc_count" : 535
           },
           "baseline" : {
             "doc_count" : 6329
@@ -752,9 +762,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_commerce_ps_generalsavings20/index_4.impression",
-          "doc_count" : 5418,
+          "doc_count" : 5724,
           "current" : {
-            "doc_count" : 230
+            "doc_count" : 525
           },
           "baseline" : {
             "doc_count" : 231
@@ -772,9 +782,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_commerce_ps_generalsavings20/index_5.impression",
-          "doc_count" : 6343,
+          "doc_count" : 6405,
           "current" : {
-            "doc_count" : 177
+            "doc_count" : 236
           },
           "baseline" : {
             "doc_count" : 76
@@ -792,9 +802,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_commerce_ps_generalsavings20/index_6.impression",
-          "doc_count" : 3744,
+          "doc_count" : 3783,
           "current" : {
-            "doc_count" : 95
+            "doc_count" : 120
           },
           "baseline" : {
             "doc_count" : 24
@@ -802,9 +812,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_commerce_ps_generalsavings20/index_7.impression",
-          "doc_count" : 746,
+          "doc_count" : 810,
           "current" : {
-            "doc_count" : 103
+            "doc_count" : 131
           },
           "baseline" : {
             "doc_count" : 7
@@ -812,9 +822,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_commerce_ps_generalsavings20/index_8.impression",
-          "doc_count" : 172,
+          "doc_count" : 210,
           "current" : {
-            "doc_count" : 29
+            "doc_count" : 67
           },
           "baseline" : {
             "doc_count" : 7
@@ -842,9 +852,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_compliance_privacy.impression",
-          "doc_count" : 11777,
+          "doc_count" : 11860,
           "current" : {
-            "doc_count" : 29
+            "doc_count" : 111
           },
           "baseline" : {
             "doc_count" : 2094
@@ -862,9 +872,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_compliance_privacy/index_0.impression",
-          "doc_count" : 2717,
+          "doc_count" : 2722,
           "current" : {
-            "doc_count" : 12
+            "doc_count" : 17
           },
           "baseline" : {
             "doc_count" : 564
@@ -882,9 +892,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_compliance_privacy/index_1.impression",
-          "doc_count" : 12017,
+          "doc_count" : 12115,
           "current" : {
-            "doc_count" : 28
+            "doc_count" : 125
           },
           "baseline" : {
             "doc_count" : 1862
@@ -892,9 +902,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_connectinstagram.click",
-          "doc_count" : 10754,
+          "doc_count" : 10828,
           "current" : {
-            "doc_count" : 196
+            "doc_count" : 231
           },
           "baseline" : {
             "doc_count" : 2583
@@ -902,9 +912,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_connectinstagram.impression",
-          "doc_count" : 6462758,
+          "doc_count" : 6511957,
           "current" : {
-            "doc_count" : 128415
+            "doc_count" : 151809
           },
           "baseline" : {
             "doc_count" : 1539769
@@ -912,9 +922,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_connectinstagram/index_0.click",
-          "doc_count" : 1658,
+          "doc_count" : 1687,
           "current" : {
-            "doc_count" : 25
+            "doc_count" : 49
           },
           "baseline" : {
             "doc_count" : 354
@@ -922,9 +932,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_connectinstagram/index_0.impression",
-          "doc_count" : 1230138,
+          "doc_count" : 1246261,
           "current" : {
-            "doc_count" : 20651
+            "doc_count" : 32617
           },
           "baseline" : {
             "doc_count" : 267215
@@ -932,9 +942,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_connectinstagram/index_1.click",
-          "doc_count" : 3879,
+          "doc_count" : 3888,
           "current" : {
-            "doc_count" : 72
+            "doc_count" : 70
           },
           "baseline" : {
             "doc_count" : 942
@@ -942,9 +952,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_connectinstagram/index_1.impression",
-          "doc_count" : 2808465,
+          "doc_count" : 2824884,
           "current" : {
-            "doc_count" : 71096
+            "doc_count" : 71244
           },
           "baseline" : {
             "doc_count" : 678752
@@ -952,9 +962,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_connectinstagram/index_2.click",
-          "doc_count" : 2205,
+          "doc_count" : 2217,
           "current" : {
-            "doc_count" : 33
+            "doc_count" : 39
           },
           "baseline" : {
             "doc_count" : 410
@@ -962,9 +972,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_connectinstagram/index_2.impression",
-          "doc_count" : 1358540,
+          "doc_count" : 1370375,
           "current" : {
-            "doc_count" : 24620
+            "doc_count" : 32516
           },
           "baseline" : {
             "doc_count" : 287017
@@ -972,9 +982,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_connectinstagram/index_3.click",
-          "doc_count" : 1994,
+          "doc_count" : 2013,
           "current" : {
-            "doc_count" : 37
+            "doc_count" : 50
           },
           "baseline" : {
             "doc_count" : 552
@@ -982,9 +992,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_connectinstagram/index_3.impression",
-          "doc_count" : 927333,
+          "doc_count" : 932690,
           "current" : {
-            "doc_count" : 11824
+            "doc_count" : 15380
           },
           "baseline" : {
             "doc_count" : 238366
@@ -992,9 +1002,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_connectinstagram/index_4.click",
-          "doc_count" : 808,
+          "doc_count" : 811,
           "current" : {
-            "doc_count" : 24
+            "doc_count" : 16
           },
           "baseline" : {
             "doc_count" : 261
@@ -1002,9 +1012,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_connectinstagram/index_4.impression",
-          "doc_count" : 405755,
+          "doc_count" : 407427,
           "current" : {
-            "doc_count" : 5893
+            "doc_count" : 6637
           },
           "baseline" : {
             "doc_count" : 125550
@@ -1012,9 +1022,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_connectinstagram/index_5.click",
-          "doc_count" : 198,
+          "doc_count" : 200,
           "current" : {
-            "doc_count" : 5
+            "doc_count" : 7
           },
           "baseline" : {
             "doc_count" : 58
@@ -1022,9 +1032,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_connectinstagram/index_5.impression",
-          "doc_count" : 103765,
+          "doc_count" : 104527,
           "current" : {
-            "doc_count" : 1985
+            "doc_count" : 2534
           },
           "baseline" : {
             "doc_count" : 31792
@@ -1042,9 +1052,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_connectinstagram/index_6.impression",
-          "doc_count" : 11588,
+          "doc_count" : 11696,
           "current" : {
-            "doc_count" : 282
+            "doc_count" : 376
           },
           "baseline" : {
             "doc_count" : 3769
@@ -1062,9 +1072,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_connectinstagram/index_7.impression",
-          "doc_count" : 598,
+          "doc_count" : 601,
           "current" : {
-            "doc_count" : 16
+            "doc_count" : 19
           },
           "baseline" : {
             "doc_count" : 219
@@ -1082,9 +1092,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_conversations.click",
-          "doc_count" : 593,
+          "doc_count" : 600,
           "current" : {
-            "doc_count" : 7
+            "doc_count" : 14
           },
           "baseline" : {
             "doc_count" : 153
@@ -1092,9 +1102,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_conversations.impression",
-          "doc_count" : 1592840,
+          "doc_count" : 1602024,
           "current" : {
-            "doc_count" : 13946
+            "doc_count" : 21714
           },
           "baseline" : {
             "doc_count" : 251952
@@ -1102,9 +1112,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_conversations/index_0.click",
-          "doc_count" : 266,
+          "doc_count" : 269,
           "current" : {
-            "doc_count" : 3
+            "doc_count" : 6
           },
           "baseline" : {
             "doc_count" : 90
@@ -1112,9 +1122,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_conversations/index_0.impression",
-          "doc_count" : 782846,
+          "doc_count" : 788181,
           "current" : {
-            "doc_count" : 8444
+            "doc_count" : 12766
           },
           "baseline" : {
             "doc_count" : 172734
@@ -1122,9 +1132,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_conversations/index_1.click",
-          "doc_count" : 287,
+          "doc_count" : 289,
           "current" : {
-            "doc_count" : 1
+            "doc_count" : 3
           },
           "baseline" : {
             "doc_count" : 60
@@ -1132,9 +1142,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_conversations/index_1.impression",
-          "doc_count" : 667382,
+          "doc_count" : 670926,
           "current" : {
-            "doc_count" : 5367
+            "doc_count" : 8468
           },
           "baseline" : {
             "doc_count" : 105546
@@ -1152,9 +1162,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_conversations/index_2.impression",
-          "doc_count" : 7227,
+          "doc_count" : 7434,
           "current" : {
-            "doc_count" : 438
+            "doc_count" : 568
           },
           "baseline" : {
             "doc_count" : 787
@@ -1172,9 +1182,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_conversations/index_3.impression",
-          "doc_count" : 5082,
+          "doc_count" : 5235,
           "current" : {
-            "doc_count" : 289
+            "doc_count" : 397
           },
           "baseline" : {
             "doc_count" : 242
@@ -1182,9 +1192,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_conversations/index_4.click",
-          "doc_count" : 22,
+          "doc_count" : 24,
           "current" : {
-            "doc_count" : 2
+            "doc_count" : 4
           },
           "baseline" : {
             "doc_count" : 1
@@ -1192,9 +1202,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_conversations/index_4.impression",
-          "doc_count" : 14261,
+          "doc_count" : 14761,
           "current" : {
-            "doc_count" : 761
+            "doc_count" : 1177
           },
           "baseline" : {
             "doc_count" : 65
@@ -1212,9 +1222,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_conversations/index_5.impression",
-          "doc_count" : 4564,
+          "doc_count" : 4729,
           "current" : {
-            "doc_count" : 228
+            "doc_count" : 343
           },
           "baseline" : {
             "doc_count" : 10
@@ -1232,9 +1242,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_conversations/index_6.impression",
-          "doc_count" : 667,
+          "doc_count" : 686,
           "current" : {
-            "doc_count" : 36
+            "doc_count" : 55
           },
           "baseline" : {
             "doc_count" : 3
@@ -1242,9 +1252,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_conversations_telephony_paid-wam.click",
-          "doc_count" : 1207,
+          "doc_count" : 1217,
           "current" : {
-            "doc_count" : 9
+            "doc_count" : 15
           },
           "baseline" : {
             "doc_count" : 272
@@ -1252,9 +1262,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_conversations_telephony_paid-wam.impression",
-          "doc_count" : 842236,
+          "doc_count" : 849586,
           "current" : {
-            "doc_count" : 8013
+            "doc_count" : 14615
           },
           "baseline" : {
             "doc_count" : 210299
@@ -1262,9 +1272,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_conversations_telephony_paid-wam/index_0.click",
-          "doc_count" : 370,
+          "doc_count" : 372,
           "current" : {
-            "doc_count" : 1
+            "doc_count" : 3
           },
           "baseline" : {
             "doc_count" : 53
@@ -1272,9 +1282,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_conversations_telephony_paid-wam/index_0.impression",
-          "doc_count" : 286463,
+          "doc_count" : 290654,
           "current" : {
-            "doc_count" : 1901
+            "doc_count" : 6019
           },
           "baseline" : {
             "doc_count" : 34808
@@ -1282,9 +1292,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_conversations_telephony_paid-wam/index_1.click",
-          "doc_count" : 717,
+          "doc_count" : 721,
           "current" : {
-            "doc_count" : 3
+            "doc_count" : 4
           },
           "baseline" : {
             "doc_count" : 217
@@ -1292,9 +1302,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_conversations_telephony_paid-wam/index_1.impression",
-          "doc_count" : 568584,
+          "doc_count" : 570961,
           "current" : {
-            "doc_count" : 4862
+            "doc_count" : 6792
           },
           "baseline" : {
             "doc_count" : 192244
@@ -1302,9 +1312,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_conversations_telephony_paid-wam/index_2.click",
-          "doc_count" : 21,
+          "doc_count" : 22,
           "current" : {
-            "doc_count" : 0
+            "doc_count" : 1
           },
           "baseline" : {
             "doc_count" : 2
@@ -1312,9 +1322,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_conversations_telephony_paid-wam/index_2.impression",
-          "doc_count" : 24256,
+          "doc_count" : 24873,
           "current" : {
-            "doc_count" : 228
+            "doc_count" : 776
           },
           "baseline" : {
             "doc_count" : 3234
@@ -1322,9 +1332,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_conversations_telephony_paid-wam/index_3.click",
-          "doc_count" : 43,
+          "doc_count" : 45,
           "current" : {
-            "doc_count" : 1
+            "doc_count" : 3
           },
           "baseline" : {
             "doc_count" : 0
@@ -1332,9 +1342,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_conversations_telephony_paid-wam/index_3.impression",
-          "doc_count" : 17269,
+          "doc_count" : 17635,
           "current" : {
-            "doc_count" : 264
+            "doc_count" : 593
           },
           "baseline" : {
             "doc_count" : 53
@@ -1352,9 +1362,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_conversations_telephony_paid-wam/index_4.impression",
-          "doc_count" : 14611,
+          "doc_count" : 14775,
           "current" : {
-            "doc_count" : 345
+            "doc_count" : 428
           },
           "baseline" : {
             "doc_count" : 154
@@ -1372,9 +1382,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_conversations_telephony_paid-wam/index_5.impression",
-          "doc_count" : 9126,
+          "doc_count" : 9262,
           "current" : {
-            "doc_count" : 420
+            "doc_count" : 516
           },
           "baseline" : {
             "doc_count" : 245
@@ -1382,9 +1392,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_conversations_telephony_paid-wam/index_6.click",
-          "doc_count" : 15,
+          "doc_count" : 16,
           "current" : {
-            "doc_count" : 0
+            "doc_count" : 1
           },
           "baseline" : {
             "doc_count" : 0
@@ -1392,9 +1402,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_conversations_telephony_paid-wam/index_6.impression",
-          "doc_count" : 3792,
+          "doc_count" : 3930,
           "current" : {
-            "doc_count" : 505
+            "doc_count" : 608
           },
           "baseline" : {
             "doc_count" : 310
@@ -1404,7 +1414,7 @@
           "key" : "pandc.vnext.recommendations.feed.feed_conversations_telephony_paid-wam/index_7.click",
           "doc_count" : 3,
           "current" : {
-            "doc_count" : 3
+            "doc_count" : 2
           },
           "baseline" : {
             "doc_count" : 0
@@ -1412,9 +1422,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_conversations_telephony_paid-wam/index_7.impression",
-          "doc_count" : 1391,
+          "doc_count" : 1590,
           "current" : {
-            "doc_count" : 252
+            "doc_count" : 425
           },
           "baseline" : {
             "doc_count" : 155
@@ -1422,9 +1432,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_conversations_telephony_paid-wam/index_8.impression",
-          "doc_count" : 163,
+          "doc_count" : 167,
           "current" : {
-            "doc_count" : 8
+            "doc_count" : 12
           },
           "baseline" : {
             "doc_count" : 29
@@ -1432,9 +1442,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_conversations_telephony_paid-wam/index_9.impression",
-          "doc_count" : 2,
+          "doc_count" : 3,
           "current" : {
-            "doc_count" : 0
+            "doc_count" : 1
           },
           "baseline" : {
             "doc_count" : 1
@@ -1442,9 +1452,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_creategmb.click",
-          "doc_count" : 7531,
+          "doc_count" : 7568,
           "current" : {
-            "doc_count" : 228
+            "doc_count" : 225
           },
           "baseline" : {
             "doc_count" : 2744
@@ -1452,9 +1462,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_creategmb.impression",
-          "doc_count" : 1871914,
+          "doc_count" : 1881386,
           "current" : {
-            "doc_count" : 64012
+            "doc_count" : 61639
           },
           "baseline" : {
             "doc_count" : 667156
@@ -1462,9 +1472,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_creategmb/index_0.click",
-          "doc_count" : 212,
+          "doc_count" : 224,
           "current" : {
-            "doc_count" : 70
+            "doc_count" : 66
           },
           "baseline" : {
             "doc_count" : 42
@@ -1472,9 +1482,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_creategmb/index_0.impression",
-          "doc_count" : 87764,
+          "doc_count" : 92537,
           "current" : {
-            "doc_count" : 28659
+            "doc_count" : 28379
           },
           "baseline" : {
             "doc_count" : 16807
@@ -1482,9 +1492,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_creategmb/index_1.click",
-          "doc_count" : 1626,
+          "doc_count" : 1635,
           "current" : {
-            "doc_count" : 54
+            "doc_count" : 56
           },
           "baseline" : {
             "doc_count" : 655
@@ -1492,9 +1502,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_creategmb/index_1.impression",
-          "doc_count" : 468449,
+          "doc_count" : 470346,
           "current" : {
-            "doc_count" : 14049
+            "doc_count" : 13777
           },
           "baseline" : {
             "doc_count" : 183496
@@ -1502,9 +1512,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_creategmb/index_2.click",
-          "doc_count" : 1925,
+          "doc_count" : 1930,
           "current" : {
-            "doc_count" : 38
+            "doc_count" : 34
           },
           "baseline" : {
             "doc_count" : 704
@@ -1512,9 +1522,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_creategmb/index_2.impression",
-          "doc_count" : 731488,
+          "doc_count" : 733247,
           "current" : {
-            "doc_count" : 17140
+            "doc_count" : 15037
           },
           "baseline" : {
             "doc_count" : 253219
@@ -1522,9 +1532,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_creategmb/index_3.click",
-          "doc_count" : 1093,
+          "doc_count" : 1095,
           "current" : {
-            "doc_count" : 24
+            "doc_count" : 19
           },
           "baseline" : {
             "doc_count" : 385
@@ -1532,9 +1542,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_creategmb/index_3.impression",
-          "doc_count" : 236312,
+          "doc_count" : 237125,
           "current" : {
-            "doc_count" : 4782
+            "doc_count" : 4828
           },
           "baseline" : {
             "doc_count" : 82429
@@ -1542,9 +1552,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_creategmb/index_4.click",
-          "doc_count" : 1258,
+          "doc_count" : 1262,
           "current" : {
-            "doc_count" : 25
+            "doc_count" : 28
           },
           "baseline" : {
             "doc_count" : 450
@@ -1552,9 +1562,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_creategmb/index_4.impression",
-          "doc_count" : 179560,
+          "doc_count" : 180050,
           "current" : {
-            "doc_count" : 2127
+            "doc_count" : 2064
           },
           "baseline" : {
             "doc_count" : 66198
@@ -1562,9 +1572,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_creategmb/index_5.click",
-          "doc_count" : 1066,
+          "doc_count" : 1070,
           "current" : {
-            "doc_count" : 10
+            "doc_count" : 13
           },
           "baseline" : {
             "doc_count" : 379
@@ -1572,9 +1582,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_creategmb/index_5.impression",
-          "doc_count" : 168195,
+          "doc_count" : 168541,
           "current" : {
-            "doc_count" : 2024
+            "doc_count" : 2027
           },
           "baseline" : {
             "doc_count" : 62158
@@ -1582,9 +1592,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_creategmb/index_6.click",
-          "doc_count" : 292,
+          "doc_count" : 294,
           "current" : {
-            "doc_count" : 7
+            "doc_count" : 9
           },
           "baseline" : {
             "doc_count" : 108
@@ -1592,9 +1602,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_creategmb/index_6.impression",
-          "doc_count" : 84980,
+          "doc_count" : 85208,
           "current" : {
-            "doc_count" : 912
+            "doc_count" : 1053
           },
           "baseline" : {
             "doc_count" : 31705
@@ -1612,9 +1622,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_creategmb/index_7.impression",
-          "doc_count" : 28099,
+          "doc_count" : 28168,
           "current" : {
-            "doc_count" : 221
+            "doc_count" : 259
           },
           "baseline" : {
             "doc_count" : 9264
@@ -1632,9 +1642,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_creategmb/index_8.impression",
-          "doc_count" : 3106,
+          "doc_count" : 3113,
           "current" : {
-            "doc_count" : 95
+            "doc_count" : 99
           },
           "baseline" : {
             "doc_count" : 1180
@@ -1652,9 +1662,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_difywds.click",
-          "doc_count" : 1890,
+          "doc_count" : 1917,
           "current" : {
-            "doc_count" : 24
+            "doc_count" : 47
           },
           "baseline" : {
             "doc_count" : 478
@@ -1662,9 +1672,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_difywds.impression",
-          "doc_count" : 2636240,
+          "doc_count" : 2669923,
           "current" : {
-            "doc_count" : 37540
+            "doc_count" : 65791
           },
           "baseline" : {
             "doc_count" : 666600
@@ -1672,9 +1682,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_difywds/index_0.click",
-          "doc_count" : 596,
+          "doc_count" : 608,
           "current" : {
-            "doc_count" : 9
+            "doc_count" : 19
           },
           "baseline" : {
             "doc_count" : 163
@@ -1682,9 +1692,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_difywds/index_0.impression",
-          "doc_count" : 1363424,
+          "doc_count" : 1380932,
           "current" : {
-            "doc_count" : 17224
+            "doc_count" : 32345
           },
           "baseline" : {
             "doc_count" : 374548
@@ -1692,9 +1702,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_difywds/index_1.click",
-          "doc_count" : 720,
+          "doc_count" : 728,
           "current" : {
-            "doc_count" : 8
+            "doc_count" : 15
           },
           "baseline" : {
             "doc_count" : 170
@@ -1702,9 +1712,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_difywds/index_1.impression",
-          "doc_count" : 1045197,
+          "doc_count" : 1057826,
           "current" : {
-            "doc_count" : 16961
+            "doc_count" : 26922
           },
           "baseline" : {
             "doc_count" : 247754
@@ -1712,9 +1722,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_difywds/index_2.click",
-          "doc_count" : 390,
+          "doc_count" : 394,
           "current" : {
-            "doc_count" : 3
+            "doc_count" : 6
           },
           "baseline" : {
             "doc_count" : 126
@@ -1722,9 +1732,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_difywds/index_2.impression",
-          "doc_count" : 312670,
+          "doc_count" : 315585,
           "current" : {
-            "doc_count" : 2867
+            "doc_count" : 5362
           },
           "baseline" : {
             "doc_count" : 90501
@@ -1732,9 +1742,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_difywds/index_3.click",
-          "doc_count" : 89,
+          "doc_count" : 91,
           "current" : {
-            "doc_count" : 1
+            "doc_count" : 3
           },
           "baseline" : {
             "doc_count" : 18
@@ -1742,9 +1752,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_difywds/index_3.impression",
-          "doc_count" : 83032,
+          "doc_count" : 84650,
           "current" : {
-            "doc_count" : 1146
+            "doc_count" : 2599
           },
           "baseline" : {
             "doc_count" : 19296
@@ -1762,9 +1772,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_difywds/index_4.impression",
-          "doc_count" : 19800,
+          "doc_count" : 20600,
           "current" : {
-            "doc_count" : 510
+            "doc_count" : 1287
           },
           "baseline" : {
             "doc_count" : 2402
@@ -1782,9 +1792,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_difywds/index_5.impression",
-          "doc_count" : 31879,
+          "doc_count" : 32500,
           "current" : {
-            "doc_count" : 1622
+            "doc_count" : 2040
           },
           "baseline" : {
             "doc_count" : 81
@@ -1802,9 +1812,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_difywds/index_6.impression",
-          "doc_count" : 10417,
+          "doc_count" : 10571,
           "current" : {
-            "doc_count" : 608
+            "doc_count" : 734
           },
           "baseline" : {
             "doc_count" : 1
@@ -1812,9 +1822,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_difywds/index_7.click",
-          "doc_count" : 4,
+          "doc_count" : 5,
           "current" : {
-            "doc_count" : 0
+            "doc_count" : 1
           },
           "baseline" : {
             "doc_count" : 0
@@ -1822,9 +1832,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_difywds/index_7.impression",
-          "doc_count" : 1947,
+          "doc_count" : 1969,
           "current" : {
-            "doc_count" : 132
+            "doc_count" : 139
           },
           "baseline" : {
             "doc_count" : 0
@@ -1842,9 +1852,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_difywds/index_8.impression",
-          "doc_count" : 187,
+          "doc_count" : 188,
           "current" : {
-            "doc_count" : 8
+            "doc_count" : 7
           },
           "baseline" : {
             "doc_count" : 0
@@ -1872,9 +1882,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_difywdsdomainonly.impression",
-          "doc_count" : 1482501,
+          "doc_count" : 1490599,
           "current" : {
-            "doc_count" : 16454
+            "doc_count" : 23060
           },
           "baseline" : {
             "doc_count" : 263621
@@ -1892,9 +1902,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_difywdsdomainonly/index_0.impression",
-          "doc_count" : 1486511,
+          "doc_count" : 1493514,
           "current" : {
-            "doc_count" : 13999
+            "doc_count" : 19773
           },
           "baseline" : {
             "doc_count" : 278181
@@ -1912,9 +1922,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_difywdsdomainonly/index_1.impression",
-          "doc_count" : 8123,
+          "doc_count" : 8146,
           "current" : {
-            "doc_count" : 162
+            "doc_count" : 172
           },
           "baseline" : {
             "doc_count" : 1768
@@ -1932,9 +1942,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_difywdsdomainonly/index_2.impression",
-          "doc_count" : 9252,
+          "doc_count" : 9390,
           "current" : {
-            "doc_count" : 588
+            "doc_count" : 705
           },
           "baseline" : {
             "doc_count" : 107
@@ -1952,9 +1962,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_difywdsdomainonly/index_3.impression",
-          "doc_count" : 33678,
+          "doc_count" : 34831,
           "current" : {
-            "doc_count" : 2377
+            "doc_count" : 3211
           },
           "baseline" : {
             "doc_count" : 260
@@ -1972,9 +1982,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_difywdsdomainonly/index_4.impression",
-          "doc_count" : 4495,
+          "doc_count" : 4588,
           "current" : {
-            "doc_count" : 205
+            "doc_count" : 250
           },
           "baseline" : {
             "doc_count" : 200
@@ -1982,9 +1992,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_difywdsdomainonly/index_5.impression",
-          "doc_count" : 1163,
+          "doc_count" : 1180,
           "current" : {
-            "doc_count" : 33
+            "doc_count" : 50
           },
           "baseline" : {
             "doc_count" : 150
@@ -1992,9 +2002,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_difywdsdomainonly/index_6.impression",
-          "doc_count" : 266,
+          "doc_count" : 272,
           "current" : {
-            "doc_count" : 3
+            "doc_count" : 9
           },
           "baseline" : {
             "doc_count" : 41
@@ -2002,9 +2012,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_domain.click",
-          "doc_count" : 3327,
+          "doc_count" : 3330,
           "current" : {
-            "doc_count" : 3
+            "doc_count" : 6
           },
           "baseline" : {
             "doc_count" : 1441
@@ -2012,9 +2022,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_domain.impression",
-          "doc_count" : 801843,
+          "doc_count" : 802732,
           "current" : {
-            "doc_count" : 1918
+            "doc_count" : 2621
           },
           "baseline" : {
             "doc_count" : 295446
@@ -2022,9 +2032,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_domain/index_0.click",
-          "doc_count" : 730,
+          "doc_count" : 732,
           "current" : {
-            "doc_count" : 3
+            "doc_count" : 5
           },
           "baseline" : {
             "doc_count" : 463
@@ -2032,9 +2042,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_domain/index_0.impression",
-          "doc_count" : 476318,
+          "doc_count" : 477072,
           "current" : {
-            "doc_count" : 1707
+            "doc_count" : 2280
           },
           "baseline" : {
             "doc_count" : 192213
@@ -2042,9 +2052,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_domain/index_1.click",
-          "doc_count" : 231,
+          "doc_count" : 232,
           "current" : {
-            "doc_count" : 0
+            "doc_count" : 1
           },
           "baseline" : {
             "doc_count" : 88
@@ -2052,9 +2062,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_domain/index_1.impression",
-          "doc_count" : 58454,
+          "doc_count" : 58548,
           "current" : {
-            "doc_count" : 364
+            "doc_count" : 432
           },
           "baseline" : {
             "doc_count" : 27908
@@ -2072,9 +2082,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_domain/index_2.impression",
-          "doc_count" : 79650,
+          "doc_count" : 79671,
           "current" : {
-            "doc_count" : 33
+            "doc_count" : 50
           },
           "baseline" : {
             "doc_count" : 30324
@@ -2092,9 +2102,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_domain/index_3.impression",
-          "doc_count" : 71269,
+          "doc_count" : 71294,
           "current" : {
-            "doc_count" : 6
+            "doc_count" : 29
           },
           "baseline" : {
             "doc_count" : 27236
@@ -2112,9 +2122,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_domain/index_4.impression",
-          "doc_count" : 54455,
+          "doc_count" : 54482,
           "current" : {
-            "doc_count" : 8
+            "doc_count" : 35
           },
           "baseline" : {
             "doc_count" : 20377
@@ -2132,9 +2142,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_domain/index_5.impression",
-          "doc_count" : 31105,
+          "doc_count" : 31110,
           "current" : {
-            "doc_count" : 1
+            "doc_count" : 6
           },
           "baseline" : {
             "doc_count" : 11991
@@ -2152,9 +2162,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_domain/index_6.impression",
-          "doc_count" : 5245,
+          "doc_count" : 5249,
           "current" : {
-            "doc_count" : 0
+            "doc_count" : 4
           },
           "baseline" : {
             "doc_count" : 2201
@@ -2192,9 +2202,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_domainforwarding.click",
-          "doc_count" : 76234,
+          "doc_count" : 76690,
           "current" : {
-            "doc_count" : 1408
+            "doc_count" : 1596
           },
           "baseline" : {
             "doc_count" : 20423
@@ -2202,9 +2212,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_domainforwarding.impression",
-          "doc_count" : 6701456,
+          "doc_count" : 6757165,
           "current" : {
-            "doc_count" : 146316
+            "doc_count" : 173759
           },
           "baseline" : {
             "doc_count" : 1638906
@@ -2212,9 +2222,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_domainforwarding/index_0.click",
-          "doc_count" : 19484,
+          "doc_count" : 19684,
           "current" : {
-            "doc_count" : 605
+            "doc_count" : 712
           },
           "baseline" : {
             "doc_count" : 4569
@@ -2222,9 +2232,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_domainforwarding/index_0.impression",
-          "doc_count" : 2143763,
+          "doc_count" : 2174970,
           "current" : {
-            "doc_count" : 76075
+            "doc_count" : 93676
           },
           "baseline" : {
             "doc_count" : 490456
@@ -2232,9 +2242,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_domainforwarding/index_1.click",
-          "doc_count" : 9003,
+          "doc_count" : 9057,
           "current" : {
-            "doc_count" : 138
+            "doc_count" : 166
           },
           "baseline" : {
             "doc_count" : 2008
@@ -2242,9 +2252,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_domainforwarding/index_1.impression",
-          "doc_count" : 719999,
+          "doc_count" : 726922,
           "current" : {
-            "doc_count" : 16711
+            "doc_count" : 20882
           },
           "baseline" : {
             "doc_count" : 132585
@@ -2252,19 +2262,29 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_domainforwarding/index_10.impression",
-          "doc_count" : 51,
+          "doc_count" : 54,
           "current" : {
-            "doc_count" : 7
+            "doc_count" : 8
           },
           "baseline" : {
             "doc_count" : 7
           }
         },
         {
-          "key" : "pandc.vnext.recommendations.feed.feed_domainforwarding/index_2.click",
-          "doc_count" : 16409,
+          "key" : "pandc.vnext.recommendations.feed.feed_domainforwarding/index_11.impression",
+          "doc_count" : 1,
+          "baseline" : {
+            "doc_count" : 0
+          },
           "current" : {
-            "doc_count" : 208
+            "doc_count" : 1
+          }
+        },
+        {
+          "key" : "pandc.vnext.recommendations.feed.feed_domainforwarding/index_2.click",
+          "doc_count" : 16472,
+          "current" : {
+            "doc_count" : 215
           },
           "baseline" : {
             "doc_count" : 3783
@@ -2272,9 +2292,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_domainforwarding/index_2.impression",
-          "doc_count" : 1340539,
+          "doc_count" : 1346081,
           "current" : {
-            "doc_count" : 22425
+            "doc_count" : 21733
           },
           "baseline" : {
             "doc_count" : 287988
@@ -2282,9 +2302,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_domainforwarding/index_3.click",
-          "doc_count" : 17100,
+          "doc_count" : 17183,
           "current" : {
-            "doc_count" : 297
+            "doc_count" : 311
           },
           "baseline" : {
             "doc_count" : 5891
@@ -2292,9 +2312,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_domainforwarding/index_3.impression",
-          "doc_count" : 1314768,
+          "doc_count" : 1321897,
           "current" : {
-            "doc_count" : 21860
+            "doc_count" : 24424
           },
           "baseline" : {
             "doc_count" : 386311
@@ -2302,9 +2322,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_domainforwarding/index_4.click",
-          "doc_count" : 7594,
+          "doc_count" : 7629,
           "current" : {
-            "doc_count" : 49
+            "doc_count" : 70
           },
           "baseline" : {
             "doc_count" : 2434
@@ -2312,9 +2332,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_domainforwarding/index_4.impression",
-          "doc_count" : 667702,
+          "doc_count" : 671702,
           "current" : {
-            "doc_count" : 5812
+            "doc_count" : 8989
           },
           "baseline" : {
             "doc_count" : 191795
@@ -2322,9 +2342,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_domainforwarding/index_5.click",
-          "doc_count" : 4262,
+          "doc_count" : 4280,
           "current" : {
-            "doc_count" : 67
+            "doc_count" : 78
           },
           "baseline" : {
             "doc_count" : 1126
@@ -2332,9 +2352,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_domainforwarding/index_5.impression",
-          "doc_count" : 457507,
+          "doc_count" : 459739,
           "current" : {
-            "doc_count" : 5600
+            "doc_count" : 7150
           },
           "baseline" : {
             "doc_count" : 119931
@@ -2342,9 +2362,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_domainforwarding/index_6.click",
-          "doc_count" : 1906,
+          "doc_count" : 1910,
           "current" : {
-            "doc_count" : 38
+            "doc_count" : 37
           },
           "baseline" : {
             "doc_count" : 480
@@ -2352,9 +2372,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_domainforwarding/index_6.impression",
-          "doc_count" : 261111,
+          "doc_count" : 262152,
           "current" : {
-            "doc_count" : 4237
+            "doc_count" : 4391
           },
           "baseline" : {
             "doc_count" : 68967
@@ -2362,9 +2382,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_domainforwarding/index_7.click",
-          "doc_count" : 506,
+          "doc_count" : 508,
           "current" : {
-            "doc_count" : 10
+            "doc_count" : 12
           },
           "baseline" : {
             "doc_count" : 142
@@ -2372,9 +2392,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_domainforwarding/index_7.impression",
-          "doc_count" : 98299,
+          "doc_count" : 98827,
           "current" : {
-            "doc_count" : 1680
+            "doc_count" : 1980
           },
           "baseline" : {
             "doc_count" : 28651
@@ -2382,9 +2402,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_domainforwarding/index_8.click",
-          "doc_count" : 95,
+          "doc_count" : 96,
           "current" : {
-            "doc_count" : 1
+            "doc_count" : 2
           },
           "baseline" : {
             "doc_count" : 26
@@ -2392,9 +2412,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_domainforwarding/index_8.impression",
-          "doc_count" : 24480,
+          "doc_count" : 24816,
           "current" : {
-            "doc_count" : 874
+            "doc_count" : 1141
           },
           "baseline" : {
             "doc_count" : 7136
@@ -2404,7 +2424,7 @@
           "key" : "pandc.vnext.recommendations.feed.feed_domainforwarding/index_9.click",
           "doc_count" : 10,
           "current" : {
-            "doc_count" : 1
+            "doc_count" : 0
           },
           "baseline" : {
             "doc_count" : 1
@@ -2412,9 +2432,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_domainforwarding/index_9.impression",
-          "doc_count" : 2585,
+          "doc_count" : 2639,
           "current" : {
-            "doc_count" : 186
+            "doc_count" : 211
           },
           "baseline" : {
             "doc_count" : 712
@@ -2492,9 +2512,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_gallery.click",
-          "doc_count" : 5746,
+          "doc_count" : 5768,
           "current" : {
-            "doc_count" : 99
+            "doc_count" : 102
           },
           "baseline" : {
             "doc_count" : 1292
@@ -2502,9 +2522,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_gallery.impression",
-          "doc_count" : 3498345,
+          "doc_count" : 3512756,
           "current" : {
-            "doc_count" : 54022
+            "doc_count" : 59423
           },
           "baseline" : {
             "doc_count" : 837287
@@ -2512,9 +2532,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_gallery/index_0.click",
-          "doc_count" : 2678,
+          "doc_count" : 2683,
           "current" : {
-            "doc_count" : 40
+            "doc_count" : 35
           },
           "baseline" : {
             "doc_count" : 464
@@ -2522,9 +2542,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_gallery/index_0.impression",
-          "doc_count" : 1959135,
+          "doc_count" : 1966571,
           "current" : {
-            "doc_count" : 27336
+            "doc_count" : 29542
           },
           "baseline" : {
             "doc_count" : 386997
@@ -2532,9 +2552,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_gallery/index_1.click",
-          "doc_count" : 2063,
+          "doc_count" : 2074,
           "current" : {
-            "doc_count" : 34
+            "doc_count" : 39
           },
           "baseline" : {
             "doc_count" : 540
@@ -2542,9 +2562,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_gallery/index_1.impression",
-          "doc_count" : 1203141,
+          "doc_count" : 1207904,
           "current" : {
-            "doc_count" : 19164
+            "doc_count" : 20745
           },
           "baseline" : {
             "doc_count" : 328734
@@ -2562,9 +2582,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_gallery/index_2.click",
-          "doc_count" : 754,
+          "doc_count" : 759,
           "current" : {
-            "doc_count" : 15
+            "doc_count" : 19
           },
           "baseline" : {
             "doc_count" : 217
@@ -2572,9 +2592,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_gallery/index_2.impression",
-          "doc_count" : 493408,
+          "doc_count" : 495820,
           "current" : {
-            "doc_count" : 7087
+            "doc_count" : 8779
           },
           "baseline" : {
             "doc_count" : 140417
@@ -2582,7 +2602,7 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_gallery/index_3.click",
-          "doc_count" : 212,
+          "doc_count" : 213,
           "current" : {
             "doc_count" : 8
           },
@@ -2592,9 +2612,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_gallery/index_3.impression",
-          "doc_count" : 140821,
+          "doc_count" : 141642,
           "current" : {
-            "doc_count" : 3790
+            "doc_count" : 4020
           },
           "baseline" : {
             "doc_count" : 42982
@@ -2612,9 +2632,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_gallery/index_4.impression",
-          "doc_count" : 19776,
+          "doc_count" : 20114,
           "current" : {
-            "doc_count" : 878
+            "doc_count" : 1124
           },
           "baseline" : {
             "doc_count" : 5340
@@ -2632,9 +2652,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_gallery/index_5.impression",
-          "doc_count" : 2866,
+          "doc_count" : 2889,
           "current" : {
-            "doc_count" : 372
+            "doc_count" : 354
           },
           "baseline" : {
             "doc_count" : 475
@@ -2644,7 +2664,7 @@
           "key" : "pandc.vnext.recommendations.feed.feed_gallery/index_6.click",
           "doc_count" : 2,
           "current" : {
-            "doc_count" : 1
+            "doc_count" : 0
           },
           "baseline" : {
             "doc_count" : 0
@@ -2652,9 +2672,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_gallery/index_6.impression",
-          "doc_count" : 980,
+          "doc_count" : 1019,
           "current" : {
-            "doc_count" : 54
+            "doc_count" : 88
           },
           "baseline" : {
             "doc_count" : 88
@@ -2662,9 +2682,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_gallery/index_7.impression",
-          "doc_count" : 313,
+          "doc_count" : 314,
           "current" : {
-            "doc_count" : 23
+            "doc_count" : 24
           },
           "baseline" : {
             "doc_count" : 24
@@ -2702,9 +2722,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_gdconversations.impression",
-          "doc_count" : 31644,
+          "doc_count" : 31690,
           "current" : {
-            "doc_count" : 384
+            "doc_count" : 387
           },
           "baseline" : {
             "doc_count" : 8000
@@ -2742,9 +2762,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_gdconversations/index_2.impression",
-          "doc_count" : 3081,
+          "doc_count" : 3086,
           "current" : {
-            "doc_count" : 21
+            "doc_count" : 25
           },
           "baseline" : {
             "doc_count" : 87
@@ -2762,9 +2782,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_gdconversations/index_3.impression",
-          "doc_count" : 6996,
+          "doc_count" : 7001,
           "current" : {
-            "doc_count" : 43
+            "doc_count" : 44
           },
           "baseline" : {
             "doc_count" : 1467
@@ -2782,9 +2802,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_gdconversations/index_4.impression",
-          "doc_count" : 14170,
+          "doc_count" : 14204,
           "current" : {
-            "doc_count" : 86
+            "doc_count" : 113
           },
           "baseline" : {
             "doc_count" : 4592
@@ -2802,9 +2822,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_gdconversations/index_5.impression",
-          "doc_count" : 6849,
+          "doc_count" : 6860,
           "current" : {
-            "doc_count" : 66
+            "doc_count" : 76
           },
           "baseline" : {
             "doc_count" : 1947
@@ -2822,9 +2842,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_gdconversations/index_6.impression",
-          "doc_count" : 1487,
+          "doc_count" : 1499,
           "current" : {
-            "doc_count" : 138
+            "doc_count" : 149
           },
           "baseline" : {
             "doc_count" : 230
@@ -2832,9 +2852,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_gdconversations/index_7.impression",
-          "doc_count" : 114,
+          "doc_count" : 119,
           "current" : {
-            "doc_count" : 8
+            "doc_count" : 12
           },
           "baseline" : {
             "doc_count" : 19
@@ -2852,9 +2872,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_gdconversations_free.click",
-          "doc_count" : 1178,
+          "doc_count" : 1182,
           "current" : {
-            "doc_count" : 10
+            "doc_count" : 13
           },
           "baseline" : {
             "doc_count" : 307
@@ -2862,9 +2882,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_gdconversations_free.impression",
-          "doc_count" : 2885953,
+          "doc_count" : 2895461,
           "current" : {
-            "doc_count" : 32278
+            "doc_count" : 37998
           },
           "baseline" : {
             "doc_count" : 777088
@@ -2872,9 +2892,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_gdconversations_free/index_0.click",
-          "doc_count" : 762,
+          "doc_count" : 765,
           "current" : {
-            "doc_count" : 8
+            "doc_count" : 10
           },
           "baseline" : {
             "doc_count" : 196
@@ -2882,9 +2902,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_gdconversations_free/index_0.impression",
-          "doc_count" : 2570759,
+          "doc_count" : 2578809,
           "current" : {
-            "doc_count" : 28355
+            "doc_count" : 33071
           },
           "baseline" : {
             "doc_count" : 678143
@@ -2902,9 +2922,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_gdconversations_free/index_1.impression",
-          "doc_count" : 461412,
+          "doc_count" : 462577,
           "current" : {
-            "doc_count" : 1837
+            "doc_count" : 2875
           },
           "baseline" : {
             "doc_count" : 178696
@@ -2922,9 +2942,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_gdconversations_free/index_2.impression",
-          "doc_count" : 61938,
+          "doc_count" : 62144,
           "current" : {
-            "doc_count" : 480
+            "doc_count" : 610
           },
           "baseline" : {
             "doc_count" : 5152
@@ -2932,9 +2952,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_gdconversations_free/index_3.click",
-          "doc_count" : 38,
+          "doc_count" : 39,
           "current" : {
-            "doc_count" : 0
+            "doc_count" : 1
           },
           "baseline" : {
             "doc_count" : 0
@@ -2942,9 +2962,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_gdconversations_free/index_3.impression",
-          "doc_count" : 72535,
+          "doc_count" : 73370,
           "current" : {
-            "doc_count" : 2870
+            "doc_count" : 3410
           },
           "baseline" : {
             "doc_count" : 705
@@ -2962,9 +2982,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_gdconversations_free/index_4.impression",
-          "doc_count" : 21443,
+          "doc_count" : 21753,
           "current" : {
-            "doc_count" : 1021
+            "doc_count" : 1216
           },
           "baseline" : {
             "doc_count" : 184
@@ -2982,9 +3002,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_gdconversations_free/index_5.impression",
-          "doc_count" : 7439,
+          "doc_count" : 7480,
           "current" : {
-            "doc_count" : 413
+            "doc_count" : 266
           },
           "baseline" : {
             "doc_count" : 89
@@ -3002,9 +3022,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_gdconversations_free/index_6.impression",
-          "doc_count" : 1617,
+          "doc_count" : 1654,
           "current" : {
-            "doc_count" : 204
+            "doc_count" : 237
           },
           "baseline" : {
             "doc_count" : 48
@@ -3022,9 +3042,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_gdconversations_free/index_7.impression",
-          "doc_count" : 301,
+          "doc_count" : 315,
           "current" : {
-            "doc_count" : 58
+            "doc_count" : 70
           },
           "baseline" : {
             "doc_count" : 10
@@ -3034,7 +3054,7 @@
           "key" : "pandc.vnext.recommendations.feed.feed_gdconversations_free/index_8.impression",
           "doc_count" : 48,
           "current" : {
-            "doc_count" : 29
+            "doc_count" : 2
           },
           "baseline" : {
             "doc_count" : 0
@@ -3042,9 +3062,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_gdploan.click",
-          "doc_count" : 242,
+          "doc_count" : 245,
           "current" : {
-            "doc_count" : 5
+            "doc_count" : 8
           },
           "baseline" : {
             "doc_count" : 57
@@ -3052,9 +3072,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_gdploan.impression",
-          "doc_count" : 52653,
+          "doc_count" : 53298,
           "current" : {
-            "doc_count" : 654
+            "doc_count" : 1203
           },
           "baseline" : {
             "doc_count" : 11767
@@ -3062,9 +3082,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_gdploan/index_0.click",
-          "doc_count" : 58,
+          "doc_count" : 59,
           "current" : {
-            "doc_count" : 0
+            "doc_count" : 1
           },
           "baseline" : {
             "doc_count" : 8
@@ -3072,9 +3092,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_gdploan/index_0.impression",
-          "doc_count" : 18424,
+          "doc_count" : 18753,
           "current" : {
-            "doc_count" : 311
+            "doc_count" : 631
           },
           "baseline" : {
             "doc_count" : 2419
@@ -3082,9 +3102,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_gdploan/index_1.click",
-          "doc_count" : 86,
+          "doc_count" : 88,
           "current" : {
-            "doc_count" : 4
+            "doc_count" : 6
           },
           "baseline" : {
             "doc_count" : 20
@@ -3092,9 +3112,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_gdploan/index_1.impression",
-          "doc_count" : 21128,
+          "doc_count" : 21447,
           "current" : {
-            "doc_count" : 292
+            "doc_count" : 540
           },
           "baseline" : {
             "doc_count" : 4414
@@ -3112,9 +3132,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_gdploan/index_2.impression",
-          "doc_count" : 16671,
+          "doc_count" : 16770,
           "current" : {
-            "doc_count" : 89
+            "doc_count" : 170
           },
           "baseline" : {
             "doc_count" : 5740
@@ -3152,9 +3172,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_gdploan/index_4.impression",
-          "doc_count" : 15,
+          "doc_count" : 16,
           "current" : {
-            "doc_count" : 3
+            "doc_count" : 4
           },
           "baseline" : {
             "doc_count" : 2
@@ -3162,9 +3182,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_gdploan/index_5.impression",
-          "doc_count" : 18,
+          "doc_count" : 19,
           "current" : {
-            "doc_count" : 0
+            "doc_count" : 1
           },
           "baseline" : {
             "doc_count" : 7
@@ -3202,9 +3222,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_logo.click",
-          "doc_count" : 1766,
+          "doc_count" : 1776,
           "current" : {
-            "doc_count" : 31
+            "doc_count" : 39
           },
           "baseline" : {
             "doc_count" : 345
@@ -3212,9 +3232,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_logo.impression",
-          "doc_count" : 1503355,
+          "doc_count" : 1512528,
           "current" : {
-            "doc_count" : 33891
+            "doc_count" : 36463
           },
           "baseline" : {
             "doc_count" : 286303
@@ -3222,9 +3242,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_logo/index_0.click",
-          "doc_count" : 903,
+          "doc_count" : 906,
           "current" : {
-            "doc_count" : 26
+            "doc_count" : 28
           },
           "baseline" : {
             "doc_count" : 212
@@ -3232,9 +3252,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_logo/index_0.impression",
-          "doc_count" : 822092,
+          "doc_count" : 827400,
           "current" : {
-            "doc_count" : 24077
+            "doc_count" : 23783
           },
           "baseline" : {
             "doc_count" : 177193
@@ -3242,9 +3262,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_logo/index_1.click",
-          "doc_count" : 390,
+          "doc_count" : 395,
           "current" : {
-            "doc_count" : 3
+            "doc_count" : 8
           },
           "baseline" : {
             "doc_count" : 60
@@ -3252,9 +3272,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_logo/index_1.impression",
-          "doc_count" : 389791,
+          "doc_count" : 393004,
           "current" : {
-            "doc_count" : 9898
+            "doc_count" : 11803
           },
           "baseline" : {
             "doc_count" : 71305
@@ -3262,9 +3282,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_logo/index_2.click",
-          "doc_count" : 282,
+          "doc_count" : 284,
           "current" : {
-            "doc_count" : 2
+            "doc_count" : 3
           },
           "baseline" : {
             "doc_count" : 40
@@ -3272,9 +3292,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_logo/index_2.impression",
-          "doc_count" : 233851,
+          "doc_count" : 235143,
           "current" : {
-            "doc_count" : 2149
+            "doc_count" : 3304
           },
           "baseline" : {
             "doc_count" : 42465
@@ -3292,9 +3312,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_logo/index_3.impression",
-          "doc_count" : 78519,
+          "doc_count" : 78861,
           "current" : {
-            "doc_count" : 485
+            "doc_count" : 805
           },
           "baseline" : {
             "doc_count" : 15404
@@ -3312,9 +3332,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_logo/index_4.impression",
-          "doc_count" : 23560,
+          "doc_count" : 23648,
           "current" : {
-            "doc_count" : 64
+            "doc_count" : 149
           },
           "baseline" : {
             "doc_count" : 4761
@@ -3332,9 +3352,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_logo/index_5.impression",
-          "doc_count" : 5237,
+          "doc_count" : 5244,
           "current" : {
-            "doc_count" : 2
+            "doc_count" : 9
           },
           "baseline" : {
             "doc_count" : 608
@@ -3382,9 +3402,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_logotowam.click",
-          "doc_count" : 154,
+          "doc_count" : 174,
           "current" : {
-            "doc_count" : 1
+            "doc_count" : 21
           },
           "baseline" : {
             "doc_count" : 53
@@ -3392,9 +3412,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_logotowam.impression",
-          "doc_count" : 182697,
+          "doc_count" : 187926,
           "current" : {
-            "doc_count" : 892
+            "doc_count" : 5741
           },
           "baseline" : {
             "doc_count" : 17414
@@ -3402,9 +3422,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_logotowam/index_0.click",
-          "doc_count" : 75,
+          "doc_count" : 87,
           "current" : {
-            "doc_count" : 1
+            "doc_count" : 13
           },
           "baseline" : {
             "doc_count" : 30
@@ -3412,9 +3432,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_logotowam/index_0.impression",
-          "doc_count" : 61728,
+          "doc_count" : 64380,
           "current" : {
-            "doc_count" : 742
+            "doc_count" : 3022
           },
           "baseline" : {
             "doc_count" : 9903
@@ -3422,9 +3442,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_logotowam/index_1.click",
-          "doc_count" : 39,
+          "doc_count" : 47,
           "current" : {
-            "doc_count" : 0
+            "doc_count" : 8
           },
           "baseline" : {
             "doc_count" : 15
@@ -3432,9 +3452,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_logotowam/index_1.impression",
-          "doc_count" : 37379,
+          "doc_count" : 39757,
           "current" : {
-            "doc_count" : 99
+            "doc_count" : 2467
           },
           "baseline" : {
             "doc_count" : 4634
@@ -3452,9 +3472,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_logotowam/index_2.impression",
-          "doc_count" : 54428,
+          "doc_count" : 54855,
           "current" : {
-            "doc_count" : 42
+            "doc_count" : 466
           },
           "baseline" : {
             "doc_count" : 3445
@@ -3472,9 +3492,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_logotowam/index_3.impression",
-          "doc_count" : 3466,
+          "doc_count" : 3619,
           "current" : {
-            "doc_count" : 23
+            "doc_count" : 176
           },
           "baseline" : {
             "doc_count" : 934
@@ -3492,9 +3512,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_logotowam/index_4.impression",
-          "doc_count" : 473,
+          "doc_count" : 546,
           "current" : {
-            "doc_count" : 1
+            "doc_count" : 74
           },
           "baseline" : {
             "doc_count" : 57
@@ -3512,9 +3532,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_logotowam/index_5.impression",
-          "doc_count" : 24,
+          "doc_count" : 26,
           "current" : {
-            "doc_count" : 0
+            "doc_count" : 2
           },
           "baseline" : {
             "doc_count" : 2
@@ -3542,9 +3562,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_marketing.click",
-          "doc_count" : 8015,
+          "doc_count" : 8074,
           "current" : {
-            "doc_count" : 152
+            "doc_count" : 190
           },
           "baseline" : {
             "doc_count" : 2048
@@ -3552,9 +3572,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_marketing.impression",
-          "doc_count" : 7249011,
+          "doc_count" : 7296092,
           "current" : {
-            "doc_count" : 125837
+            "doc_count" : 147261
           },
           "baseline" : {
             "doc_count" : 1855617
@@ -3562,9 +3582,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_marketing/index_0.click",
-          "doc_count" : 2548,
+          "doc_count" : 2555,
           "current" : {
-            "doc_count" : 41
+            "doc_count" : 42
           },
           "baseline" : {
             "doc_count" : 777
@@ -3572,9 +3592,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_marketing/index_0.impression",
-          "doc_count" : 3275546,
+          "doc_count" : 3286523,
           "current" : {
-            "doc_count" : 54903
+            "doc_count" : 52579
           },
           "baseline" : {
             "doc_count" : 931245
@@ -3582,9 +3602,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_marketing/index_1.click",
-          "doc_count" : 2383,
+          "doc_count" : 2410,
           "current" : {
-            "doc_count" : 37
+            "doc_count" : 55
           },
           "baseline" : {
             "doc_count" : 521
@@ -3592,9 +3612,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_marketing/index_1.impression",
-          "doc_count" : 2114130,
+          "doc_count" : 2132533,
           "current" : {
-            "doc_count" : 26909
+            "doc_count" : 40046
           },
           "baseline" : {
             "doc_count" : 515067
@@ -3602,9 +3622,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_marketing/index_2.click",
-          "doc_count" : 1812,
+          "doc_count" : 1825,
           "current" : {
-            "doc_count" : 35
+            "doc_count" : 43
           },
           "baseline" : {
             "doc_count" : 467
@@ -3612,9 +3632,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_marketing/index_2.impression",
-          "doc_count" : 1420245,
+          "doc_count" : 1431633,
           "current" : {
-            "doc_count" : 30155
+            "doc_count" : 35897
           },
           "baseline" : {
             "doc_count" : 345056
@@ -3622,9 +3642,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_marketing/index_3.click",
-          "doc_count" : 928,
+          "doc_count" : 936,
           "current" : {
-            "doc_count" : 17
+            "doc_count" : 25
           },
           "baseline" : {
             "doc_count" : 222
@@ -3632,9 +3652,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_marketing/index_3.impression",
-          "doc_count" : 695485,
+          "doc_count" : 701077,
           "current" : {
-            "doc_count" : 12673
+            "doc_count" : 16351
           },
           "baseline" : {
             "doc_count" : 173625
@@ -3642,9 +3662,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_marketing/index_4.click",
-          "doc_count" : 285,
+          "doc_count" : 289,
           "current" : {
-            "doc_count" : 12
+            "doc_count" : 15
           },
           "baseline" : {
             "doc_count" : 57
@@ -3652,9 +3672,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_marketing/index_4.impression",
-          "doc_count" : 253194,
+          "doc_count" : 255610,
           "current" : {
-            "doc_count" : 6199
+            "doc_count" : 8032
           },
           "baseline" : {
             "doc_count" : 45730
@@ -3672,9 +3692,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_marketing/index_5.impression",
-          "doc_count" : 48768,
+          "doc_count" : 49395,
           "current" : {
-            "doc_count" : 2586
+            "doc_count" : 2893
           },
           "baseline" : {
             "doc_count" : 5592
@@ -3682,9 +3702,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_marketing/index_6.click",
-          "doc_count" : 11,
+          "doc_count" : 12,
           "current" : {
-            "doc_count" : 3
+            "doc_count" : 4
           },
           "baseline" : {
             "doc_count" : 1
@@ -3692,9 +3712,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_marketing/index_6.impression",
-          "doc_count" : 7307,
+          "doc_count" : 7613,
           "current" : {
-            "doc_count" : 1004
+            "doc_count" : 998
           },
           "baseline" : {
             "doc_count" : 382
@@ -3712,9 +3732,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_marketing/index_7.impression",
-          "doc_count" : 1311,
+          "doc_count" : 1358,
           "current" : {
-            "doc_count" : 281
+            "doc_count" : 314
           },
           "baseline" : {
             "doc_count" : 22
@@ -3722,9 +3742,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_marketing/index_8.impression",
-          "doc_count" : 233,
+          "doc_count" : 241,
           "current" : {
-            "doc_count" : 93
+            "doc_count" : 100
           },
           "baseline" : {
             "doc_count" : 4
@@ -3732,37 +3752,7 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_marketing/index_9.impression",
-          "doc_count" : 4,
-          "current" : {
-            "doc_count" : 1
-          },
-          "baseline" : {
-            "doc_count" : 0
-          }
-        },
-        {
-          "key" : "pandc.vnext.recommendations.feed.feed_poyntsetup.click",
-          "doc_count" : 2524,
-          "current" : {
-            "doc_count" : 103
-          },
-          "baseline" : {
-            "doc_count" : 0
-          }
-        },
-        {
-          "key" : "pandc.vnext.recommendations.feed.feed_poyntsetup.impression",
-          "doc_count" : 980544,
-          "current" : {
-            "doc_count" : 37202
-          },
-          "baseline" : {
-            "doc_count" : 110
-          }
-        },
-        {
-          "key" : "pandc.vnext.recommendations.feed.feed_poyntsetup/index_0.click",
-          "doc_count" : 570,
+          "doc_count" : 5,
           "current" : {
             "doc_count" : 2
           },
@@ -3771,10 +3761,40 @@
           }
         },
         {
-          "key" : "pandc.vnext.recommendations.feed.feed_poyntsetup/index_0.impression",
-          "doc_count" : 281741,
+          "key" : "pandc.vnext.recommendations.feed.feed_poyntsetup.click",
+          "doc_count" : 2555,
           "current" : {
-            "doc_count" : 3112
+            "doc_count" : 113
+          },
+          "baseline" : {
+            "doc_count" : 0
+          }
+        },
+        {
+          "key" : "pandc.vnext.recommendations.feed.feed_poyntsetup.impression",
+          "doc_count" : 993098,
+          "current" : {
+            "doc_count" : 44686
+          },
+          "baseline" : {
+            "doc_count" : 110
+          }
+        },
+        {
+          "key" : "pandc.vnext.recommendations.feed.feed_poyntsetup/index_0.click",
+          "doc_count" : 577,
+          "current" : {
+            "doc_count" : 8
+          },
+          "baseline" : {
+            "doc_count" : 0
+          }
+        },
+        {
+          "key" : "pandc.vnext.recommendations.feed.feed_poyntsetup/index_0.impression",
+          "doc_count" : 283623,
+          "current" : {
+            "doc_count" : 4507
           },
           "baseline" : {
             "doc_count" : 0
@@ -3782,9 +3802,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_poyntsetup/index_1.click",
-          "doc_count" : 713,
+          "doc_count" : 720,
           "current" : {
-            "doc_count" : 24
+            "doc_count" : 25
           },
           "baseline" : {
             "doc_count" : 0
@@ -3792,9 +3812,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_poyntsetup/index_1.impression",
-          "doc_count" : 355502,
+          "doc_count" : 362031,
           "current" : {
-            "doc_count" : 18850
+            "doc_count" : 22959
           },
           "baseline" : {
             "doc_count" : 32
@@ -3802,9 +3822,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_poyntsetup/index_2.click",
-          "doc_count" : 270,
+          "doc_count" : 275,
           "current" : {
-            "doc_count" : 21
+            "doc_count" : 22
           },
           "baseline" : {
             "doc_count" : 0
@@ -3812,9 +3832,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_poyntsetup/index_2.impression",
-          "doc_count" : 81272,
+          "doc_count" : 82634,
           "current" : {
-            "doc_count" : 4956
+            "doc_count" : 5462
           },
           "baseline" : {
             "doc_count" : 17
@@ -3824,7 +3844,7 @@
           "key" : "pandc.vnext.recommendations.feed.feed_poyntsetup/index_3.click",
           "doc_count" : 326,
           "current" : {
-            "doc_count" : 20
+            "doc_count" : 18
           },
           "baseline" : {
             "doc_count" : 0
@@ -3832,9 +3852,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_poyntsetup/index_3.impression",
-          "doc_count" : 98024,
+          "doc_count" : 99315,
           "current" : {
-            "doc_count" : 3506
+            "doc_count" : 4562
           },
           "baseline" : {
             "doc_count" : 5
@@ -3842,9 +3862,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_poyntsetup/index_4.click",
-          "doc_count" : 390,
+          "doc_count" : 395,
           "current" : {
-            "doc_count" : 14
+            "doc_count" : 19
           },
           "baseline" : {
             "doc_count" : 0
@@ -3852,9 +3872,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_poyntsetup/index_4.impression",
-          "doc_count" : 127645,
+          "doc_count" : 128692,
           "current" : {
-            "doc_count" : 4192
+            "doc_count" : 4792
           },
           "baseline" : {
             "doc_count" : 32
@@ -3862,9 +3882,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_poyntsetup/index_5.click",
-          "doc_count" : 188,
+          "doc_count" : 191,
           "current" : {
-            "doc_count" : 12
+            "doc_count" : 7
           },
           "baseline" : {
             "doc_count" : 0
@@ -3872,9 +3892,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_poyntsetup/index_5.impression",
-          "doc_count" : 66771,
+          "doc_count" : 67563,
           "current" : {
-            "doc_count" : 2735
+            "doc_count" : 2937
           },
           "baseline" : {
             "doc_count" : 3
@@ -3892,9 +3912,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_poyntsetup/index_6.impression",
-          "doc_count" : 17565,
+          "doc_count" : 17854,
           "current" : {
-            "doc_count" : 1105
+            "doc_count" : 1276
           },
           "baseline" : {
             "doc_count" : 11
@@ -3902,9 +3922,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_poyntsetup/index_7.click",
-          "doc_count" : 15,
+          "doc_count" : 19,
           "current" : {
-            "doc_count" : 5
+            "doc_count" : 9
           },
           "baseline" : {
             "doc_count" : 0
@@ -3912,9 +3932,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_poyntsetup/index_7.impression",
-          "doc_count" : 3449,
+          "doc_count" : 3601,
           "current" : {
-            "doc_count" : 780
+            "doc_count" : 880
           },
           "baseline" : {
             "doc_count" : 10
@@ -3932,9 +3952,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_poyntsetup/index_8.impression",
-          "doc_count" : 412,
+          "doc_count" : 431,
           "current" : {
-            "doc_count" : 129
+            "doc_count" : 118
           },
           "baseline" : {
             "doc_count" : 0
@@ -3952,7 +3972,7 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_poyntsetup/index_9.impression",
-          "doc_count" : 18,
+          "doc_count" : 20,
           "current" : {
             "doc_count" : 8
           },
@@ -4032,9 +4052,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_selldomain.impression",
-          "doc_count" : 893,
+          "doc_count" : 910,
           "current" : {
-            "doc_count" : 12
+            "doc_count" : 29
           },
           "baseline" : {
             "doc_count" : 223
@@ -4052,9 +4072,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_selldomain/index_1.impression",
-          "doc_count" : 557,
+          "doc_count" : 572,
           "current" : {
-            "doc_count" : 22
+            "doc_count" : 37
           },
           "baseline" : {
             "doc_count" : 137
@@ -4082,9 +4102,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_selldomain/index_4.impression",
-          "doc_count" : 20,
+          "doc_count" : 22,
           "current" : {
-            "doc_count" : 0
+            "doc_count" : 2
           },
           "baseline" : {
             "doc_count" : 10
@@ -4122,9 +4142,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_social.impression",
-          "doc_count" : 7514,
+          "doc_count" : 7534,
           "current" : {
-            "doc_count" : 116
+            "doc_count" : 136
           },
           "baseline" : {
             "doc_count" : 2024
@@ -4132,9 +4152,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_social/index_0.impression",
-          "doc_count" : 6961,
+          "doc_count" : 6978,
           "current" : {
-            "doc_count" : 130
+            "doc_count" : 147
           },
           "baseline" : {
             "doc_count" : 1755
@@ -4152,9 +4172,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_social/index_2.impression",
-          "doc_count" : 402,
+          "doc_count" : 405,
           "current" : {
-            "doc_count" : 0
+            "doc_count" : 3
           },
           "baseline" : {
             "doc_count" : 143
@@ -4172,9 +4192,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_ssl.click",
-          "doc_count" : 4386,
+          "doc_count" : 4424,
           "current" : {
-            "doc_count" : 96
+            "doc_count" : 117
           },
           "baseline" : {
             "doc_count" : 1061
@@ -4182,9 +4202,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_ssl.impression",
-          "doc_count" : 1568210,
+          "doc_count" : 1576107,
           "current" : {
-            "doc_count" : 24683
+            "doc_count" : 28072
           },
           "baseline" : {
             "doc_count" : 293056
@@ -4192,9 +4212,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_ssl/index_0.click",
-          "doc_count" : 1709,
+          "doc_count" : 1718,
           "current" : {
-            "doc_count" : 23
+            "doc_count" : 25
           },
           "baseline" : {
             "doc_count" : 437
@@ -4202,9 +4222,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_ssl/index_0.impression",
-          "doc_count" : 811884,
+          "doc_count" : 814767,
           "current" : {
-            "doc_count" : 8435
+            "doc_count" : 9828
           },
           "baseline" : {
             "doc_count" : 152287
@@ -4212,9 +4232,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_ssl/index_1.click",
-          "doc_count" : 1309,
+          "doc_count" : 1326,
           "current" : {
-            "doc_count" : 35
+            "doc_count" : 42
           },
           "baseline" : {
             "doc_count" : 355
@@ -4222,9 +4242,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_ssl/index_1.impression",
-          "doc_count" : 373337,
+          "doc_count" : 375282,
           "current" : {
-            "doc_count" : 8850
+            "doc_count" : 8732
           },
           "baseline" : {
             "doc_count" : 84959
@@ -4232,9 +4252,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_ssl/index_2.click",
-          "doc_count" : 786,
+          "doc_count" : 795,
           "current" : {
-            "doc_count" : 31
+            "doc_count" : 40
           },
           "baseline" : {
             "doc_count" : 127
@@ -4242,9 +4262,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_ssl/index_2.impression",
-          "doc_count" : 284743,
+          "doc_count" : 287507,
           "current" : {
-            "doc_count" : 8257
+            "doc_count" : 9864
           },
           "baseline" : {
             "doc_count" : 49062
@@ -4252,9 +4272,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_ssl/index_3.click",
-          "doc_count" : 397,
+          "doc_count" : 400,
           "current" : {
-            "doc_count" : 5
+            "doc_count" : 8
           },
           "baseline" : {
             "doc_count" : 108
@@ -4262,9 +4282,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_ssl/index_3.impression",
-          "doc_count" : 152945,
+          "doc_count" : 153744,
           "current" : {
-            "doc_count" : 1269
+            "doc_count" : 1977
           },
           "baseline" : {
             "doc_count" : 27285
@@ -4282,9 +4302,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_ssl/index_4.impression",
-          "doc_count" : 38127,
+          "doc_count" : 38308,
           "current" : {
-            "doc_count" : 269
+            "doc_count" : 433
           },
           "baseline" : {
             "doc_count" : 8223
@@ -4302,9 +4322,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_ssl/index_5.impression",
-          "doc_count" : 3789,
+          "doc_count" : 3809,
           "current" : {
-            "doc_count" : 30
+            "doc_count" : 48
           },
           "baseline" : {
             "doc_count" : 776
@@ -4322,9 +4342,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_startseo.click",
-          "doc_count" : 11489,
+          "doc_count" : 11605,
           "current" : {
-            "doc_count" : 422
+            "doc_count" : 395
           },
           "baseline" : {
             "doc_count" : 886
@@ -4332,9 +4352,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_startseo.impression",
-          "doc_count" : 546172,
+          "doc_count" : 548832,
           "current" : {
-            "doc_count" : 13601
+            "doc_count" : 14107
           },
           "baseline" : {
             "doc_count" : 104429
@@ -4342,9 +4362,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_startseo/index_0.click",
-          "doc_count" : 4184,
+          "doc_count" : 4216,
           "current" : {
-            "doc_count" : 115
+            "doc_count" : 118
           },
           "baseline" : {
             "doc_count" : 5
@@ -4352,9 +4372,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_startseo/index_0.impression",
-          "doc_count" : 158414,
+          "doc_count" : 159783,
           "current" : {
-            "doc_count" : 4796
+            "doc_count" : 5431
           },
           "baseline" : {
             "doc_count" : 1702
@@ -4362,9 +4382,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_startseo/index_1.click",
-          "doc_count" : 681,
+          "doc_count" : 717,
           "current" : {
-            "doc_count" : 130
+            "doc_count" : 133
           },
           "baseline" : {
             "doc_count" : 44
@@ -4372,9 +4392,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_startseo/index_1.impression",
-          "doc_count" : 37190,
+          "doc_count" : 37732,
           "current" : {
-            "doc_count" : 4892
+            "doc_count" : 4792
           },
           "baseline" : {
             "doc_count" : 4675
@@ -4382,9 +4402,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_startseo/index_2.click",
-          "doc_count" : 1243,
+          "doc_count" : 1246,
           "current" : {
-            "doc_count" : 41
+            "doc_count" : 33
           },
           "baseline" : {
             "doc_count" : 112
@@ -4392,9 +4412,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_startseo/index_2.impression",
-          "doc_count" : 48065,
+          "doc_count" : 48232,
           "current" : {
-            "doc_count" : 1481
+            "doc_count" : 1406
           },
           "baseline" : {
             "doc_count" : 9808
@@ -4402,9 +4422,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_startseo/index_3.click",
-          "doc_count" : 2277,
+          "doc_count" : 2290,
           "current" : {
-            "doc_count" : 14
+            "doc_count" : 27
           },
           "baseline" : {
             "doc_count" : 138
@@ -4412,9 +4432,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_startseo/index_3.impression",
-          "doc_count" : 64719,
+          "doc_count" : 64861,
           "current" : {
-            "doc_count" : 483
+            "doc_count" : 548
           },
           "baseline" : {
             "doc_count" : 11281
@@ -4422,9 +4442,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_startseo/index_4.click",
-          "doc_count" : 2025,
+          "doc_count" : 2044,
           "current" : {
-            "doc_count" : 82
+            "doc_count" : 50
           },
           "baseline" : {
             "doc_count" : 331
@@ -4432,9 +4452,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_startseo/index_4.impression",
-          "doc_count" : 129643,
+          "doc_count" : 130006,
           "current" : {
-            "doc_count" : 1616
+            "doc_count" : 1613
           },
           "baseline" : {
             "doc_count" : 37470
@@ -4442,9 +4462,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_startseo/index_5.click",
-          "doc_count" : 801,
+          "doc_count" : 814,
           "current" : {
-            "doc_count" : 38
+            "doc_count" : 32
           },
           "baseline" : {
             "doc_count" : 175
@@ -4452,9 +4472,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_startseo/index_5.impression",
-          "doc_count" : 87763,
+          "doc_count" : 87910,
           "current" : {
-            "doc_count" : 794
+            "doc_count" : 799
           },
           "baseline" : {
             "doc_count" : 28485
@@ -4472,9 +4492,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_startseo/index_6.impression",
-          "doc_count" : 37929,
+          "doc_count" : 38037,
           "current" : {
-            "doc_count" : 258
+            "doc_count" : 311
           },
           "baseline" : {
             "doc_count" : 11379
@@ -4492,9 +4512,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_startseo/index_7.impression",
-          "doc_count" : 6204,
+          "doc_count" : 6211,
           "current" : {
-            "doc_count" : 34
+            "doc_count" : 37
           },
           "baseline" : {
             "doc_count" : 2416
@@ -4512,9 +4532,9 @@
         },
         {
           "key" : "pandc.vnext.recommendations.feed.feed_startseo/index_8.impression",
-          "doc_count" : 513,
+          "doc_count" : 515,
           "current" : {
-            "doc_count" : 1
+            "doc_count" : 3
           },
           "baseline" : {
             "doc_count" : 188

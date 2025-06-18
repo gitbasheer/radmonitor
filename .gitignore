@@ -1,0 +1,32 @@
+# Mac
+.DS_Store
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Logs
+*.log
+
+# Local testing
+test/
+temp/
+*.tmp
+
+# Sensitive data (just in case)
+.env
+secrets/
+
+# Node modules and test coverage
+node_modules/
+coverage/
+.nyc_output/
+*.lcov
+
+# Test artifacts
+test-results/
+.vitest/
+
+# Project specific
+data/raw_response.json

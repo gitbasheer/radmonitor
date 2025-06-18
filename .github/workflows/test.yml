@@ -1,0 +1,88 @@
+name: Run Tests
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x]
+        python-version: ['3.9', '3.10', '3.11']
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v3
+      with:
+        node-version: ${{ matrix.node-version }}
+    
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+    
+    - name: Install bats for Bash testing
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y bats
+    
+    - name: Install JavaScript dependencies
+      run: npm ci
+    
+    - name: Install Python dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r tests/requirements.txt
+    
+    - name: Run JavaScript tests
+      run: npm test
+    
+    - name: Run JavaScript tests with coverage
+      run: npm run test:coverage
+    
+    - name: Run Python tests
+      run: |
+        python -m pytest tests/test_cors_proxy.py -v --cov=cors_proxy --cov-report=xml
+        python -m pytest tests/test_github_pages_integration.py -v
+    
+    - name: Run Bash tests
+      run: bats tests/test_bash_scripts.bats
+    
+    - name: Run integration tests
+      run: ./run_all_tests.sh
+    
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        files: ./coverage.xml,./coverage/lcov.info
+        flags: unittests
+        name: codecov-umbrella
+    
+    - name: Check file permissions
+      run: |
+        # Ensure all scripts are executable
+        test -x run_with_cors.sh
+        test -x test_locally.sh
+        test -x run_with_cors_direct.sh
+        test -x scripts/generate_dashboard.sh
+        test -x run_all_tests.sh
+    
+    - name: Validate GitHub Pages compatibility
+      run: |
+        # Check for absolute paths in HTML
+        if grep -E 'href="/|src="/' index.html; then
+          echo "WARNING: Found absolute paths in index.html"
+          exit 1
+        fi
+        
+        # Check for GitHub Pages detection code
+        if ! grep -q "window.location.hostname" index.html; then
+          echo "WARNING: GitHub Pages detection not found"
+        fi 

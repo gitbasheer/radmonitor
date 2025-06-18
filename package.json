@@ -1,0 +1,23 @@
+{
+  "name": "rad-monitor",
+  "version": "1.0.0",
+  "description": "RAD Traffic Monitor Dashboard",
+  "type": "module",
+  "scripts": {
+    "test": "vitest",
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest --coverage",
+    "test:watch": "vitest --watch",
+    "test:run": "vitest run"
+  },
+  "devDependencies": {
+    "@vitest/ui": "^1.6.0",
+    "@vitest/coverage-v8": "^1.6.0",
+    "vitest": "^1.6.0",
+    "jsdom": "^24.0.0",
+    "@testing-library/dom": "^10.1.0",
+    "@testing-library/user-event": "^14.5.2",
+    "vitest-fetch-mock": "^0.2.2"
+  },
+  "dependencies": {}
+} 
