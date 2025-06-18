@@ -54,8 +54,7 @@ class CORSProxyHandler(BaseHTTPRequestHandler):
             content_length = int(self.headers.get('Content-Length', 0))
             post_data = self.rfile.read(content_length)
             
-            # Get the target URL and elastic cookie
-            query_params = parse_qs(urlparse(self.path).query)
+            # Get the elastic cookie
             elastic_cookie = self.headers.get('X-Elastic-Cookie')
             
             if not elastic_cookie:
@@ -123,7 +122,15 @@ class CORSProxyHandler(BaseHTTPRequestHandler):
     def log_message(self, format, *args):
         """Override to control logging"""
         # Only log errors and important messages
-        if "ERROR" in format or args[1] not in ['200', '204']:
+        # Check if this looks like a standard request log
+        if len(args) > 0 and isinstance(args[0], str):
+            # Standard format includes status code in the message
+            message = args[0] if args else ''
+            # Skip successful requests unless they contain ERROR
+            if not any(code in str(message) for code in ['200', '204', '304']) or 'ERROR' in str(message):
+                super().log_message(format, *args)
+        else:
+            # Non-standard format, log it
             super().log_message(format, *args)
 
 def main():
