@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Traffic Status</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .alert { background: #ffcccc; padding: 20px; border-radius: 5px; margin: 10px 0; }
+        .warning { background: #ffffcc; padding: 20px; border-radius: 5px; margin: 10px 0; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f44336; color: white; }
+    </style>
+</head>
+<body>
+    <h1>🚨 RAD Traffic Health Status</h1>
+    <div class="alert">
+        <strong>Critical Drops Detected</strong>
+        <p>Several RAD cards showing significant traffic drops</p>
+    </div>
+    <table>
+        <tr>
+            <th>Card</th>
+            <th>Status</th>
+            <th>Drop %</th>
+        </tr>
+        <tr>
+            <td>APMC</td>
+            <td>🔴</td>
+            <td>-85%</td>
+        </tr>
+        <tr>
+            <td>CreateGMB</td>
+            <td>🟡</td>
+            <td>-72%</td>
+        </tr>
+    </table>
+    <p><a href="https://usieventho-prod-usw2.kb.us-west-2.aws.found.io:9243/app/lens#/edit/3b33f66b-740a-4068-9a38-a04f9021a7df">View Full Dashboard in Kibana →</a></p>
+</body>
+</html>
