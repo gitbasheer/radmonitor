@@ -407,3 +407,164 @@ Built in response to the RAD card migration incident to ensure traffic anomalies
 ---
 
 **Remember**: This dashboard is your early warning system. A quick glance can save days of lost traffic. Keep it open, check it often, and never miss another traffic drop! 🚀
+
+**Technologies Used**: Python 3, Bash, cURL, GitHub Actions, GitHub Pages
+
+## How It Works: Traffic Analysis & Calculations
+
+### Overview
+
+The RAD Traffic Monitor analyzes traffic patterns for GoDaddy's RAD cards by comparing current traffic against historical baselines. It identifies anomalies and categorizes them based on severity.
+
+### Data Flow
+
+1. **Data Collection**: 
+   - Queries Elasticsearch/Kibana for RAD card traffic events
+   - Collects data for events matching pattern: `pandc.vnext.recommendations.feed.feed*`
+   - Retrieves both baseline period data (8 days) and current period data (last 12 hours)
+
+2. **Request Architecture**:
+   - **Static Mode**: Pre-generated dashboard using GitHub Actions (updates every 15 minutes)
+   - **Live Mode**: Real-time updates via CORS proxy server
+   
+   ```
+   Browser → CORS Proxy (port 8889) → Kibana API → Elasticsearch
+   ```
+
+### Calculation Methodology
+
+#### 1. Baseline Calculation
+The baseline represents expected traffic based on historical data:
+
+```python
+# Baseline period: 8 days of historical data
+baseline_count = total_events_in_8_days
+
+# Convert to 12-hour baseline for comparison
+baseline_12h = (baseline_count / 8 / 24 * 12)
+
+# Daily average for context
+daily_avg = baseline_count / 8
+```
+
+#### 2. Score Calculation
+The score indicates how current traffic compares to the baseline:
+
+```python
+# For high-traffic events (daily_avg >= 1000):
+if current_count / baseline_12h < 0.5:  # Significant drop
+    score = -((1 - current_count / baseline_12h) * 100)
+else:
+    score = ((current_count / baseline_12h - 1) * 100)
+
+# For low-traffic events (daily_avg < 1000):
+if current_count / baseline_12h < 0.3:  # More sensitive threshold
+    score = -((1 - current_count / baseline_12h) * 100)
+else:
+    score = ((current_count / baseline_12h - 1) * 100)
+```
+
+**Score Examples**:
+- `-99%`: Current traffic is 99% below expected (1% of baseline)
+- `+150%`: Current traffic is 150% above expected (2.5x baseline)
+- `0%`: Current traffic matches baseline exactly
+
+#### 3. Status Classification
+
+Events are categorized based on their score:
+
+| Status | Score Range | Description |
+|--------|-------------|-------------|
+| **CRITICAL** | ≤ -80% | Severe traffic drop requiring immediate attention |
+| **WARNING** | -50% to -80% | Significant traffic drop that needs investigation |
+| **NORMAL** | -50% to 0% | Below baseline but within acceptable range |
+| **INCREASED** | > 0% | Traffic above baseline |
+
+#### 4. Impact Calculation
+
+The impact shows the actual difference in event counts:
+
+```python
+impact = current_count - baseline_12h
+
+# Examples:
+# "Lost ~1,234 impressions" (negative impact)
+# "Gained ~567 impressions" (positive impact)
+# "Normal variance" (for low-traffic events with small changes)
+```
+
+### Kibana Request Structure
+
+The system queries Kibana using Elasticsearch aggregations:
+
+```json
+{
+  "aggs": {
+    "events": {
+      "terms": {
+        "field": "detail.event.data.traffic.eid.keyword",
+        "size": 500
+      },
+      "aggs": {
+        "baseline": {
+          "filter": {
+            "range": {
+              "@timestamp": {
+                "gte": "2025-06-01",
+                "lt": "2025-06-09"
+              }
+            }
+          }
+        },
+        "current": {
+          "filter": {
+            "range": {
+              "@timestamp": {
+                "gte": "now-12h"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "query": {
+    "bool": {
+      "filter": [
+        {
+          "wildcard": {
+            "detail.event.data.traffic.eid.keyword": {
+              "value": "pandc.vnext.recommendations.feed.feed*"
+            }
+          }
+        }
+      ]
+    }
+  }
+}
+```
+
+### CORS Proxy Details
+
+The CORS proxy server (`cors_proxy.py`) enables real-time dashboard updates:
+
+1. **Purpose**: Browsers block direct requests to Kibana due to CORS policy
+2. **Solution**: Local proxy adds required CORS headers
+3. **Flow**: 
+   - Dashboard sends request to `http://localhost:8889/kibana-proxy`
+   - Proxy forwards to Kibana with authentication cookie
+   - Proxy returns response with CORS headers
+4. **Security**: Cookie is passed via header, never exposed in browser
+
+### Example Analysis
+
+For event `feed_domain/index_3.impression`:
+- **Baseline**: 3,404 events/day = 1,702 events/12h expected
+- **Current**: 34 events in last 12 hours
+- **Score**: -98% (34/1702 = 0.02 = 2% of expected)
+- **Status**: CRITICAL
+- **Impact**: Lost ~1,668 impressions
+
+This indicates a critical traffic drop where the RAD card is receiving only 2% of its expected traffic.
+
+## Architecture

@@ -1,0 +1,84 @@
+name: Comprehensive Test Suite
+
+on:
+  workflow_dispatch:  # Manual trigger
+  schedule:
+    - cron: '0 2 * * 0'  # Weekly on Sunday at 2 AM UTC
+  push:
+    branches: [ develop ]  # Only on develop branch
+
+jobs:
+  full-test-suite:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Node.js 20.x
+      uses: actions/setup-node@v3
+      with:
+        node-version: '20.x'
+    
+    - name: Set up Python 3.11
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    - name: Install bats for Bash testing
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y bats
+    
+    - name: Install JavaScript dependencies
+      run: npm ci
+    
+    - name: Install Python dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r tests/requirements.txt
+    
+    - name: Run JavaScript tests
+      run: npm test
+    
+    - name: Run JavaScript tests with coverage
+      run: npm run test:coverage
+    
+    - name: Run Python tests
+      run: |
+        python -m pytest tests/test_cors_proxy.py -v --cov=cors_proxy --cov-report=xml
+        python -m pytest tests/test_github_pages_integration.py -v
+    
+    - name: Run Bash tests
+      run: bats tests/test_bash_scripts.bats
+    
+    - name: Run integration tests
+      run: ./run_all_tests.sh
+    
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        files: ./coverage.xml,./coverage/lcov.info
+        flags: unittests
+        name: codecov-umbrella
+    
+    - name: Check all file permissions
+      run: |
+        # Ensure all scripts are executable
+        test -x run_with_cors.sh
+        test -x test_locally.sh
+        test -x scripts/legacy/run_with_cors_direct.sh
+        test -x scripts/generate_dashboard.sh
+        test -x run_all_tests.sh
+    
+    - name: Full validation
+      run: |
+        # Check for absolute paths in HTML
+        if grep -E 'href="/|src="/' index.html; then
+          echo "WARNING: Found absolute paths in index.html"
+          exit 1
+        fi
+        
+        # Check for GitHub Pages detection code
+        if ! grep -q "window.location.hostname" index.html; then
+          echo "WARNING: GitHub Pages detection not found"
+        fi 
