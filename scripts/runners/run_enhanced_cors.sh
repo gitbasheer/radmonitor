@@ -6,7 +6,7 @@ echo ""
 
 # Make scripts executable
 chmod +x scripts/generate_dashboard_refactored.sh
-chmod +x cors_proxy_enhanced.py
+chmod +x bin/cors_proxy_enhanced.py
 
 # Check for configuration
 if [ -f ".env" ]; then
@@ -84,7 +84,7 @@ trap cleanup INT
 # Start centralized API (includes enhanced CORS proxy + utilities)
 echo ""
 echo "Starting centralized API with FastAPI on port 8889..."
-python3 centralized_api.py &
+python3 bin/centralized_api.py &
 PROXY_PID=$!
 
 # Give proxy time to start

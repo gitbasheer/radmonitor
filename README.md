@@ -120,86 +120,37 @@ All common tasks can be run via npm:
 - Elasticsearch/Kibana access with valid cookie
 - bats (optional, for bash tests): `brew install bats-core` (macOS) or `apt-get install bats` (Linux)
 
-### Local Development with Live Data
-
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/yourusername/rad_monitor.git
-   cd rad_monitor
-   ```
-
-2. **Set up authentication**
-   ```bash
-   # Get your Elastic cookie from Kibana (see Authentication section)
-   export ELASTIC_COOKIE="your_cookie_here"
-   ```
-
-3. **Install dependencies**
-   ```bash
-   npm install
-   ```
-
-4. **Start development server** (one command that just works!)
-
-   **🎯 Recommended: Unified Smart Server**
-   ```bash
-   npm run dev
-   ```
-   This intelligent command will:
-   - **Auto-detect** if FastAPI is available and use it for full features
-   - **Graceful fallback** to simple mode if FastAPI isn't set up
-   - **Clean startup** with clear instructions on which URL to open
-   - **Port management** - automatically cleans up conflicting processes
-   - **Show** exactly what mode it's running in
-
-   **🚀 First-time FastAPI Setup**
-   ```bash
-   npm run dev:setup
-   ```
-   Perfect for first-time setup or when you want full FastAPI features:
-   - **Automatic environment setup** - creates venv and installs dependencies
-   - **Full feature set** - WebSocket, API endpoints, validation, caching
-   - **Interactive API docs** at http://localhost:8000/docs
-   - **Real-time updates** via WebSocket at `ws://localhost:8000/ws`
-
-   **⚡ Quick Frontend Testing**
-   ```bash
-   npm run dev:simple
-   ```
-   Use when you need fast startup for frontend-only work:
-   - **Instant startup** - no dependency installation
-   - **Basic features** - HTTP server + CORS proxy
-   - **Perfect for** UI testing and quick iterations
-
-   **Advanced Options**
-   ```bash
-   # Force FastAPI mode (will show error if not available)
-   npm run dev:fastapi
-
-   # Direct Python usage with options
-   python3 dev_server_unified.py --help
-   python3 dev_server_unified.py --mode simple
-   python3 dev_server_unified.py --setup
-   ```
-
-### Alternative Commands
+### Quick Start - Development
 
 ```bash
-# Quick test - generate static dashboard
-./test_locally.sh
+# Clone and navigate
+git clone https://github.com/balkhalil/rad_monitor.git
+cd rad_monitor
 
-# Start only CORS proxy (port 8889)
-npm run cors-proxy
+# Development mode (auto-detects FastAPI or falls back to simple)
+npm run dev
 
-# Start only web server (port 8000)
-npm run serve
+# Force specific mode
+npm run dev:simple    # Force simple HTTP server
+npm run dev:fastapi   # Force FastAPI with WebSocket
 
-# Generate dashboard without starting servers
+# Advanced options
+python3 bin/dev_server_unified.py --help
+python3 bin/dev_server_unified.py --mode simple
+python3 bin/dev_server_unified.py --setup
+```
+
+### Generate Dashboard
+
+```bash
+# Using npm script (recommended)
 npm run generate
-# or: python3 generate_dashboard.py
 
-# Run all tests
-npm run test:all
+# Using wrapper script
+./scripts/generate_dashboard_refactored.sh
+
+# Direct Python (if wrapper fails)
+# or: python3 bin/generate_dashboard.py
 ```
 
 ## Unified Development Server
@@ -358,7 +309,7 @@ The dashboard is automatically deployed to GitHub Pages:
 
 ```bash
 # Generate dashboard
-python3 generate_dashboard.py
+python3 bin/generate_dashboard.py
 # or use the wrapper: ./scripts/generate_dashboard_refactored.sh
 
 # Commit and push
@@ -441,7 +392,7 @@ TIME WINDOW: 6/18/2025, 12:00:00 PM -> 6/18/2025, 3:00:00 PM (3h)
 TRAFFIC VISUALIZATION (Current vs Assumed)
 
 [CRIT] feed_apmc                   -90%
-   Current  ███░░░░░░░░░░░░░░░░░░░░░░░░░░░ 100
+   Current  ███░░░░░░░░░░░░░░░░░░░░░░░░░░░░░ 100
    Assumed  ██████████████████████████████ 1,000
 
 [NORM] feed_marketing               -4%
@@ -517,7 +468,7 @@ DataLayer.resetPerformanceMetrics()
 
 ### CORS Proxy Settings
 
-In `cors_proxy.py`:
+In `bin/cors_proxy.py`:
 ```python
 port = 8889  # Proxy port (line 133)
 KIBANA_URL = "https://usieventho-prod-usw2.kb.us-west-2.aws.found.io:9243"
@@ -572,9 +523,32 @@ Automatic Updates (GitHub Actions)
 ```
 rad_monitor/
 ├── index.html                   # Main dashboard with live functionality
-├── generate_dashboard.py        # Python dashboard generator (main script)
+├── bin/                         # Python executables
+│   ├── generate_dashboard.py    # Python dashboard generator (main script)
+│   ├── cors_proxy.py           # Local CORS proxy server
+│   ├── cors_proxy_enhanced.py  # Enhanced CORS proxy with typed endpoints
+│   ├── dev_server.py           # Simple development server
+│   ├── dev_server_unified.py   # Unified development server with auto-detection
+│   ├── dev_server_fastapi.py   # FastAPI development server with WebSocket
+│   ├── centralized_api.py      # Centralized API with FastAPI
+│   ├── cleanup_ports.py        # Port cleanup utility
+│   ├── validate_connections.py # Connection validation utility
+│   ├── health_check.py         # Health check utility
+│   └── test_full_integration.py # Full integration test script
 ├── scripts/
-│   ├── generate_dashboard.sh    # Original monolithic script (deprecated)
+│   ├── runners/                 # Execution scripts
+│   │   ├── run_with_cors.sh   # Primary local development script
+│   │   ├── run_enhanced_cors.sh # Run enhanced CORS proxy
+│   │   ├── run_all_tests.sh   # Comprehensive test runner
+│   │   └── run_fastapi_dev.sh # Run FastAPI development server
+│   ├── tests/                   # Test scripts
+│   │   ├── test_locally.sh    # Quick test script
+│   │   └── test_refactored.sh # Test refactored components
+│   ├── setup/                   # Utility scripts
+│   │   ├── cleanup-ports.sh   # Port cleanup wrapper
+│   │   ├── validate_connections.sh # Connection validation wrapper
+│   │   ├── setup_and_run.sh   # Setup and run script
+│   │   └── ensure_correct_dashboard.sh # Dashboard validation
 │   ├── generate_dashboard_refactored.sh  # Wrapper for Python version
 │   └── lib/                     # Utility functions
 ├── config/                      # Configuration files
@@ -604,11 +578,6 @@ rad_monitor/
 │       ├── update-dashboard.yml # Auto-update workflow (every 45 min)
 │       ├── test.yml            # CI test workflow
 │       └── test-comprehensive.yml # Full test suite
-├── cors_proxy.py               # Local CORS proxy server
-├── dev_server_unified.py      # Unified development server with auto-detection
-├── run_with_cors.sh           # Primary local development script
-├── test_locally.sh            # Quick test script
-├── run_all_tests.sh           # Comprehensive test runner
 ├── package.json               # Node.js dependencies
 ├── vitest.config.js           # JavaScript test configuration
 ├── .gitignore                 # Git ignore patterns
@@ -619,10 +588,7 @@ rad_monitor/
 │   ├── Feature Documentation
 │   └── Development Guides
 ├── requirements-enhanced.txt       # Dependencies for enhanced proxy
-├── run_enhanced_cors.sh           # Run enhanced CORS proxy
-├── dev_server_fastapi.py          # FastAPI development server with WebSocket
-├── run_fastapi_dev.sh            # Run FastAPI development server
-└── README.md                  # This file
+└── README.md                      # This file
 ```
 
 ## Architecture & Test Coverage
@@ -783,7 +749,7 @@ A comprehensive client library (`api-client-fastapi.js`) provides:
 
 ### New Kibana Data Endpoint
 
-The `/api/fetch-kibana-data` endpoint replaces the functionality of the old bash script with a modern, typed FastAPI endpoint. The data fetching is now handled by `generate_dashboard.py` which automatically tries the FastAPI endpoint first, then falls back to the CORS proxy if needed:
+The `/api/fetch-kibana-data` endpoint replaces the functionality of the old bash script with a modern, typed FastAPI endpoint. The data fetching is now handled by `bin/generate_dashboard.py` which automatically tries the FastAPI endpoint first, then falls back to the CORS proxy if needed:
 
 **Features:**
 - **Type-safe queries** with Pydantic validation (requires `events` aggregation)
@@ -906,7 +872,7 @@ npm test tests/fastapiClient.test.js
 
 3. **Test locally**
    ```bash
-   ./run_with_cors.sh
+   ./scripts/runners/run_with_cors.sh
    ```
 
 ## Troubleshooting
@@ -942,7 +908,7 @@ npm test tests/fastapiClient.test.js
 
 **Development Server Issues:**
 - **FastAPI setup fails**: Run `npm run dev:simple` for basic functionality
-- **Auto-detection not working**: Use `python3 dev_server_unified.py --help` for options
+- **Auto-detection not working**: Use `python3 bin/dev_server_unified.py --help` for options
 - **Want to force a specific mode**: Use `npm run dev:fastapi` or `npm run dev:simple`
 - **First time setup**: Use `npm run dev:setup` to install FastAPI dependencies
 
@@ -953,13 +919,13 @@ npm test tests/fastapiClient.test.js
 curl http://localhost:8889/health
 
 # Check if cookie is valid
-python3 generate_dashboard.py
+python3 bin/generate_dashboard.py
 
 # View recent GitHub Actions logs
 gh run list --workflow=update-dashboard.yml
 
 # Test all components
-./run_all_tests.sh
+./scripts/runners/run_all_tests.sh
 ```
 
 ## Testing
@@ -989,7 +955,7 @@ Run with:
 ```bash
 cd tests && python -m pytest --cov=.. test_*.py      # All Python tests
 python3 tests/test_dashboard_generation.py            # Dashboard generator tests
-python3 test_full_integration.py                      # Full system integration
+python3 bin/test_full_integration.py                      # Full system integration
 ```
 
 ### Integration Tests
@@ -1015,7 +981,7 @@ bats tests/test_refactored_bash.bats
 
 ### Complete Test Suite
 ```bash
-./run_all_tests.sh     # All tests with detailed output
+./scripts/runners/run_all_tests.sh     # All tests with detailed output
 npm run test:all       # Same via npm
 
 # Verify integration test setup
@@ -1046,7 +1012,7 @@ python3 verify_integration_tests.py
 
 1. Fork the repository
 2. Create a feature branch
-3. Run tests: `./run_all_tests.sh`
+3. Run tests: `./scripts/runners/run_all_tests.sh`
 4. Submit a pull request
 
 ### Enhancement Opportunities
@@ -1162,3 +1128,8 @@ const errors = await EnhancedApiClient.getErrorAnalysis({
   end: '2025-06-18T23:59:59Z'
 });
 ```
+
+### FAQ
+
+**Q: How is the data fetched from Kibana?**
+A: Initially, the data was fetched using a bash script (`fetch_kibana_data.sh`). This has been replaced with more robust solutions. The data fetching is now handled by `bin/generate_dashboard.py` which automatically tries the FastAPI endpoint first, then falls back to the CORS proxy if needed:

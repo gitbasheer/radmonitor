@@ -3,9 +3,10 @@
 # Run the FastAPI development server for RAD Monitor
 #
 
-# Set script directory
+# Set script directory and project root
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-cd "$SCRIPT_DIR"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+cd "$PROJECT_ROOT"
 
 # Check if Python is available
 if ! command -v python3 &> /dev/null; then
@@ -32,8 +33,8 @@ pip install -q fastapi uvicorn[standard] websockets httpx pytest-asyncio
 
 # Clear any existing processes on ports
 echo "🧹 Cleaning up ports..."
-./cleanup-ports.sh 2>/dev/null || true
+./scripts/setup/cleanup-ports.sh 2>/dev/null || true
 
 # Run the FastAPI dev server
 echo "🚀 Starting FastAPI development server..."
-python3 dev_server_fastapi.py
+python3 bin/dev_server_fastapi.py

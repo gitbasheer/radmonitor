@@ -10,4 +10,4 @@ PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 cd "$PROJECT_ROOT" || exit 1
 
 # Call the Python version with all arguments
-exec python3 generate_dashboard.py "$@"
+exec python3 bin/generate_dashboard.py "$@"

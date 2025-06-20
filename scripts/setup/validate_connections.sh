@@ -4,6 +4,7 @@
 
 # Get script directory and project root
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 
 # Call the Python version with all arguments
-exec python3 "$SCRIPT_DIR/validate_connections.py" "$@"
+exec python3 "$PROJECT_ROOT/bin/validate_connections.py" "$@"

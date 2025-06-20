@@ -12,8 +12,8 @@ from fastapi.websockets import WebSocket
 import sys
 import os
 
-# Add parent directory to path
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+# Add bin directory to path
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'bin'))
 
 # Mock subprocess before importing the module
 with patch('subprocess.Popen') as mock_popen:

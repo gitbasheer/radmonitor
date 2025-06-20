@@ -6,7 +6,7 @@ echo ""
 
 # Make scripts executable
 chmod +x scripts/generate_dashboard_refactored.sh  # Wrapper for Python implementation
-chmod +x cors_proxy.py
+chmod +x bin/cors_proxy.py
 
 # Check for elastic cookie
 if [ -z "$ELASTIC_COOKIE" ]; then
@@ -48,7 +48,7 @@ trap cleanup INT
 # Start CORS proxy
 echo ""
 echo "Starting CORS proxy on port 8889..."
-python3 cors_proxy.py &
+python3 bin/cors_proxy.py &
 PROXY_PID=$!
 
 # Give proxy time to start

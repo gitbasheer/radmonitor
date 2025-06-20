@@ -13,7 +13,7 @@ export default defineConfig({
         'tests/**',
         '**/*.config.js',
         'scripts/**',
-        'cors_proxy.py'
+        'bin/cors_proxy.py'
       ]
     },
     include: ['tests/**/*.test.{js,ts}'],

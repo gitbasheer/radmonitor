@@ -17,7 +17,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 def test_dashboard_generator_cli():
     """Test the dashboard generator command line interface"""
     # Test help
-    result = subprocess.run([sys.executable, 'generate_dashboard.py', '--help'],
+    result = subprocess.run([sys.executable, 'bin/generate_dashboard.py', '--help'],
                           capture_output=True, text=True)
     assert result.returncode == 0
     assert 'Generate RAD Monitor Dashboard' in result.stdout
@@ -28,6 +28,7 @@ def test_dashboard_generator_cli():
 def test_dashboard_generator_import():
     """Test that the dashboard generator can be imported"""
     try:
+        sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'bin'))
         import generate_dashboard
         assert hasattr(generate_dashboard, 'main')
         assert hasattr(generate_dashboard, 'DashboardConfig')
@@ -41,6 +42,7 @@ def test_dashboard_generator_import():
 
 def test_configuration():
     """Test the configuration class"""
+    sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'bin'))
     from generate_dashboard import DashboardConfig
 
     config = DashboardConfig()
@@ -55,6 +57,7 @@ def test_configuration():
 
 def test_cookie_validation():
     """Test cookie validation functions"""
+    sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'bin'))
     from generate_dashboard import validate_cookie, get_elastic_cookie
 
     # Test invalid cookies

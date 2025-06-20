@@ -15,8 +15,8 @@ import sys
 import os
 from io import BytesIO
 
-# Add parent directory to path
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+# Add bin directory to path
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'bin'))
 from cors_proxy import CORSProxyHandler, ssl_context
 
 
@@ -400,7 +400,7 @@ class TestCORSProxyForGitHubPages:
 
 
 if __name__ == '__main__':
-    pytest.main([__file__, '-v', '--cov=cors_proxy', '--cov-report=term-missing'])
+    pytest.main([__file__, '-v', '--cov=bin.cors_proxy', '--cov-report=term-missing'])
 
 
 # Additional tests for cors_proxy_enhanced.py features
@@ -411,6 +411,9 @@ class TestEnhancedCORSProxyFlexibleTime:
         """Setup for enhanced proxy tests"""
         # Import enhanced proxy components
         try:
+            import sys
+            import os
+            sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'bin'))
             from cors_proxy_enhanced import (
                 TrafficQueryRequest, ResponseProcessor,
                 TrafficEvent, TrafficQueryResponse

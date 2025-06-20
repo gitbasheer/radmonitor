@@ -76,7 +76,7 @@ if [ -f "tests/requirements.txt" ]; then
     fi
 
     # Run Python tests
-    run_test_suite "Python Tests - CORS Proxy" "python -m pytest tests/test_cors_proxy.py -v --cov=cors_proxy --cov-report=term-missing"
+    run_test_suite "Python Tests - CORS Proxy" "python -m pytest tests/test_cors_proxy.py -v --cov=bin.cors_proxy --cov-report=term-missing"
 
     run_test_suite "Python Tests - GitHub Pages" "python -m pytest tests/test_github_pages_integration.py -v"
 
@@ -87,7 +87,7 @@ if [ -f "tests/requirements.txt" ]; then
 
     # Run tests for FastAPI dev server
     if [ -f "tests/test_dev_server_fastapi.py" ]; then
-        run_test_suite "Python Tests - FastAPI Dev Server" "python -m pytest tests/test_dev_server_fastapi.py -v --cov=dev_server_fastapi --cov-report=term-missing"
+    run_test_suite "Python Tests - FastAPI Dev Server" "python -m pytest tests/test_dev_server_fastapi.py -v --cov=bin.dev_server_fastapi --cov-report=term-missing"
     fi
 
     # Run integration tests
@@ -95,8 +95,8 @@ if [ -f "tests/requirements.txt" ]; then
         run_test_suite "Integration Tests - Dashboard Generation" "python -m pytest tests/test_dashboard_generation.py -v"
     fi
 
-    if [ -f "test_full_integration.py" ]; then
-        run_test_suite "Integration Tests - Full System" "python test_full_integration.py"
+    if [ -f "bin/test_full_integration.py" ]; then
+        run_test_suite "Integration Tests - Full System" "python bin/test_full_integration.py"
     fi
 
     # Run component tests
@@ -142,11 +142,11 @@ echo "------------------------"
 echo "Checking required files..."
 REQUIRED_FILES=(
     "index.html"
-    "cors_proxy.py"
-    "generate_dashboard.py"
+    "bin/cors_proxy.py"
+    "bin/generate_dashboard.py"
     "scripts/generate_dashboard_refactored.sh"
-    "run_with_cors.sh"
-    "test_locally.sh"
+    "scripts/runners/run_with_cors.sh"
+    "scripts/tests/test_locally.sh"
     ".github/workflows/update-dashboard.yml"
 )
 
@@ -171,8 +171,8 @@ fi
 # Check script permissions
 echo "Checking script permissions..."
 SCRIPTS=(
-    "run_with_cors.sh"
-    "test_locally.sh"
+    "scripts/runners/run_with_cors.sh"
+    "scripts/tests/test_locally.sh"
     "scripts/legacy/run_with_cors_direct.sh"
     "scripts/generate_dashboard_refactored.sh"
 )
@@ -202,7 +202,7 @@ echo "------------------"
 # Python syntax
 if command -v python3 >/dev/null 2>&1; then
     echo "Checking Python syntax..."
-    if python3 -m py_compile cors_proxy.py 2>/dev/null; then
+    if python3 -m py_compile bin/cors_proxy.py 2>/dev/null; then
         echo -e "${GREEN}PASS: Python syntax OK${NC}"
         ((TESTS_PASSED++))
     else

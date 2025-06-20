@@ -4,7 +4,8 @@
 
 # Get script directory and project root
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PYTHON_SCRIPT="$SCRIPT_DIR/cleanup_ports.py"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+PYTHON_SCRIPT="$PROJECT_ROOT/bin/cleanup_ports.py"
 
 # Check if Python3 is available
 if ! command -v python3 &> /dev/null; then
