@@ -16,8 +16,8 @@ export default defineConfig({
         'cors_proxy.py'
       ]
     },
-    include: ['tests/**/*.test.js'],
+    include: ['tests/**/*.test.{js,ts}'],
     mockReset: true,
     restoreMocks: true
   }
-}); 
+});

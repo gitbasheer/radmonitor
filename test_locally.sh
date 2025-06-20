@@ -1,51 +1,56 @@
 #!/bin/bash
-# test_locally.sh - Test the dashboard generation locally before pushing
+# test_locally.sh - Test dashboard with a local HTTP server
 
-echo "=== Testing RAD Traffic Dashboard Locally ==="
-echo "This will simulate the GitHub Actions workflow"
+# Colors for output
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+RED='\033[0;31m'
+NC='\033[0m' # No Color
+
+PORT=8888
+
+echo "=== RAD Monitor Local Test ==="
+echo ""
+echo "Starting local test environment..."
 echo ""
 
-# Check if we have the cookie from the local script
-LOCAL_COOKIE=$(grep "ELASTIC_COOKIE=" ~/scripts/traffic_monitor.sh | cut -d'"' -f2)
+# Check if cookie is set
+if [ -z "$ELASTIC_COOKIE" ]; then
+    echo -e "${YELLOW}Warning: No ELASTIC_COOKIE set${NC}"
+    echo "The dashboard will show cached data only."
+fi
 
-if [ -z "$LOCAL_COOKIE" ]; then
-    echo "Error: Could not extract ELASTIC_COOKIE from ~/scripts/traffic_monitor.sh"
-    echo "Please set it manually:"
-    echo "export ELASTIC_COOKIE='your-cookie-here'"
+# Generate fresh dashboard
+echo "Generating dashboard..."
+chmod +x scripts/generate_dashboard_refactored.sh
+
+# Generate the dashboard
+if ./scripts/generate_dashboard_refactored.sh; then
+    echo -e "${GREEN}✓ Dashboard generated successfully${NC}"
+else
+    echo -e "${RED}✗ Dashboard generation failed${NC}"
     exit 1
 fi
 
-# Export the cookie for the generate script
-export ELASTIC_COOKIE="$LOCAL_COOKIE"
+# Check if index.html exists
+if [ ! -f "index.html" ]; then
+    echo -e "${RED}Error: index.html not found${NC}"
+    exit 1
+fi
 
-echo "✓ Found Elastic cookie"
+echo ""
+echo "Starting local server on port $PORT..."
+echo ""
+echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+echo ""
+echo -e "🌐 Dashboard URL: ${GREEN}http://localhost:$PORT${NC}"
+echo ""
+echo -e "📝 Instructions:"
+echo -e "   1. Click the link above or open in your browser"
+echo -e "   2. Use ${YELLOW}Ctrl+C${NC} to stop the server when done"
+echo ""
+echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo ""
 
-# Make sure the script is executable
-chmod +x scripts/generate_dashboard.sh
-
-# Run the dashboard generation
-echo "Running dashboard generation..."
-./scripts/generate_dashboard.sh
-
-if [ $? -eq 0 ]; then
-    echo ""
-    echo "✓ Dashboard generated successfully!"
-    echo ""
-    echo "Files created:"
-    echo "- index.html ($(wc -l < index.html) lines)"
-    echo "- data/raw_response.json ($(wc -c < data/raw_response.json) bytes)"
-    echo ""
-    echo "To view the dashboard locally:"
-    echo "1. python3 -m http.server 8000"
-    echo "2. Open http://localhost:8000 in your browser"
-    echo ""
-    echo "To test auto-refresh:"
-    echo "- Leave the page open for 5 minutes"
-    echo "- Check if it refreshes automatically"
-else
-    echo ""
-    echo "✗ Dashboard generation failed!"
-    echo "Check the error messages above"
-    exit 1
-fi 
+# Start Python HTTP server
+python3 -m http.server $PORT

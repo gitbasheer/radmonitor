@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RAD Monitor - Traffic Health Dashboard</title>
+    <!-- Dashboard Version: Control Panel v2.0 -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta http-equiv="refresh" content="2700">
+    <!-- Cache busting to prevent old UI from showing -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <meta name="dashboard-version" content="control-panel-v2">
+
+    <!-- External CSS -->
+    <link rel="stylesheet" href="assets/css/dashboard.css">
+
+    <!-- JavaScript Modules -->
+    <script src="assets/js/time-range-utils.js"></script>
+    <script src="assets/js/data-layer.js"></script>
+    <script src="examples/data-layer-example.js"></script>
+    <script src="assets/js/state-logging-demo.js"></script>
+    <script src="assets/js/api-client.js"></script>
+    <script src="assets/js/config-manager.js"></script>
+    <script src="assets/js/console-visualizer.js"></script>
+    <script src="assets/js/data-processor.js"></script>
+    <script src="assets/js/ui-updater.js"></script>
+    <script src="assets/js/dashboard-main.js"></script>
+</head>
+<body>
+    <!-- Hidden input for server-side cookie (optional) -->
+    <input type="hidden" id="elasticCookie" value="">
+
+    <div class="container">
+        <!-- Header with Controls -->
+        <header>
+            <h1>RAD Traffic Health Monitor</h1>
+            <div class="refresh-controls">
+                <button onclick="Dashboard.refresh()" class="refresh-btn">REFRESH NOW</button>
+                <span id="refreshStatus" class="refresh-status">Ready</span>
+                <span class="separator">|</span>
+                <button id="testApiBtn" onclick="Dashboard.testApiConnection()" class="refresh-btn">TEST API CONNECTION</button>
+                <span class="separator">|</span>
+                <span id="apiStatus" class="api-status"></span>
+            </div>
+        </header>
+
+        <!-- Control Panel -->
+        <div id="configPanel" class="config-panel">
+            <h3>Dashboard Configuration</h3>
+
+            <div class="config-group">
+                <label>Real-time Features:</label>
+                <div style="display: flex; gap: 10px;">
+                    <button onclick="Dashboard.setCookieForRealtime()" class="action-btn">SET COOKIE FOR REAL-TIME</button>
+                    <button onclick="Dashboard.showApiSetupInstructions()" class="action-btn">API SETUP GUIDE</button>
+                </div>
+            </div>
+
+            <div class="config-group">
+                <label for="baselineStart">Baseline Start:</label>
+                <input type="date" id="baselineStart" value="2025-06-01">
+            </div>
+
+            <div class="config-group">
+                <label for="baselineEnd">Baseline End:</label>
+                <input type="date" id="baselineEnd" value="2025-06-09">
+            </div>
+
+            <div class="config-group">
+                <label for="currentTimeRange">Current Time Range:</label>
+                <input type="text" id="currentTimeRange" value="now-12h" placeholder="e.g., now-12h, -3h-6h">
+                <small class="help-text">
+                    Standard: now-6h, now-12h, now-24h, now-3d<br>
+                    Custom: -3h-6h (from 6h ago to 3h ago)<br>
+                    Inspection: inspection_time (8-24h ago)
+                </small>
+            </div>
+
+            <div class="config-group">
+                <label>Quick Select:</label>
+                <div class="preset-buttons">
+                    <button class="preset-button" onclick="ConfigManager.setPresetTimeRange('6h')">6h</button>
+                    <button class="preset-button" onclick="ConfigManager.setPresetTimeRange('12h')">12h</button>
+                    <button class="preset-button" onclick="ConfigManager.setPresetTimeRange('24h')">24h</button>
+                    <button class="preset-button" onclick="ConfigManager.setPresetTimeRange('3d')">3d</button>
+                    <button class="preset-button" onclick="ConfigManager.setPresetTimeRange('inspection')">Inspection</button>
+                </div>
+            </div>
+
+            <div class="config-group">
+                <label for="highVolumeThreshold">High Volume Threshold:</label>
+                <input type="number" id="highVolumeThreshold" value="1000" min="1">
+                <small class="help-text">Events with daily avg above this use different scoring</small>
+            </div>
+
+            <div class="config-group">
+                <label for="mediumVolumeThreshold">Medium Volume Threshold:</label>
+                <input type="number" id="mediumVolumeThreshold" value="100" min="1">
+                <small class="help-text">Events below this daily avg are filtered out</small>
+            </div>
+
+            <div class="config-actions">
+                <button onclick="ConfigManager.applyConfiguration()" class="action-btn">APPLY CONFIGURATION</button>
+                <button onclick="ConfigManager.exportConfiguration()" class="action-btn">EXPORT CONFIG</button>
+            </div>
+            </div>
+
+        <!-- Summary Cards -->
+        <div class="summary-cards">
+            <div class="summary-card critical">
+                <div class="card-title">Critical</div>
+                <div id="criticalCount" class="card-value">0</div>
+                <div class="card-subtitle">Need Immediate Attention</div>
+            </div>
+            <div class="summary-card warning">
+                <div class="card-title">Warning</div>
+                <div id="warningCount" class="card-value">0</div>
+                <div class="card-subtitle">Below Expected</div>
+                </div>
+            <div class="summary-card normal">
+                <div class="card-title">Normal</div>
+                <div id="normalCount" class="card-value">0</div>
+                <div class="card-subtitle">Within Range</div>
+            </div>
+            <div class="summary-card increased">
+                <div class="card-title">Increased</div>
+                <div id="increasedCount" class="card-value">0</div>
+                <div class="card-subtitle">Above Baseline</div>
+        </div>
+    </div>
+
+        <!-- Search and Filters -->
+        <div class="search-container">
+            <input type="text" id="searchInput" placeholder="Search events... (e.g., 'feed', 'critical')" class="search-input">
+            <div class="filter-buttons">
+                <button class="filter-btn active" data-filter="all">All</button>
+                <button class="filter-btn" data-filter="critical">Critical</button>
+                <button class="filter-btn" data-filter="warning">Warning</button>
+                <button class="filter-btn" data-filter="normal">Normal</button>
+                <button class="filter-btn" data-filter="increased">Increased</button>
+            </div>
+                    </div>
+
+        <!-- Data Table Container -->
+        <div id="loadingIndicator" class="loading-indicator" style="display: none;">
+            <div class="spinner"></div>
+            <span>Loading...</span>
+                </div>
+
+        <!-- Results Info -->
+        <div id="resultsInfo" class="results-info"></div>
+
+        <!-- Data Table -->
+        <div id="dataTableContainer" class="table-container">
+            <table id="dataTable" class="data-table">
+                    <thead>
+                        <tr>
+                        <th data-sort="event_id">Event ID</th>
+                        <th data-sort="status">Status</th>
+                        <th data-sort="score">Score</th>
+                        <th data-sort="current" class="right-align">Current</th>
+                        <th data-sort="baseline12h" class="right-align">Expected</th>
+                        <th data-sort="change" class="right-align">Change</th>
+                        <th data-sort="dailyAvg" class="right-align">Daily Avg</th>
+                        </tr>
+                    </thead>
+                <tbody id="tableBody">
+                    <!-- Data rows will be inserted here -->
+                    </tbody>
+                </table>
+                </div>
+
+        <!-- Footer -->
+        <footer>
+            <div class="footer-content">
+                <span class="last-update">Last updated: <span id="lastUpdate">Never</span></span>
+                <span class="separator">|</span>
+                <a href="#" onclick="location.reload(); return false;">Reload Page</a>
+                <span class="separator">|</span>
+                <a href="https://github.com/yourusername/rad_monitor" target="_blank">GitHub</a>
+            </div>
+        </footer>
+    </div>
+
+    <!-- JavaScript Modules -->
+    <script src="assets/js/data-layer.js"></script>
+    <script src="assets/js/time-range-utils.js"></script>
+    <script src="assets/js/api-client.js"></script>
+    <script src="assets/js/config-manager.js"></script>
+    <script src="assets/js/console-visualizer.js"></script>
+    <script src="assets/js/data-processor.js"></script>
+    <script src="assets/js/ui-updater.js"></script>
+    <script src="assets/js/dashboard-main.js"></script>
+</body>
+</html>

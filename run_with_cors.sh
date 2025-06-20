@@ -1,148 +1,91 @@
 #!/bin/bash
-# run_with_cors.sh - Start dashboard with CORS proxy for full real-time functionality
+# run_with_cors.sh - Run dashboard with CORS proxy for real-time updates
 
-echo "🚀 RAD Monitor - Full Real-Time Setup"
-echo "====================================="
+echo "=== RAD Monitor with CORS Proxy ==="
+echo ""
 
-# Make sure scripts are executable
-chmod +x scripts/generate_dashboard.sh
+# Make scripts executable
+chmod +x scripts/generate_dashboard_refactored.sh  # Wrapper for Python implementation
 chmod +x cors_proxy.py
 
-# Stop any existing servers
-echo "🔪 Stopping any existing servers..."
-pkill -f "python3 -m http.server 8888" 2>/dev/null || true
-pkill -f "python3 cors_proxy.py" 2>/dev/null || true
-
-# Kill processes on both ports
-if command -v lsof > /dev/null; then
-    for port in 8888 8889; do
-        PID=$(lsof -ti:$port 2>/dev/null)
-        if [ ! -z "$PID" ]; then
-            echo "   Killing process $PID on port $port..."
-            kill -9 $PID 2>/dev/null || true
+# Check for elastic cookie
+if [ -z "$ELASTIC_COOKIE" ]; then
+    # Try to get from local file
+    if [ -f "$HOME/scripts/traffic_monitor.sh" ]; then
+        export ELASTIC_COOKIE=$(grep 'ELASTIC_COOKIE="' "$HOME/scripts/traffic_monitor.sh" | cut -d'"' -f2)
+        if [ -z "$ELASTIC_COOKIE" ]; then
+            echo "Error: No ELASTIC_COOKIE found in ~/scripts/traffic_monitor.sh"
+            echo "Please set: export ELASTIC_COOKIE='your-cookie-here'"
+            exit 1
         fi
-    done
-    sleep 1
+        echo "Found ELASTIC_COOKIE from local script"
+    else
+        echo "Warning: No ELASTIC_COOKIE set"
+        echo "Dashboard will work but real-time updates will require manual cookie entry"
+    fi
 fi
 
 # Generate fresh dashboard
-echo "📊 Generating fresh dashboard..."
-if ./scripts/generate_dashboard.sh; then
-    echo "✅ Dashboard generated successfully!"
+echo "Generating dashboard..."
+if ./scripts/generate_dashboard_refactored.sh; then
+    echo "✓ Dashboard generated"
 else
-    echo "❌ Dashboard generation failed!"
+    echo "✗ Dashboard generation failed"
     exit 1
 fi
 
-# Check if index.html was created
-if [ ! -f "index.html" ]; then
-    echo "❌ index.html not found!"
-    exit 1
-fi
-
-echo ""
-echo "🚀 Starting CORS Proxy Server (port 8889)..."
-# Start CORS proxy in background
-python3 cors_proxy.py &
-CORS_PID=$!
-
-echo "🌐 Starting Dashboard Server (port 8888)..."
-# Start dashboard server in background  
-python3 -m http.server 8888 &
-DASH_PID=$!
-
-# Wait for servers to start
-sleep 3
-
-# Check if both servers are running
-CORS_RUNNING=false
-DASH_RUNNING=false
-
-if ps -p $CORS_PID > /dev/null 2>&1; then
-    CORS_RUNNING=true
-fi
-
-if ps -p $DASH_PID > /dev/null 2>&1; then
-    DASH_RUNNING=true
-fi
-
-echo ""
-echo "📊 Server Status:"
-echo "================================="
-echo "CORS Proxy (8889): $([ "$CORS_RUNNING" = true ] && echo "✅ Running" || echo "❌ Failed")"
-echo "Dashboard (8888):  $([ "$DASH_RUNNING" = true ] && echo "✅ Running" || echo "❌ Failed")"
-echo ""
-
-if [ "$CORS_RUNNING" = true ] && [ "$DASH_RUNNING" = true ]; then
-    echo "🎉 SUCCESS! Both servers are running!"
-    echo ""
-    echo "📱 Dashboard URL: http://localhost:8888"
-    echo "🔧 CORS Proxy:   http://localhost:8889/health"
-    echo ""
-    echo "🔑 SETUP STEPS:"
-    echo "1. Open http://localhost:8888 in your browser"
-    echo "2. Click the ⚙️ gear icon (sidebar)"  
-    echo "3. Click 'SET COOKIE FOR REAL-TIME'"
-    echo "4. Paste your Elastic cookie (sid=...)"
-    echo "5. Click 'REFRESH NOW' - should work instantly!"
-    echo ""
-    echo "✨ REAL-TIME FEATURES:"
-    echo "• Configuration changes apply immediately"
-    echo "• No page reloads needed"
-    echo "• Timestamp updates automatically"
-    echo "• Live data from Kibana"
-    echo ""
-else
-    echo "❌ STARTUP FAILED!"
-    if [ "$CORS_RUNNING" = false ]; then
-        echo "• CORS Proxy failed to start on port 8889"
-    fi
-    if [ "$DASH_RUNNING" = false ]; then
-        echo "• Dashboard server failed to start on port 8888"
-    fi
-    echo ""
-    echo "Try running individual servers:"
-    echo "• python3 cors_proxy.py"
-    echo "• python3 -m http.server 8888"
-fi
-
-# Open browser automatically on macOS
-if [ "$CORS_RUNNING" = true ] && [ "$DASH_RUNNING" = true ]; then
-    sleep 2
-    if command -v open > /dev/null; then
-        echo "🌐 Opening dashboard in browser..."
-        open http://localhost:8888
-    elif command -v xdg-open > /dev/null; then
-        echo "🌐 Opening dashboard in browser..."
-        xdg-open http://localhost:8888
-    fi
-fi
-
-echo ""
-echo "Press Ctrl+C to stop both servers"
-echo "================================="
-
-# Function to cleanup on exit
+# Function to stop both processes
 cleanup() {
     echo ""
-    echo "🛑 Stopping servers..."
-    if [ ! -z "$CORS_PID" ]; then
-        kill $CORS_PID 2>/dev/null || true
-    fi
-    if [ ! -z "$DASH_PID" ]; then
-        kill $DASH_PID 2>/dev/null || true
-    fi
-    
-    # Force kill any remaining processes
-    pkill -f "python3 cors_proxy.py" 2>/dev/null || true
-    pkill -f "python3 -m http.server 8888" 2>/dev/null || true
-    
-    echo "✅ Servers stopped"
-    exit 0
+    echo "Stopping servers..."
+    kill $PROXY_PID $SERVER_PID 2>/dev/null
+    exit
 }
 
-# Set up signal handling
-trap cleanup SIGINT SIGTERM
+# Set up cleanup on Ctrl+C
+trap cleanup INT
 
-# Wait for background processes
-wait 
+# Start CORS proxy
+echo ""
+echo "Starting CORS proxy on port 8889..."
+python3 cors_proxy.py &
+PROXY_PID=$!
+
+# Give proxy time to start
+sleep 2
+
+# Check if proxy started
+if ! kill -0 $PROXY_PID 2>/dev/null; then
+    echo "Error: CORS proxy failed to start"
+    exit 1
+fi
+
+# Start HTTP server
+echo "Starting HTTP server on port 8888..."
+python3 -m http.server 8888 &
+SERVER_PID=$!
+
+# Give server time to start
+sleep 1
+
+echo ""
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo ""
+echo "✅ RAD Monitor is running!"
+echo ""
+echo "🌐 Dashboard URL: http://localhost:8888"
+echo "🔌 CORS Proxy: http://localhost:8889"
+echo ""
+echo "📝 To enable real-time updates:"
+echo "   1. Open the dashboard"
+echo "   2. Click 'SET COOKIE FOR REAL-TIME'"
+echo "   3. Enter your Elastic cookie (sid=...)"
+echo "   4. Click 'REFRESH NOW' to test"
+echo ""
+echo "Use Ctrl+C to stop both servers"
+echo ""
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo ""
+
+# Wait for user to stop
+wait

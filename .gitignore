@@ -20,7 +20,7 @@ temp/
 .env
 secrets/
 
-# Node modules 
+# Node modules
 node_modules/
 
 # Test coverage and artifacts
@@ -34,6 +34,10 @@ test-results/
 
 # Project specific - generated data
 data/raw_response.json
+/raw_response.json
+
+# Development files
+dev_index.html
 
 # Legacy scripts (preserved but not in active use)
 scripts/legacy/

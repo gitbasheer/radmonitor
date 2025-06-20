@@ -1,13 +1,7 @@
 // tests/setup.js - Global test setup for Vitest
 
 import { vi } from 'vitest';
-import createFetchMock from 'vitest-fetch-mock';
 import { JSDOM } from 'jsdom';
-
-const fetchMocker = createFetchMock(vi);
-
-// Enable fetch mocking
-fetchMocker.enableMocks();
 
 // Setup DOM environment
 const dom = new JSDOM('<!DOCTYPE html><html><body></body></html>', {
@@ -73,15 +67,15 @@ Object.defineProperty(document, 'cookie', {
 
 // Helper to change location
 global.setLocation = (hostname = 'localhost') => {
-  const url = hostname === 'localhost' || hostname === '127.0.0.1' 
-    ? `http://${hostname}` 
+  const url = hostname === 'localhost' || hostname === '127.0.0.1'
+    ? `http://${hostname}`
     : `https://${hostname}`;
   dom.reconfigure({ url });
 };
 
 // Reset mocks before each test
 beforeEach(() => {
-  fetchMocker.resetMocks();
+  global.fetch.mockReset();
   localStorage.getItem.mockReset();
   localStorage.setItem.mockReset();
   localStorage.removeItem.mockReset();
@@ -89,12 +83,12 @@ beforeEach(() => {
   // Clear localStorage data
   Object.keys(localStorageData).forEach(key => delete localStorageData[key]);
   cookies = {};
-  
+
   // Reset DOM
   document.body.innerHTML = '';
   vi.clearAllMocks();
   document.cookie = '';
-  
+
   // Reset location to localhost
   global.setLocation('localhost');
 });
@@ -129,4 +123,4 @@ global.createBucket = (key, baselineCount, currentCount) => {
     baseline: { doc_count: baselineCount },
     current: { doc_count: currentCount }
   };
-}; 
+};
