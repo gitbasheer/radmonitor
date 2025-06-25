@@ -25,13 +25,43 @@ jobs:
         with:
           python-version: "3.11"
 
+      - name: Install dependencies
+        run: |
+          echo "Installing Python dependencies..."
+          # Install only what's needed for dashboard generation
+          pip install requests>=2.31.0
+          pip install python-dateutil>=2.8.2
+          pip install pydantic>=2.5.0
+          pip install pydantic-settings>=2.0.0
+          echo "Dependencies installed successfully"
+          echo "Installed packages:"
+          pip list | grep -E "requests|pydantic|dateutil"
+
       - name: Generate dashboard
         env:
           ELASTIC_COOKIE: ${{ secrets.ELASTIC_COOKIE }}
+          ES_COOKIE: ${{ secrets.ELASTIC_COOKIE }}  # Settings expects ES_COOKIE
         run: |
+          set -e  # Exit on error
+          echo "Starting dashboard generation..."
+          echo "Cookie length: ${#ELASTIC_COOKIE}"
+          
+          # Make script executable
           chmod +x scripts/generate_dashboard_refactored.sh
-          # This wrapper calls the Python implementation (generate_dashboard.py)
-          ./scripts/generate_dashboard_refactored.sh
+          
+          # Run with error handling
+          if ./scripts/generate_dashboard_refactored.sh; then
+            echo "✅ Dashboard generated successfully"
+            ls -la index.html
+          else
+            echo "❌ Dashboard generation failed"
+            echo "Checking for error logs..."
+            if [ -f data/raw_response.json ]; then
+              echo "Raw response exists - showing first 100 chars:"
+              head -c 100 data/raw_response.json
+            fi
+            exit 1
+          fi
 
       - name: Commit and push if changed
         run: |

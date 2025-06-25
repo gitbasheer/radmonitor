@@ -92,7 +92,7 @@ def main():
 
     # Start CORS proxy
     cors_process = subprocess.Popen(
-        [sys.executable, 'cors_proxy.py'],
+        [sys.executable, 'bin/cors_proxy.py'],
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         text=True

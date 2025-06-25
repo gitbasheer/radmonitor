@@ -1,14 +1,28 @@
 /**
  * Configuration Manager for RAD Monitor Dashboard
- * Handles loading, saving, and managing dashboard configuration
+ * Now acts as a compatibility layer over the centralized ConfigService
  */
 
 // ESM: Import dependencies
 import TimeRangeUtils from './time-range-utils.js';
+import { ConfigService } from './config-service.js';
 
 // ESM: Converted from IIFE to ES module export
 export const ConfigManager = (() => {
     'use strict';
+
+    // Initialize ConfigService on load
+    let initialized = false;
+    async function ensureInitialized() {
+        if (!initialized) {
+            try {
+                await ConfigService.initialize();
+                initialized = true;
+            } catch (error) {
+                console.error('Failed to initialize ConfigService:', error);
+            }
+        }
+    }
 
     const CONFIG_KEY = 'radMonitorConfig';
     const DEFAULT_CONFIG = {
@@ -23,10 +37,13 @@ export const ConfigManager = (() => {
      * Get current configuration from form inputs
      */
     function getCurrentConfig() {
+        // Try to get from ConfigService first
+        const serviceConfig = ConfigService.getConfig();
+        
         // Handle cases where DOM elements might not exist (e.g., in tests)
         const getElementValue = (id, defaultValue) => {
             const element = document.getElementById(id);
-            return element ? element.value : defaultValue;
+            return element ? element.value : (serviceConfig[id] || defaultValue);
         };
 
         return {
@@ -38,51 +55,70 @@ export const ConfigManager = (() => {
             minDailyVolume: parseInt(getElementValue('minDailyVolume', '100')) || 100,
             criticalThreshold: parseInt(getElementValue('criticalThreshold', '-80')) || -80,
             warningThreshold: parseInt(getElementValue('warningThreshold', '-50')) || -50,
-            autoRefreshEnabled: document.getElementById('autoRefreshEnabled')?.checked ?? true,
-            autoRefreshInterval: parseInt(getElementValue('autoRefreshInterval', '300')) || 300
+            autoRefreshEnabled: document.getElementById('autoRefreshEnabled')?.checked ?? serviceConfig.autoRefreshEnabled ?? true,
+            autoRefreshInterval: parseInt(getElementValue('autoRefreshInterval', '300')) || serviceConfig.autoRefreshInterval/1000 || 300
         };
     }
 
     /**
-     * Load configuration from localStorage
+     * Load configuration from ConfigService
      */
     function loadConfiguration() {
-        const saved = localStorage.getItem(CONFIG_KEY);
-        if (saved) {
             try {
-                const config = JSON.parse(saved);
+            const config = ConfigService.getConfig();
 
                 // Validate and fix time range if needed
                 if (config.currentTimeRange && !TimeRangeUtils.validateTimeRange(config.currentTimeRange)) {
                     config.currentTimeRange = DEFAULT_CONFIG.currentTimeRange;
-                    localStorage.setItem(CONFIG_KEY, JSON.stringify(config));
+                ConfigService.set('currentTimeRange', config.currentTimeRange, { saveToBackend: false });
                     console.log('Fixed invalid time range in saved configuration');
                 }
 
-                // Apply to form inputs
-                document.getElementById('baselineStart').value = config.baselineStart || DEFAULT_CONFIG.baselineStart;
-                document.getElementById('baselineEnd').value = config.baselineEnd || DEFAULT_CONFIG.baselineEnd;
-                document.getElementById('currentTimeRange').value = config.currentTimeRange || DEFAULT_CONFIG.currentTimeRange;
-                document.getElementById('highVolumeThreshold').value = config.highVolumeThreshold || DEFAULT_CONFIG.highVolumeThreshold;
-                document.getElementById('mediumVolumeThreshold').value = config.mediumVolumeThreshold || DEFAULT_CONFIG.mediumVolumeThreshold;
+            // Apply to form inputs if they exist
+            const applyToElement = (id, value) => {
+                const element = document.getElementById(id);
+                if (element) element.value = value;
+            };
+
+            applyToElement('baselineStart', config.baselineStart || DEFAULT_CONFIG.baselineStart);
+            applyToElement('baselineEnd', config.baselineEnd || DEFAULT_CONFIG.baselineEnd);
+            applyToElement('currentTimeRange', config.currentTimeRange || DEFAULT_CONFIG.currentTimeRange);
+            applyToElement('highVolumeThreshold', config.highVolumeThreshold || DEFAULT_CONFIG.highVolumeThreshold);
+            applyToElement('mediumVolumeThreshold', config.mediumVolumeThreshold || DEFAULT_CONFIG.mediumVolumeThreshold);
 
                 return config;
             } catch (e) {
                 console.error('Failed to load configuration:', e);
+            
+            // Fallback to localStorage for backward compatibility
+            const saved = localStorage.getItem(CONFIG_KEY);
+            if (saved) {
+                try {
+                    return JSON.parse(saved);
+                } catch (e) {
                 localStorage.removeItem(CONFIG_KEY);
+                }
             }
         }
 
         // Set defaults if no saved config
+        if (document.getElementById('currentTimeRange')) {
         document.getElementById('currentTimeRange').value = DEFAULT_CONFIG.currentTimeRange;
+        }
         return DEFAULT_CONFIG;
     }
 
     /**
-     * Save configuration to localStorage
+     * Save configuration to ConfigService
      */
-    function saveConfiguration(config) {
+    async function saveConfiguration(config) {
+        try {
+            await ConfigService.updateConfig(config);
+        } catch (error) {
+            console.error('Failed to save configuration:', error);
+            // Fallback to localStorage for backward compatibility
         localStorage.setItem(CONFIG_KEY, JSON.stringify(config));
+        }
     }
 
     /**
@@ -152,6 +188,11 @@ export const ConfigManager = (() => {
      * Export configuration as JSON file
      */
     function exportConfiguration() {
+        // Use ConfigService export if available
+        if (ConfigService && ConfigService.exportConfig) {
+            ConfigService.exportConfig();
+        } else {
+            // Fallback to legacy export
         const config = getCurrentConfig();
         config.timestamp = new Date().toISOString();
 
@@ -168,6 +209,7 @@ export const ConfigManager = (() => {
         link.download = 'rad-monitor-config.json';
         link.click();
         URL.revokeObjectURL(url);
+        }
     }
 
     /**
@@ -243,7 +285,30 @@ export const ConfigManager = (() => {
     /**
      * Import configuration from JSON file
      */
-    function importConfiguration() {
+    async function importConfiguration() {
+        // Use ConfigService import if available
+        if (ConfigService && ConfigService.importConfig) {
+            try {
+                const config = await ConfigService.importConfig();
+                
+                // Apply to form inputs
+                const applyToElement = (id, value) => {
+                    const element = document.getElementById(id);
+                    if (element) element.value = value;
+                };
+
+                applyToElement('baselineStart', config.baselineStart);
+                applyToElement('baselineEnd', config.baselineEnd);
+                applyToElement('currentTimeRange', config.currentTimeRange);
+                applyToElement('highVolumeThreshold', config.highVolumeThreshold);
+                applyToElement('mediumVolumeThreshold', config.mediumVolumeThreshold);
+                
+                alert('Configuration imported successfully!');
+            } catch (error) {
+                alert(`Failed to import configuration: ${error.message}`);
+            }
+        } else {
+            // Fallback to legacy import
         const input = document.createElement('input');
         input.type = 'file';
         input.accept = '.json';
@@ -274,6 +339,7 @@ export const ConfigManager = (() => {
         };
 
         input.click();
+        }
     }
 
     /**
@@ -296,6 +362,12 @@ export const ConfigManager = (() => {
      * Validate configuration
      */
     function validateConfiguration(config) {
+        // Use ConfigService validation if available
+        if (ConfigService && ConfigService.validateConfig) {
+            return ConfigService.validateConfig(config);
+        }
+        
+        // Fallback to legacy validation
         const errors = [];
 
         // Validate dates

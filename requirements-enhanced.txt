@@ -4,11 +4,18 @@ pydantic>=2.5.0
 pydantic-settings>=2.0.0
 uvicorn[standard]>=0.24.0
 python-dateutil>=2.8.2
+python-dotenv>=1.0.0
 
 # Additional FastAPI dependencies
 websockets>=12.0
 httpx>=0.27.0
 python-multipart>=0.0.9
+
+# Production enhancements
+slowapi>=0.1.9
+pybreaker>=1.0.1
+python-json-logger>=2.0.7
+structlog>=24.1.0
 
 # Elasticsearch integration
 elasticsearch>=8.0.0

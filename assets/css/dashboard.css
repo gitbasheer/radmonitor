@@ -366,3 +366,89 @@ tbody tr:hover {
 .footer a:hover {
     text-decoration: underline;
 }
+
+/* Configuration Editor Styles */
+.config-editor-section {
+    background: #f8f8f8;
+    padding: 15px;
+    border-radius: 4px;
+    margin-top: 20px;
+}
+
+.config-editor-section h4 {
+    color: #333;
+    font-size: 14px;
+    margin: 0 0 10px 0;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.config-editor-fields {
+    max-height: 400px;
+    overflow-y: auto;
+    padding-right: 10px;
+}
+
+.config-section {
+    background: white;
+    padding: 10px;
+    border-radius: 3px;
+    margin-bottom: 10px;
+    border: 1px solid #e0e0e0;
+}
+
+.config-section h5 {
+    color: #555;
+    font-size: 12px;
+    margin: 0 0 8px 0;
+    font-weight: 600;
+}
+
+.config-field {
+    margin-bottom: 8px;
+}
+
+.config-field label {
+    color: #666;
+    font-size: 11px;
+    font-weight: 500;
+}
+
+.config-field input,
+.config-field select {
+    width: 100%;
+    padding: 6px 8px;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+    font-size: 12px;
+    font-family: monospace;
+    background: white;
+}
+
+.config-field input:focus,
+.config-field select:focus {
+    outline: none;
+    border-color: #2196f3;
+    box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.1);
+}
+
+.config-editor-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.config-editor-actions .action-btn {
+    flex: 1;
+    padding: 8px 12px;
+    font-size: 11px;
+}
+
+#configEditorStatus {
+    padding: 6px 10px;
+    background: #f0f0f0;
+    border-radius: 3px;
+    font-size: 11px;
+    text-align: center;
+    min-height: 20px;
+}

@@ -3,6 +3,32 @@
  * Central control point for all FastAPI features
  */
 
+/**
+ * Exponential Backoff with Jitter for reconnection
+ */
+class ExponentialBackoffReconnect {
+    constructor(baseDelay = 1000, maxDelay = 30000, factor = 1.5) {
+        this.baseDelay = baseDelay;
+        this.maxDelay = maxDelay;
+        this.factor = factor;
+        this.attempt = 0;
+    }
+    
+    nextDelay() {
+        const exponentialDelay = Math.min(
+            this.baseDelay * Math.pow(this.factor, this.attempt++),
+            this.maxDelay
+        );
+        // Add jitter (±20%) to prevent thundering herd
+        const jitter = exponentialDelay * 0.2 * Math.random();
+        return Math.round(exponentialDelay + jitter);
+    }
+    
+    reset() {
+        this.attempt = 0;
+    }
+}
+
 export const FastAPIIntegration = {
     // Main feature flag - can be toggled via localStorage or config
     enabled: false,
@@ -11,8 +37,8 @@ export const FastAPIIntegration = {
     config: {
         apiUrl: window.FASTAPI_URL || 'http://localhost:8000',
         wsUrl: window.FASTAPI_WS_URL || 'ws://localhost:8000/ws',
-        reconnectInterval: 5000,
-        maxReconnectAttempts: 5,
+        reconnectInterval: 5000, // Deprecated - using exponential backoff
+        maxReconnectAttempts: 10, // Increased for exponential backoff
         enableRealtime: true,
         // Feature flags for specific FastAPI features
         features: {
@@ -29,7 +55,8 @@ export const FastAPIIntegration = {
         websocketConnected: false,
         lastHealthCheck: null,
         reconnectAttempts: 0,
-        eventListeners: new Map()
+        eventListeners: new Map(),
+        reconnectBackoff: null // Exponential backoff instance
     },
 
     /**
@@ -99,17 +126,12 @@ export const FastAPIIntegration = {
     async setupAdapters() {
         // Dynamically import FastAPI modules only when needed
         const { FastAPIClient } = await import('./api-client-fastapi.js');
-        const { FastAPIAdapter } = await import('./adapters/fastapi-adapter.js');
 
         // Initialize the FastAPI client
-        this.client = new FastAPIClient(this.config);
+        this.client = FastAPIClient;
 
-        // Set up adapters
-        this.adapters = {
-            fetchData: (config) => this.client.fetchData(config),
-            updateConfig: (config) => this.client.updateConfiguration(config),
-            getAuthDetails: () => this.client.getAuthenticationDetails()
-        };
+        // Initialize the client
+        await this.client.initialize();
 
         // Set up WebSocket if enabled
         if (this.config.features.websocket) {
@@ -121,25 +143,45 @@ export const FastAPIIntegration = {
      * Set up WebSocket connection with proper error handling
      */
     async setupWebSocket() {
-        const { RealtimeBridge } = await import('./bridges/realtime-bridge.js');
-        this.realtimeBridge = new RealtimeBridge(this.client);
+        // Initialize exponential backoff
+        this.state.reconnectBackoff = new ExponentialBackoffReconnect();
+        
+        // Set up WebSocket event handlers to bridge to UI
+        this.client.on('config', (data) => {
+            // Emit event for UI updater
+            window.dispatchEvent(new CustomEvent('fastapi:config', { detail: data }));
+        });
+        
+        this.client.on('stats', (data) => {
+            // Emit event for UI updater
+            window.dispatchEvent(new CustomEvent('fastapi:stats', { detail: data }));
+        });
+        
+        this.client.on('data', (data) => {
+            // Emit event for UI updater
+            window.dispatchEvent(new CustomEvent('fastapi:data', { detail: data }));
+        });
 
-        // Connect WebSocket with retry logic
+        // Connect WebSocket with exponential backoff retry
         const connectWithRetry = async () => {
             try {
                 await this.client.connect();
                 this.state.websocketConnected = true;
                 this.state.reconnectAttempts = 0;
+                this.state.reconnectBackoff.reset(); // Reset backoff on success
                 console.log('📡 WebSocket connected');
             } catch (error) {
                 console.warn('WebSocket connection failed:', error);
                 this.state.websocketConnected = false;
 
-                // Retry logic
+                // Retry logic with exponential backoff
                 if (this.state.reconnectAttempts < this.config.maxReconnectAttempts) {
                     this.state.reconnectAttempts++;
-                    console.log(`🔄 Retrying WebSocket connection (${this.state.reconnectAttempts}/${this.config.maxReconnectAttempts})...`);
-                    setTimeout(connectWithRetry, this.config.reconnectInterval);
+                    const delay = this.state.reconnectBackoff.nextDelay();
+                    console.log(`🔄 Retrying WebSocket connection (${this.state.reconnectAttempts}/${this.config.maxReconnectAttempts}) in ${delay}ms...`);
+                    setTimeout(connectWithRetry, delay);
+                } else {
+                    console.error('❌ WebSocket reconnection failed after maximum attempts');
                 }
             }
         };

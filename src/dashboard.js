@@ -11,11 +11,49 @@ import UIUpdater from '../assets/js/ui-updater.js';
 import ConfigManager from '../assets/js/config-manager.js';
 import TimeRangeUtils from '../assets/js/time-range-utils.js';
 import ConsoleVisualizer from '../assets/js/console-visualizer.js';
+import DataLayer from '../assets/js/data-layer.js';
 
 // Re-export functions that tests expect
 
 // From Dashboard (dashboard-main.js)
 export const updateDashboardRealtime = async (customConfig) => {
+    // Helper function to wait for DataLayer results
+    const waitForDataLayerResults = () => {
+        return new Promise((resolve, reject) => {
+            let resolved = false;
+            const timeout = setTimeout(() => {
+                if (!resolved) {
+                    resolved = true;
+                    reject(new Error('Timeout waiting for DataLayer results'));
+                }
+            }, 1000); // 1 second timeout
+
+            // Listen for successful data processing
+            const handleSearchComplete = (data) => {
+                if (!resolved && data && data.data) {
+                    resolved = true;
+                    clearTimeout(timeout);
+                    DataLayer.removeEventListener('searchComplete', handleSearchComplete);
+                    resolve(data.data);
+                }
+            };
+
+            // Listen for errors
+            const handleError = (error) => {
+                if (!resolved) {
+                    resolved = true;
+                    clearTimeout(timeout);
+                    DataLayer.removeEventListener('searchComplete', handleSearchComplete);
+                    DataLayer.removeEventListener('error', handleError);
+                    reject(new Error(error.error || 'DataLayer error'));
+                }
+            };
+
+            DataLayer.addEventListener('searchComplete', handleSearchComplete);
+            DataLayer.addEventListener('error', handleError);
+        });
+    };
+
     // If custom config is provided, apply it temporarily
     if (customConfig) {
         const originalConfig = ConfigManager.getCurrentConfig ? ConfigManager.getCurrentConfig() : {};
@@ -32,18 +70,31 @@ export const updateDashboardRealtime = async (customConfig) => {
         }
 
         try {
-            // Map the response to match test expectations
-            const response = await Dashboard.refresh();
+            // Start the refresh and wait for results
+            const refreshPromise = Dashboard.refresh();
+            const resultsPromise = waitForDataLayerResults();
 
-            // Tests expect a different response format
-            if (response && typeof response === 'object') {
-                return response;
-            }
+            // Wait for both the refresh to complete and results to be available
+            await refreshPromise;
+            const results = await resultsPromise;
 
-            // Return success response if dashboard refresh succeeded
+            // Process results to match test expectations
+            const processedResults = Array.isArray(results) ? results.map(item => ({
+                eventId: item.event_id || item.eventId,
+                event_id: item.event_id || item.eventId,
+                displayName: item.displayName,
+                status: item.status,
+                score: item.score,
+                current: item.current,
+                baseline12h: item.baseline12h || item.baseline_period,
+                baseline_period: item.baseline_period || item.baseline12h,
+                dailyAvg: item.dailyAvg || 0,
+                impact: item.impact
+            })) : [];
+
             return {
                 success: true,
-                results: []
+                results: processedResults
             };
         } catch (error) {
             // Return error response in the format tests expect
@@ -66,13 +117,30 @@ export const updateDashboardRealtime = async (customConfig) => {
     }
 
     try {
-        const response = await Dashboard.refresh();
-        if (response && typeof response === 'object') {
-            return response;
-        }
+        // Start the refresh and wait for results
+        const refreshPromise = Dashboard.refresh();
+        const resultsPromise = waitForDataLayerResults();
+
+        await refreshPromise;
+        const results = await resultsPromise;
+
+        // Process results to match test expectations
+        const processedResults = Array.isArray(results) ? results.map(item => ({
+            eventId: item.event_id || item.eventId,
+            event_id: item.event_id || item.eventId,
+            displayName: item.displayName,
+            status: item.status,
+            score: item.score,
+            current: item.current,
+            baseline12h: item.baseline12h || item.baseline_period,
+            baseline_period: item.baseline_period || item.baseline12h,
+            dailyAvg: item.dailyAvg || 0,
+            impact: item.impact
+        })) : [];
+
         return {
             success: true,
-            results: []
+            results: processedResults
         };
     } catch (error) {
         return {

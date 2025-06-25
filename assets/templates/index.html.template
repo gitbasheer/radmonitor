@@ -17,17 +17,8 @@
     <!-- External CSS -->
     <link rel="stylesheet" href="assets/css/dashboard.css">
 
-    <!-- JavaScript Modules -->
-    <script src="assets/js/time-range-utils.js"></script>
-    <script src="assets/js/data-layer.js"></script>
-    <script src="examples/data-layer-example.js"></script>
-    <script src="assets/js/state-logging-demo.js"></script>
-    <script src="assets/js/api-client.js"></script>
-    <script src="assets/js/config-manager.js"></script>
-    <script src="assets/js/console-visualizer.js"></script>
-    <script src="assets/js/data-processor.js"></script>
-    <script src="assets/js/ui-updater.js"></script>
-    <script src="assets/js/dashboard-main.js"></script>
+    <!-- JavaScript Entry Point - loads all modules and makes them globally available -->
+    <script type="module" src="assets/js/main.js"></script>
 </head>
 <body>
     <!-- Hidden input for server-side cookie (optional) -->
@@ -105,6 +96,22 @@
             <div class="config-actions">
                 <button onclick="ConfigManager.applyConfiguration()" class="action-btn">APPLY CONFIGURATION</button>
                 <button onclick="ConfigManager.exportConfiguration()" class="action-btn">EXPORT CONFIG</button>
+            </div>
+
+            <!-- Configuration Editor -->
+            <div class="config-editor-section" style="margin-top: 20px; border-top: 2px solid #ddd; padding-top: 20px;">
+                <h4 style="margin: 0 0 10px 0;">Advanced Configuration Editor</h4>
+                <div class="config-editor-controls">
+                    <button onclick="ConfigEditor.loadConfig()" class="action-btn" style="margin-bottom: 10px;">LOAD CURRENT CONFIG</button>
+                    <div id="configEditorStatus" style="font-size: 12px; color: #666; margin-bottom: 10px;"></div>
+                </div>
+                <div class="config-editor-fields" id="configEditorFields">
+                    <!-- Dynamic fields will be populated here -->
+                </div>
+                <div class="config-editor-actions" style="margin-top: 10px;">
+                    <button onclick="ConfigEditor.saveConfig()" class="action-btn">SAVE CHANGES</button>
+                    <button onclick="ConfigEditor.resetToDefaults()" class="action-btn" style="background: #666;">RESET TO DEFAULTS</button>
+                </div>
             </div>
             </div>
 
@@ -185,14 +192,6 @@
         </footer>
     </div>
 
-    <!-- JavaScript Modules -->
-    <script src="assets/js/data-layer.js"></script>
-    <script src="assets/js/time-range-utils.js"></script>
-    <script src="assets/js/api-client.js"></script>
-    <script src="assets/js/config-manager.js"></script>
-    <script src="assets/js/console-visualizer.js"></script>
-    <script src="assets/js/data-processor.js"></script>
-    <script src="assets/js/ui-updater.js"></script>
-    <script src="assets/js/dashboard-main.js"></script>
+    <!-- No duplicate scripts needed - all modules loaded in head -->
 </body>
 </html>

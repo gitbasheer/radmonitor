@@ -8,7 +8,7 @@ from typing import Dict, Any
 import json
 from datetime import datetime
 
-from ..config.settings import get_settings, reload_settings, Settings
+from ..config.settings import get_settings, reload_settings, update_settings, update_from_frontend, Settings
 
 router = APIRouter(prefix="/api/config", tags=["Configuration"])
 
@@ -25,11 +25,13 @@ async def get_all_settings() -> Dict[str, Any]:
                 "url": str(settings.elasticsearch.url),
                 "index_pattern": settings.elasticsearch.index_pattern,
                 "timeout": settings.elasticsearch.timeout,
+                "cookie": settings.elasticsearch.cookie,  # Include cookie for frontend
                 "cookie_configured": bool(settings.elasticsearch.cookie)
             },
             "kibana": {
                 "url": str(settings.kibana.url),
-                "discover_path": settings.kibana.discover_path
+                "discover_path": settings.kibana.discover_path,
+                "search_path": settings.kibana.search_path
             },
             "processing": {
                 "baseline_start": settings.processing.baseline_start,
@@ -39,15 +41,22 @@ async def get_all_settings() -> Dict[str, Any]:
                 "high_volume_threshold": settings.processing.high_volume_threshold,
                 "medium_volume_threshold": settings.processing.medium_volume_threshold,
                 "critical_threshold": settings.processing.critical_threshold,
-                "warning_threshold": settings.processing.warning_threshold
+                "warning_threshold": settings.processing.warning_threshold,
+                "min_daily_volume": settings.processing.min_daily_volume
             },
             "dashboard": {
                 "refresh_interval": settings.dashboard.refresh_interval,
                 "max_events_display": settings.dashboard.max_events_display,
                 "enable_websocket": settings.dashboard.enable_websocket,
-                "theme": settings.dashboard.theme
+                "theme": settings.dashboard.theme,
+                "console_chart_width": settings.dashboard.console_chart_width,
+                "console_top_results": settings.dashboard.console_top_results
             },
-            "cors_allowed_origins": settings.cors_allowed_origins
+            "cors_proxy": {
+                "port": settings.cors_proxy.port,
+                "allowed_origins": settings.cors_proxy.allowed_origins,
+                "proxy_timeout": settings.cors_proxy.proxy_timeout
+            }
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to retrieve settings: {str(e)}")
@@ -59,7 +68,16 @@ async def get_processing_settings() -> Dict[str, Any]:
     try:
         settings = get_settings()
         return {
-            "config": settings.to_processing_config(),
+            "config": {
+                "baselineStart": settings.processing.baseline_start,
+                "baselineEnd": settings.processing.baseline_end,
+                "currentTimeRange": settings.processing.current_time_range,
+                "highVolumeThreshold": settings.processing.high_volume_threshold,
+                "mediumVolumeThreshold": settings.processing.medium_volume_threshold,
+                "criticalThreshold": settings.processing.critical_threshold,
+                "warningThreshold": settings.processing.warning_threshold,
+                "minDailyVolume": settings.processing.min_daily_volume
+            },
             "baseline_days": settings.baseline_days,
             "thresholds": {
                 "high_volume": settings.processing.high_volume_threshold,
@@ -205,6 +223,44 @@ async def export_configuration(include_sensitive: bool = False) -> Response:
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to export configuration: {str(e)}")
+
+
+@router.post("/update", summary="Update configuration from frontend")
+async def update_configuration(config_data: Dict[str, Any]) -> Dict[str, Any]:
+    """Update configuration with values from frontend"""
+    try:
+        settings = update_from_frontend(config_data, save=True)
+        return {
+            "status": "success",
+            "message": "Configuration updated successfully",
+            "config": settings.to_frontend_config()
+        }
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Failed to update configuration: {str(e)}")
+
+
+@router.post("/validate", summary="Validate configuration")
+async def validate_configuration(config_data: Dict[str, Any]) -> Dict[str, Any]:
+    """Validate configuration without saving"""
+    try:
+        # Create a temporary settings instance for validation
+        current = get_settings()
+        test_settings = current.update_from_frontend(config_data)
+        
+        # Validation passed if we got here
+        return {
+            "valid": True,
+            "errors": [],
+            "warnings": []
+        }
+    except ValueError as e:
+        return {
+            "valid": False,
+            "errors": [str(e)],
+            "warnings": []
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Validation error: {str(e)}")
 
 
 @router.get("/environment", summary="Get required environment variables")

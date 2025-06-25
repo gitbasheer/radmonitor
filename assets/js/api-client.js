@@ -310,6 +310,91 @@ export const ApiClient = (() => {
     }
 
     /**
+     * Test authentication by doing a minimal query
+     */
+    async function testAuthentication() {
+        try {
+            const auth = await getAuthenticationDetails();
+
+            if (!auth.valid) {
+                return { success: false, error: 'No authentication cookie found' };
+            }
+
+            // Minimal test query - just check if we can access the index
+            const testQuery = {
+                size: 0,
+                query: { 
+                    bool: { 
+                        filter: [{
+                            range: {
+                                "@timestamp": {
+                                    "gte": "now-1h"
+                                }
+                            }
+                        }]
+                    }
+                }
+            };
+
+            let response;
+
+            if (auth.method === 'proxy') {
+                // Test through CORS proxy
+                response = await fetch(CORS_PROXY_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Elastic-Cookie': auth.cookie
+                    },
+                    body: JSON.stringify(testQuery),
+                    signal: AbortSignal.timeout(5000) // 5 second timeout
+                });
+            } else {
+                // Test direct access
+                response = await fetch(`${KIBANA_URL}/elasticsearch/usi*/_search`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Cookie': auth.cookie
+                    },
+                    body: JSON.stringify(testQuery),
+                    signal: AbortSignal.timeout(5000) // 5 second timeout
+                });
+            }
+
+            if (!response.ok) {
+                if (response.status === 401 || response.status === 403) {
+                    return { success: false, error: 'Authentication failed - cookie is invalid or expired' };
+                }
+                return { success: false, error: `HTTP ${response.status}: ${response.statusText}` };
+            }
+
+            const data = await response.json();
+
+            // Check for Elasticsearch errors
+            if (data.error) {
+                if (data.error.type === 'security_exception') {
+                    return { success: false, error: 'Authentication failed - cookie is invalid or expired' };
+                }
+                return { success: false, error: `Elasticsearch error: ${data.error.reason || data.error.type}` };
+            }
+
+            // Success - we got a valid response
+            return { 
+                success: true, 
+                method: auth.method, 
+                message: 'Authentication validated successfully' 
+            };
+
+        } catch (error) {
+            if (error.name === 'TimeoutError') {
+                return { success: false, error: 'Authentication test timed out - check network connection' };
+            }
+            return { success: false, error: `Authentication test failed: ${error.message}` };
+        }
+    }
+
+    /**
      * Fetch data (EXISTING - keep for compatibility)
      */
     async function fetchData(config) {
@@ -389,10 +474,12 @@ export const ApiClient = (() => {
         testConnection,
         promptForCookie,
         getAuthenticationDetails,
+        checkCorsProxy,
 
         // NEW - Data layer integration
         executeQuery,
-        checkHealth
+        checkHealth,
+        testAuthentication
     };
 })();
 

@@ -11,6 +11,8 @@ import os
 from typing import Dict, Any
 from pydantic import ValidationError
 
+
+
 # Add parent directory to path for imports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -33,7 +35,9 @@ def load_json_file(filepath: str) -> Dict[str, Any]:
 
 def save_output(content: str, filepath: str):
     """Save content to file"""
-    os.makedirs(os.path.dirname(filepath), exist_ok=True)
+    dirname = os.path.dirname(filepath)
+    if dirname:
+        os.makedirs(dirname, exist_ok=True)
     with open(filepath, 'w', encoding='utf-8') as f:
         f.write(content)
 

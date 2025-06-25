@@ -11,6 +11,7 @@ import UIUpdater from './ui-updater.js';
 import DataProcessor from './data-processor.js';
 import ConsoleVisualizer from './console-visualizer.js';
 import ApiClient from './api-client.js';
+import { unifiedAPI } from './api-interface.js';
 
 // ESM: Converted from IIFE to ES module export
 export const Dashboard = (() => {
@@ -23,13 +24,22 @@ export const Dashboard = (() => {
     /**
      * Initialize dashboard with state management
      */
-    function init() {
+    async function init() {
         // Log initialization start
         if (typeof DataLayer !== 'undefined' && DataLayer.logAction) {
             DataLayer.logAction('DASHBOARD_INIT_START', {
                 timestamp: new Date().toISOString(),
                 location: window.location.hostname
             });
+        }
+
+        // Initialize unified API
+        await unifiedAPI.initialize();
+        console.log(`📡 API Mode: ${unifiedAPI.getMode()}`);
+
+        // Set up FastAPI WebSocket event listeners if in FastAPI mode
+        if (unifiedAPI.getMode() === 'fastapi') {
+            setupFastAPIListeners();
         }
 
         // Initialize configuration management
@@ -61,6 +71,63 @@ export const Dashboard = (() => {
         // Show initial performance stats in console
         console.log('%c🚀 Dashboard initialized with performance monitoring', 'color: #4CAF50; font-weight: bold;');
         console.log('%cRun Dashboard.showPerformanceStats() for detailed metrics', 'color: #2196F3;');
+
+        // CRITICAL: Perform initial data fetch after a brief delay to ensure everything is ready
+        setTimeout(() => {
+            console.log('🚀 INITIALIZING: Starting initial data fetch...');
+            refresh().catch(error => {
+                console.log('⚠️ Initial data fetch failed (expected if no cookie):', error.message);
+                console.log('💡 TIP: Set your cookie to enable real-time data');
+            });
+        }, 1000);
+    }
+
+    /**
+     * Set up FastAPI WebSocket event listeners
+     */
+    function setupFastAPIListeners() {
+        // Listen for config updates
+        window.addEventListener('fastapi:config', (event) => {
+            console.log('📋 FastAPI config update:', event.detail);
+            // Update local config if needed
+            if (event.detail) {
+                const config = {
+                    baselineStart: event.detail.baseline_start,
+                    baselineEnd: event.detail.baseline_end,
+                    currentTimeRange: event.detail.time_range,
+                    criticalThreshold: event.detail.critical_threshold,
+                    warningThreshold: event.detail.warning_threshold,
+                    highVolumeThreshold: event.detail.high_volume_threshold,
+                    mediumVolumeThreshold: event.detail.medium_volume_threshold
+                };
+                DataLayer.updateAppConfig(config);
+            }
+        });
+
+        // Listen for stats updates
+        window.addEventListener('fastapi:stats', (event) => {
+            console.log('📊 FastAPI stats update:', event.detail);
+            if (event.detail) {
+                UIUpdater.updateSummaryCards({
+                    critical: event.detail.critical_count,
+                    warning: event.detail.warning_count,
+                    normal: event.detail.normal_count,
+                    increased: event.detail.increased_count,
+                    total: event.detail.total_events
+                });
+                UIUpdater.updateTimestamp();
+            }
+        });
+
+        // Listen for data updates
+        window.addEventListener('fastapi:data', (event) => {
+            console.log('📈 FastAPI data update:', event.detail);
+            if (event.detail && Array.isArray(event.detail)) {
+                UIUpdater.updateDataTable(event.detail);
+            }
+        });
+
+        console.log('✅ FastAPI WebSocket listeners configured');
     }
 
     /**
@@ -99,16 +166,13 @@ export const Dashboard = (() => {
         DataLayer.addEventListener('searchComplete', (event) => {
             const { searchType, data } = event;
 
-            switch (searchType) {
-                case 'traffic':
-                case 'main_traffic':
-                    handleTrafficDataUpdate(data);
-                    break;
-                case 'health':
-                    handleHealthDataUpdate(data);
-                    break;
-                default:
-                    console.log(`📊 Search completed: ${searchType}`);
+            // Handle dynamic search type names (e.g., main_traffic_123456789)
+            if (searchType.startsWith('main_traffic') || searchType === 'traffic') {
+                handleTrafficDataUpdate(data);
+            } else if (searchType === 'health') {
+                handleHealthDataUpdate(data);
+            } else {
+                console.log(`📊 Search completed: ${searchType}`);
             }
         });
 
@@ -213,6 +277,12 @@ export const Dashboard = (() => {
      */
     function handleTrafficDataUpdate(transformedData) {
         try {
+            // Validate input data
+            if (!Array.isArray(transformedData)) {
+                console.warn('handleTrafficDataUpdate: transformedData is not an array:', transformedData);
+                transformedData = [];
+            }
+
             // transformedData is already processed by DataLayer
             const stats = DataProcessor.getSummaryStats(transformedData);
 
@@ -227,21 +297,25 @@ export const Dashboard = (() => {
 
             // Show console visualization if enabled
             const config = ConfigManager.getCurrentConfig();
-            if (config.enableConsoleVisualization !== false) {
-                // Reconstruct the data format expected by ConsoleVisualizer
-                const mockESResponse = {
-                    aggregations: {
-                        events: {
-                            buckets: transformedData.map(item => ({
-                                key: item.event_id,
-                                doc_count: item.current + item.baseline_count,
-                                current: { doc_count: item.current },
-                                baseline: { doc_count: item.baseline_count }
-                            }))
+            if (config.enableConsoleVisualization !== false && transformedData.length > 0) {
+                try {
+                    // Reconstruct the data format expected by ConsoleVisualizer
+                    const mockESResponse = {
+                        aggregations: {
+                            events: {
+                                buckets: transformedData.map(item => ({
+                                    key: item.event_id || 'unknown',
+                                    doc_count: (item.current || 0) + (item.baseline_count || 0),
+                                    current: { doc_count: item.current || 0 },
+                                    baseline: { doc_count: item.baseline_count || 0 }
+                                }))
+                            }
                         }
-                    }
-                };
-                ConsoleVisualizer.visualizeData(mockESResponse, config.currentTimeRange, config);
+                    };
+                    ConsoleVisualizer.visualizeData(mockESResponse, config.currentTimeRange, config);
+                } catch (vizError) {
+                    console.warn('Console visualization failed:', vizError);
+                }
             }
 
             console.log('✅ Dashboard updated successfully via DataLayer');
@@ -249,6 +323,9 @@ export const Dashboard = (() => {
         } catch (error) {
             console.error('Failed to update dashboard UI:', error);
             UIUpdater.hideLoading('❌ Update failed - data processing error');
+            
+            // Show fallback refresh option
+            showFallbackRefresh();
         }
     }
 
@@ -268,6 +345,36 @@ export const Dashboard = (() => {
     async function refresh() {
         const refreshId = `refresh_${Date.now()}`;
 
+        console.log('🔄 REFRESH STARTED:', refreshId);
+        console.log('📋 STEP 1: Checking authentication...');
+
+        // Check for cookie in priority order: localStorage -> environment -> prompt user
+        let hasCookie = localStorage.getItem('elasticCookie');
+        
+        // 🚀 NEW: Try environment cookie if no localStorage cookie
+        if (!hasCookie && window.ELASTIC_COOKIE) {
+            console.log('🔄 STEP 1A: No localStorage cookie, trying environment cookie...');
+            console.log('🚀 ENVIRONMENT COOKIE FOUND: Auto-setting from server environment');
+            localStorage.setItem('elasticCookie', window.ELASTIC_COOKIE);
+            hasCookie = window.ELASTIC_COOKIE;
+        }
+        
+        if (!hasCookie) {
+            console.log('❌ STEP 1 FAILED: No cookie found (localStorage or environment)');
+            console.log('🍪 SOLUTION: You need to set your authentication cookie manually');
+            console.log('📋 ACTION: Click "Set Cookie" to provide authentication');
+            UIUpdater.hideLoading('🍪 Cookie required for data access');
+            showAuthenticationRequired();
+            return;
+        }
+
+        if (window.ELASTIC_COOKIE && hasCookie === window.ELASTIC_COOKIE) {
+            console.log('✅ STEP 1 PASSED: Using environment cookie from server');
+        } else {
+            console.log('✅ STEP 1 PASSED: Using cookie from localStorage');
+        }
+        console.log('📋 STEP 2: Starting data fetch...');
+
         // Log dashboard action
         if (typeof DataLayer !== 'undefined' && DataLayer.logAction) {
             DataLayer.logAction('DASHBOARD_REFRESH_START', {
@@ -282,11 +389,15 @@ export const Dashboard = (() => {
             // Get current configuration
             const config = ConfigManager.getCurrentConfig();
 
+            console.log('📋 STEP 3: Executing Elasticsearch query...');
             // Use DataLayer to fetch and parse data in one clean operation
             const result = await DataLayer.fetchAndParse(`main_traffic_${refreshId}`, {
                 type: 'trafficAnalysis',
                 params: config
             });
+
+            console.log('✅ STEP 3 PASSED: Query executed successfully');
+            console.log('📊 DATA RECEIVED:', result.transformed?.length || 0, 'events');
 
             // Log completion
             if (typeof DataLayer !== 'undefined' && DataLayer.logAction) {
@@ -298,10 +409,14 @@ export const Dashboard = (() => {
                 });
             }
 
+            console.log('✅ REFRESH COMPLETE: UI will update automatically via event listeners');
             // UI update happens automatically via state listeners
             // (handleTrafficDataUpdate is called by DataLayer event system)
 
         } catch (error) {
+            console.log('❌ STEP 3 FAILED: Query execution error');
+            console.log('🔍 ERROR DETAILS:', error.message);
+
             // Log error
             if (typeof DataLayer !== 'undefined' && DataLayer.logAction) {
                 DataLayer.logAction('DASHBOARD_REFRESH_ERROR', {
@@ -313,12 +428,36 @@ export const Dashboard = (() => {
 
             // Check if it's an auth error
             if (error.message.includes('authentication') || error.message.includes('cookie')) {
-                UIUpdater.hideLoading('❌ Authentication required - set your cookie');
-                showFallbackRefresh();
+                console.log('🍪 AUTHENTICATION ISSUE: Cookie might be expired or invalid');
+                console.log('📋 SOLUTION: Try setting a new cookie or check if it\'s valid');
+                UIUpdater.hideLoading('🍪 Cookie required for data access');
+                showAuthenticationRequired();
             } else {
+                console.log('❌ REFRESH FAILED: Non-authentication error');
+                console.log('📋 POSSIBLE CAUSES: Network issue, server error, or invalid query');
                 UIUpdater.hideLoading('❌ Refresh failed - see console');
                 showFallbackRefresh();
             }
+        }
+    }
+
+    /**
+     * Show authentication required message (more specific than generic fallback)
+     */
+    function showAuthenticationRequired() {
+        const status = document.getElementById('refreshStatus');
+        if (status) {
+            status.innerHTML = `
+                🍪 Cookie required |
+                <a href="#" onclick="Dashboard.setCookieForRealtime(); return false;" style="color: #2196F3; font-weight: bold;">
+                    Set Cookie Now
+                </a> |
+                <a href="#" onclick="Dashboard.showApiSetupInstructions(); return false;" style="color: #333;">
+                    Help
+                </a>
+            `;
+            // Mark that we have an auth issue to prevent health check from overriding
+            status.dataset.authRequired = 'true';
         }
     }
 
@@ -337,6 +476,8 @@ export const Dashboard = (() => {
                     Set Cookie
                 </a>
             `;
+            // Remove auth flag since this is a different type of error
+            delete status.dataset.authRequired;
         }
     }
 
@@ -376,10 +517,91 @@ export const Dashboard = (() => {
      * Set cookie for real-time updates
      */
     async function setCookieForRealtime() {
-        const cookie = await ApiClient.promptForCookie('real-time updates');
+        // 🚀 NEW: Try environment cookie first before prompting user
+        let cookie = null;
+        
+        if (window.ELASTIC_COOKIE && !localStorage.getItem('elasticCookie')) {
+            console.log('🔄 TRYING ENVIRONMENT COOKIE: Testing server-provided cookie first...');
+            cookie = window.ELASTIC_COOKIE;
+            localStorage.setItem('elasticCookie', cookie);
+        } else {
+            console.log('🔄 PROMPTING USER: Environment cookie not available or already tried');
+            cookie = await ApiClient.promptForCookie('real-time updates');
+        }
+        
         if (cookie) {
-            UIUpdater.hideLoading('🍪 Cookie saved! Click refresh to test real-time.');
-            UIUpdater.updateApiStatus();
+            console.log('✅ COOKIE ENTERED: Now validating...');
+            
+            // Show validating status
+            UIUpdater.hideLoading('🔄 Validating cookie...');
+            
+            // Test the cookie immediately
+            try {
+                const testResult = await ApiClient.testAuthentication();
+                
+                if (testResult.success) {
+                    console.log('✅ COOKIE VALID: Authentication successful');
+                    console.log('🔄 UPDATING STATUS: Cookie validation passed');
+                    
+                    // Clear authentication error flag so status can update
+                    const statusEl = document.getElementById('refreshStatus');
+                    if (statusEl) {
+                        delete statusEl.dataset.authRequired;
+                    }
+                    
+                    UIUpdater.hideLoading('✅ Cookie validated! Now fetching data...');
+                    UIUpdater.updateApiStatus();
+                    
+                    // 🚀 CRITICAL FIX: Trigger data fetch after successful authentication
+                    console.log('🚀 TRIGGERING DATA FETCH: Authentication successful, now fetching data...');
+                    setTimeout(() => refresh(), 100); // Small delay to let UI update
+                } else {
+                    console.log('❌ COOKIE INVALID:', testResult.error);
+                    console.log('🔄 PROMPTING USER: Cookie validation failed');
+                    
+                    // Remove the invalid cookie
+                    localStorage.removeItem('elasticCookie');
+                    
+                    UIUpdater.hideLoading('❌ Invalid cookie - please try again');
+                    
+                    // Show error message with option to try again
+                    const statusEl = document.getElementById('refreshStatus');
+                    if (statusEl) {
+                        statusEl.innerHTML = `
+                            ❌ Cookie invalid: ${testResult.error} |
+                            <a href="#" onclick="Dashboard.setCookieForRealtime(); return false;" style="color: #d32f2f;">
+                                Try Again
+                            </a> |
+                            <a href="#" onclick="Dashboard.showApiSetupInstructions(); return false;" style="color: #333;">
+                                Help
+                            </a>
+                        `;
+                        statusEl.dataset.authRequired = 'true';
+                    }
+                }
+            } catch (error) {
+                console.log('❌ COOKIE TEST FAILED:', error.message);
+                
+                // Remove the potentially problematic cookie
+                localStorage.removeItem('elasticCookie');
+                
+                UIUpdater.hideLoading('❌ Cookie test failed - please try again');
+                
+                // Show error message
+                const statusEl = document.getElementById('refreshStatus');
+                if (statusEl) {
+                    statusEl.innerHTML = `
+                        ❌ Cookie test failed |
+                        <a href="#" onclick="Dashboard.setCookieForRealtime(); return false;" style="color: #d32f2f;">
+                            Try Again
+                        </a> |
+                        <a href="#" onclick="Dashboard.showApiSetupInstructions(); return false;" style="color: #333;">
+                            Help
+                        </a>
+                    `;
+                    statusEl.dataset.authRequired = 'true';
+                }
+            }
         }
     }
 

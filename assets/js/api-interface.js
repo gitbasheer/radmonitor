@@ -53,6 +53,11 @@ class LegacyAdapter {
             return { healthy: false, error: error.message };
         }
     }
+
+    async executeQuery(query) {
+        // Use legacy ApiClient for raw queries
+        return await ApiClient.executeQuery(query);
+    }
 }
 
 /**
@@ -70,25 +75,27 @@ class FastAPIAdapter {
                 throw new Error('Missing required configuration parameters');
             }
 
-            // Transform config to FastAPI format if needed
-            const fastapiConfig = {
+            // Build the query directly
+            const query = this.buildQuery({
                 baseline_start: config.baselineStart,
                 baseline_end: config.baselineEnd,
-                time_range: config.currentTimeRange,
-                critical_threshold: config.criticalThreshold || -80,
-                warning_threshold: config.warningThreshold || -50
-            };
+                time_range: config.currentTimeRange || 'now-12h'
+            });
 
-            // Use FastAPI client
-            const query = this.buildQuery(fastapiConfig);
-            const result = await this.client.fetchKibanaData(query);
+            // Get elastic cookie
+            const elasticCookie = this.client.getElasticCookie();
+            if (!elasticCookie) {
+                throw new Error('No elastic cookie found. Please authenticate first.');
+            }
+
+            // Fetch data using the Kibana endpoint
+            const response = await this.client.fetchKibanaData(query, false, elasticCookie);
 
             // Transform response to expected format
             return {
                 success: true,
-                data: result.data,
-                method: 'fastapi',
-                cached: result.cached || false
+                data: response,
+                method: 'fastapi'
             };
         } catch (error) {
             console.error('FastAPI fetch failed:', error);
@@ -115,32 +122,79 @@ class FastAPIAdapter {
     }
 
     buildQuery(config) {
-        // Build Elasticsearch query from config
-        // TODO: Move this to a dedicated query builder class
-        const query = {
-            query: {
-                bool: {
-                    must: [
-                        { range: { '@timestamp': { gte: config.time_range } } }
-                    ]
+        // Use the same query structure as legacy ApiClient for compatibility
+        const currentTimeFilter = config.time_range.startsWith('now') 
+            ? { gte: config.time_range }
+            : { gte: config.time_range, lte: 'now' };
+
+        return {
+            "aggs": {
+                "events": {
+                    "terms": {
+                        "field": "detail.event.data.traffic.eid.keyword",
+                        "order": {"_key": "asc"},
+                        "size": 500
+                    },
+                    "aggs": {
+                        "baseline": {
+                            "filter": {
+                                "range": {
+                                    "@timestamp": {
+                                        "gte": config.baseline_start,
+                                        "lt": config.baseline_end
+                                    }
+                                }
+                            }
+                        },
+                        "current": {
+                            "filter": {
+                                "range": {
+                                    "@timestamp": currentTimeFilter
+                                }
+                            }
+                        }
+                    }
                 }
             },
-            aggs: {
-                events: {
-                    terms: { field: 'event_id.keyword', size: 10000 }
+            "size": 0,
+            "query": {
+                "bool": {
+                    "filter": [
+                        {
+                            "wildcard": {
+                                "detail.event.data.traffic.eid.keyword": {
+                                    "value": "pandc.vnext.recommendations.feed.feed*"
+                                }
+                            }
+                        },
+                        {
+                            "match_phrase": {
+                                "detail.global.page.host": "dashboard.godaddy.com"
+                            }
+                        },
+                        {
+                            "range": {
+                                "@timestamp": {
+                                    "gte": "2025-05-19T04:00:00.000Z",
+                                    "lte": "now"
+                                }
+                            }
+                        }
+                    ]
                 }
             }
         };
+    }
 
-        // Add baseline period if specified
-        if (config.baseline_start && config.baseline_end) {
-            query.baseline = {
-                start: config.baseline_start,
-                end: config.baseline_end
-            };
+    async executeQuery(query) {
+        // For raw queries, use the Kibana endpoint
+        const elasticCookie = this.client.getElasticCookie();
+        if (!elasticCookie) {
+            throw new Error('No elastic cookie available');
         }
 
-        return query;
+        const result = await this.client.fetchKibanaData(query, false, elasticCookie);
+        return { success: true, data: result, method: 'fastapi' };
     }
 }
 
@@ -220,6 +274,14 @@ export class UnifiedAPI {
     async checkHealth() {
         if (!this.initialized) await this.initialize();
         return this.implementation.checkHealth();
+    }
+
+    /**
+     * Execute raw Elasticsearch query
+     */
+    async executeQuery(query) {
+        if (!this.initialized) await this.initialize();
+        return this.implementation.executeQuery(query);
     }
 
     /**

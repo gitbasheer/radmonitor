@@ -8,6 +8,7 @@ import TimeRangeUtils from './time-range-utils.js';
 import DataProcessor from './data-processor.js';
 import UIUpdater from './ui-updater.js';
 import ApiClient from './api-client.js';
+import { unifiedAPI } from './api-interface.js';
 
 // ESM: Converted from IIFE to ES module export
 export const DataLayer = (() => {
@@ -17,7 +18,8 @@ export const DataLayer = (() => {
     const queryState = {
         activeQueries: new Map(),
         responseCache: new Map(),
-        parsedCache: new Map()
+        parsedCache: new Map(),
+        lastProcessedResults: null
     };
 
     // Performance metrics state
@@ -40,10 +42,10 @@ export const DataLayer = (() => {
         actionTriggered: []
     };
 
-    // State logging configuration
+    // State logging configuration - start with reduced verbosity
     const stateLogging = {
         enabled: true,
-        collapsed: false,
+        collapsed: true,  // Start with collapsed logs to reduce console noise
         colors: {
             action: '#03A9F4',
             prevState: '#9E9E9E',
@@ -572,12 +574,33 @@ export const DataLayer = (() => {
 
         // Send query to Elasticsearch
         async sendQuery(query) {
-            // Use your existing ApiClient
-            const result = await ApiClient.executeQuery(query);
-            if (!result.success) {
-                throw new Error(result.error);
+            try {
+                // Use unified API - ensure it's initialized
+                if (!unifiedAPI || !unifiedAPI.initialized) {
+                    if (!unifiedAPI) {
+                        throw new Error('UnifiedAPI not available');
+                    }
+                    await unifiedAPI.initialize();
+                }
+                
+                // Use unified API which will delegate to the appropriate implementation
+                const result = await unifiedAPI.executeQuery(query);
+                if (!result || !result.success) {
+                    throw new Error(result?.error || 'Query execution failed');
+                }
+                return result.data;
+            } catch (error) {
+                console.error('sendQuery failed:', error);
+                
+                // Provide a more helpful error message
+                if (error.message.includes('authentication') || error.message.includes('cookie')) {
+                    throw new Error('Authentication required - please set your cookie');
+                } else if (error.message.includes('CORS') || error.message.includes('proxy')) {
+                    throw new Error('CORS proxy required for localhost - please start the proxy server');
+                } else {
+                    throw new Error(`Query failed: ${error.message}`);
+                }
             }
-            return result.data;
         },
 
         // Generate cache key
@@ -621,24 +644,32 @@ export const DataLayer = (() => {
     }
 
     function notifyListeners(event, data) {
-        if (listeners[event]) {
+        if (listeners[event] && Array.isArray(listeners[event])) {
             logAction(`EVENT_EMIT_${event.toUpperCase()}`, {
                 event,
                 listenerCount: listeners[event].length,
-                dataKeys: data ? Object.keys(data) : []
+                dataKeys: data && typeof data === 'object' ? Object.keys(data) : []
             });
 
             listeners[event].forEach((callback, index) => {
                 try {
-                    callback(data);
+                    if (typeof callback === 'function') {
+                        callback(data);
+                    } else {
+                        console.warn(`Invalid callback at index ${index} for event '${event}':`, callback);
+                    }
                 } catch (error) {
+                    console.error(`Error in listener ${index} for event '${event}':`, error);
                     logAction('EVENT_LISTENER_ERROR', {
                         event,
                         listenerIndex: index,
-                        error: error.message
+                        error: error.message,
+                        callbackType: typeof callback
                     });
                 }
             });
+        } else if (listeners[event]) {
+            console.warn(`Event '${event}' listeners is not an array:`, listeners[event]);
         }
     }
 
@@ -662,12 +693,12 @@ export const DataLayer = (() => {
         try {
             // Handle special cases
             if (searchType === 'health') {
-                // Use ApiClient health check instead of full query
-                if (typeof ApiClient !== 'undefined' && ApiClient.checkHealth) {
-                    const result = await ApiClient.checkHealth();
+                // Use unified API health check instead of full query
+                if (typeof unifiedAPI !== 'undefined' && unifiedAPI.checkHealth) {
+                    const result = await unifiedAPI.checkHealth();
                     notifyListeners('searchComplete', {
                         searchType: 'health',
-                        data: result.data || { status: result.success ? 'ok' : 'error' }
+                        data: result.data || { status: result.healthy !== false ? 'ok' : 'error' }
                     });
                     return result;
                 }
@@ -768,6 +799,11 @@ export const DataLayer = (() => {
                 raw: response,
                 queryConfig
             });
+
+            // Store last traffic results for retrieval by tests
+            if (queryConfig.type === 'trafficAnalysis' && transformed) {
+                queryState.lastProcessedResults = transformed;
+            }
 
             logAction('FETCH_AND_PARSE_COMPLETE', {
                 queryId,
@@ -878,7 +914,8 @@ export const DataLayer = (() => {
                     error: query.error
                 })),
                 responseCacheSize: queryState.responseCache.size,
-                parsedCacheSize: queryState.parsedCache.size
+                parsedCacheSize: queryState.parsedCache.size,
+                lastProcessedResults: queryState.lastProcessedResults
             },
             performanceMetrics: {
                 ...performanceMetrics,
@@ -920,7 +957,10 @@ export const DataLayer = (() => {
         executeSearch,
 
         // State access
-        getQueryState: () => ({ ...queryState }),
+        getQueryState: () => ({ 
+            ...queryState,
+            lastProcessedResults: queryState.lastProcessedResults
+        }),
         getActiveQueries: () => Array.from(queryState.activeQueries.entries()),
         getCachedResponses: () => Array.from(queryState.responseCache.keys()),
 

@@ -23,10 +23,11 @@ from pathlib import Path
 from typing import Optional, Dict, Any
 
 # Add src to path for imports
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
 # Import our data processor
-from data.process_data import main as process_data_main
+from src.data.process_data import main as process_data_main
+from src.config.settings import Settings
 
 
 # Configure logging with colors
@@ -83,23 +84,26 @@ def setup_logging():
 
 # Configuration class to replace bash config
 class DashboardConfig:
-    """Dashboard configuration with defaults"""
+    """Dashboard configuration with defaults - now uses centralized config"""
 
     def __init__(self):
+        # Load centralized settings
+        settings = Settings()
+        
         # Kibana settings
-        self.kibana_url = "https://usieventho-prod-usw2.kb.us-west-2.aws.found.io:9243"
-        self.kibana_index = "traffic-*"
+        self.kibana_url = settings.kibana.url
+        self.kibana_index = settings.elasticsearch.index_pattern
 
         # Default time ranges
-        self.default_baseline_start = "2025-06-01"
-        self.default_baseline_end = "2025-06-09"
-        self.default_current_time = "now-12h"
+        self.default_baseline_start = settings.processing.baseline_start
+        self.default_baseline_end = settings.processing.baseline_end
+        self.default_current_time = settings.processing.current_time_range
 
         # Thresholds
-        self.high_volume_threshold = 1000
-        self.medium_volume_threshold = 100
-        self.critical_threshold = -80
-        self.warning_threshold = -50
+        self.high_volume_threshold = settings.processing.high_volume_threshold
+        self.medium_volume_threshold = settings.processing.medium_volume_threshold
+        self.critical_threshold = settings.processing.critical_threshold
+        self.warning_threshold = settings.processing.warning_threshold
 
         # File paths
         self.data_dir = "data"
@@ -267,7 +271,31 @@ def fetch_kibana_data(cookie: str, config: DashboardConfig, args: argparse.Names
     except requests.exceptions.RequestException as e:
         logger.error(f"❌ Failed to connect to CORS proxy: {e}")
         logger.error("Make sure CORS proxy is running: npm run cors-proxy")
-        sys.exit(1)
+        
+        # Direct API fallback for GitHub Actions
+        logger.info("🔄 Proxy servers unavailable, using direct Elasticsearch API")
+        headers = {
+            'Cookie': f'sid={cookie}',
+            'Content-Type': 'application/json',
+            'kbn-xsrf': 'true'
+        }
+        es_url = "https://usieventho-prod-usw2.kb.us-west-2.aws.found.io:9243/api/console/proxy?path=traffic-*/_search&method=POST"
+        
+        try:
+            response = requests.post(es_url, json=query, headers=headers, timeout=30)
+            
+            if response.status_code == 200:
+                logger.info("✅ Data fetched via direct Elasticsearch API")
+                return response.json()
+            else:
+                logger.error(f"❌ Direct API failed: HTTP {response.status_code}")
+                logger.error(response.text)
+                sys.exit(1)
+                
+        except requests.exceptions.RequestException as direct_e:
+            logger.error(f"❌ Direct API connection failed: {direct_e}")
+            logger.error("All data fetch methods failed")
+            sys.exit(1)
 
 
 def save_raw_response(data: Dict[str, Any], config: DashboardConfig, logger: logging.Logger):
@@ -292,6 +320,7 @@ def generate_dashboard(config: DashboardConfig, args: argparse.Namespace,
     os.environ['WARNING_THRESHOLD'] = str(config.warning_threshold)
 
     # Build arguments for process_data.py
+    old_argv = sys.argv.copy()  # Save current argv
     sys.argv = [
         'process_data.py',
         '--response', config.raw_response_file,
@@ -300,6 +329,9 @@ def generate_dashboard(config: DashboardConfig, args: argparse.Namespace,
     ]
 
     try:
+        # Debug: Log what we're about to do
+        logger.info(f"Calling process_data with args: {sys.argv}")
+        
         # Call process_data.py main function directly
         process_data_main()
         logger.success(f"✅ Dashboard generated successfully!")
@@ -310,7 +342,11 @@ def generate_dashboard(config: DashboardConfig, args: argparse.Namespace,
             sys.exit(1)
     except Exception as e:
         logger.error(f"❌ Failed to generate dashboard: {e}")
+        import traceback
+        traceback.print_exc()
         sys.exit(1)
+    finally:
+        sys.argv = old_argv  # Restore original argv
 
 
 def main():

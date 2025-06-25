@@ -73,6 +73,7 @@ def run_simple_mode():
     print("")
 
     # Import and run the simple server
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
     from dev_server import main as simple_main
     simple_main()
 
@@ -86,22 +87,24 @@ def run_fastapi_mode(python_cmd=None):
 
     if python_cmd:
         # Run with specific Python executable (from venv)
-        subprocess.run([*python_cmd, "dev_server_fastapi.py"])
+        subprocess.run([*python_cmd, "bin/dev_server_fastapi.py"])
     else:
         # Run with current Python
+        sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
         from dev_server_fastapi import app
         import uvicorn
 
         # Clean up ports first
-        subprocess.run(["./cleanup-ports.sh"], capture_output=True)
+        subprocess.run(["scripts/setup/cleanup-ports.sh"], capture_output=True)
 
         # Run FastAPI server
         uvicorn.run(
-            app,
+            "dev_server_fastapi:app",
             host="0.0.0.0",
             port=8000,
             reload=True,
-            log_level="info"
+            log_level="info",
+            app_dir=os.path.dirname(os.path.abspath(__file__))
         )
 
 

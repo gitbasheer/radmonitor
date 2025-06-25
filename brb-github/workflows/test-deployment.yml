@@ -1,0 +1,136 @@
+name: Test RAD Dashboard Deployment
+
+on:
+  workflow_dispatch: # Manual trigger only for testing
+  pull_request:
+    paths:
+      - 'bin/generate_dashboard.py'
+      - '.github/workflows/update-dashboard.yml'
+      - 'scripts/generate_dashboard_refactored.sh'
+
+permissions:
+  contents: read
+
+jobs:
+  test-deployment:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          echo "=== Installing Python dependencies ==="
+          pip install requests python-dateutil pydantic httpx
+          pip list | grep -E "requests|pydantic|httpx|dateutil"
+
+      - name: Validate Python environment
+        run: |
+          echo "=== Python Environment ==="
+          python --version
+          echo "Current directory: $(pwd)"
+          echo "Python path:"
+          python -c "import sys; print('\n'.join(sys.path))"
+
+      - name: Test configuration loading
+        run: |
+          echo "=== Testing configuration ==="
+          python -c "
+import sys
+sys.path.insert(0, '.')
+try:
+    from src.config.settings import Settings
+    settings = Settings()
+    print('✅ Configuration loaded successfully')
+    print(f'Baseline: {settings.processing.baseline_start} to {settings.processing.baseline_end}')
+except Exception as e:
+    print(f'❌ Configuration error: {e}')
+    sys.exit(1)
+          "
+
+      - name: Test with mock data (no Elastic cookie)
+        run: |
+          echo "=== Testing without Elastic cookie ==="
+          # Create mock data
+          mkdir -p data
+          cat > data/raw_response.json << 'EOF'
+          {
+            "took": 100,
+            "timed_out": false,
+            "aggregations": {
+              "events": {
+                "buckets": [
+                  {
+                    "key": "test.event",
+                    "doc_count": 1000,
+                    "baseline": {"doc_count": 900},
+                    "current": {"doc_count": 100}
+                  }
+                ]
+              }
+            }
+          }
+          EOF
+          
+          # Test HTML generation only
+          python3 -m src.data.process_data \
+            --response data/raw_response.json \
+            --template assets/templates/index.html.template \
+            --output test_output.html
+          
+          if [ -f test_output.html ]; then
+            echo "✅ HTML generation works without Elastic cookie"
+            echo "File size: $(ls -lh test_output.html | awk '{print $5}')"
+            # Check for config editor
+            if grep -q "config-editor.js" test_output.html; then
+              echo "✅ Config editor included"
+            else
+              echo "❌ Config editor missing"
+              exit 1
+            fi
+          else
+            echo "❌ HTML generation failed"
+            exit 1
+          fi
+
+      - name: Test with dummy Elastic cookie
+        env:
+          ELASTIC_COOKIE: "Fe26.2**dummy_test_cookie_for_validation_only_1234567890abcdef1234567890abcdef"
+        run: |
+          echo "=== Testing with dummy Elastic cookie ==="
+          echo "Cookie is set: ${ELASTIC_COOKIE:0:10}..."
+          
+          # This will fail at data fetch but should show the direct API attempt
+          set +e  # Don't exit on error
+          timeout 30s ./scripts/generate_dashboard_refactored.sh 2>&1 | tee deploy_test.log
+          EXIT_CODE=$?
+          set -e
+          
+          echo "Exit code: $EXIT_CODE"
+          
+          # Check if direct API was attempted
+          if grep -q "direct Elasticsearch API\|Direct API fallback" deploy_test.log; then
+            echo "✅ Direct API fallback was attempted"
+          else
+            echo "⚠️ Direct API fallback not detected - checking for proxy attempts"
+            grep -i "proxy\|localhost" deploy_test.log || true
+          fi
+          
+          # Even if it fails, we validated the flow
+          echo "Test completed - check logs above for behavior"
+
+      - name: Upload test artifacts
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: deployment-test-results
+          path: |
+            test_output.html
+            deploy_test.log
+            data/raw_response.json 

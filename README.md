@@ -12,6 +12,40 @@ This dashboard monitors impression and click traffic for RAD cards, comparing cu
 - **Detailed metrics** including score, percentage change, and impact
 - **GitHub Pages hosting** with automatic updates every 45 minutes
 
+## 🎉 Recent Achievements (Project 77% Complete)
+
+### Latest Updates:
+
+1. **Deployment Pipeline Fixed** ✅
+   - Direct Elasticsearch API support for GitHub Actions
+   - No proxy servers needed for production deployment
+   - Fixed ES_COOKIE vs ELASTIC_COOKIE configuration issue
+   - Python processing bug resolved
+
+2. **Configuration Centralized** ✅
+   - Single source of truth in `config/settings.json`
+   - Pydantic validation for type safety
+   - Config editor UI in dashboard
+   - Full API for configuration management
+
+3. **FastAPI Integration Complete** ✅
+   - WebSocket real-time updates
+   - Production-ready with rate limiting and circuit breakers
+   - Automatic mode detection
+   - Zero breaking changes
+
+4. **JavaScript Test Suite Improved** ✅
+   - Test failures reduced from 31 to 22 (29% improvement)
+   - New test helper functions for reliability
+   - Better test infrastructure and mocking
+
+5. **Documentation Enhanced** ✅
+   - JavaScript module architecture documented
+   - Comprehensive test failure analysis
+   - Deployment guides updated
+
+See `progress.md` for detailed completion status of all features.
+
 ## 🆕 New: Unified Development Server
 
 **One command to rule them all!** The RAD Monitor now features an intelligent development server that automatically chooses the best mode for your environment:
@@ -282,19 +316,27 @@ The dashboard requires an Elasticsearch session cookie to fetch data.
 
 **For local development:**
 ```bash
+# Note: Use ES_COOKIE for the centralized config system
+export ES_COOKIE="Fe26.2**your_cookie_here**"
+# For backward compatibility, also set:
 export ELASTIC_COOKIE="Fe26.2**your_cookie_here**"
 ```
 
 **For GitHub deployment:**
 1. Go to your repo's Settings → Secrets and variables → Actions
 2. Add a new secret named `ELASTIC_COOKIE`
-3. Paste your cookie value
+3. Paste your cookie value (without the `sid=` prefix)
 
 **In the dashboard UI:**
 1. Click the gear icon
 2. Click "Set Cookie for Real-time"
 3. Paste your Elastic cookie
 4. Click "Test Connection" to verify
+
+**Important Notes:**
+- The system expects `ES_COOKIE` environment variable (not `ELASTIC_COOKIE`) for the new centralized config
+- GitHub Actions workflow sets both for compatibility
+- Direct API calls require `sid={cookie}` format in the Cookie header
 
 ## GitHub Pages Deployment
 
@@ -305,10 +347,18 @@ The dashboard is automatically deployed to GitHub Pages:
 3. **Live Data**: Works without CORS proxy on GitHub Pages
 4. **Fallback**: Shows static data when real-time is unavailable
 
+### Direct API Support for GitHub Actions 🆕
+
+The deployment pipeline now includes direct Elasticsearch API support:
+- Automatically falls back to direct HTTPS API when proxy servers are unavailable
+- No local dependencies required for GitHub Actions
+- Proper authentication with `sid={cookie}` format
+- Full error handling and retry logic
+
 ### Manual Deployment
 
 ```bash
-# Generate dashboard
+# Generate dashboard (now with direct API support)
 python3 bin/generate_dashboard.py
 # or use the wrapper: ./scripts/generate_dashboard_refactored.sh
 
@@ -317,6 +367,11 @@ git add index.html data/
 git commit -m "Update dashboard"
 git push
 ```
+
+**Deployment Requirements**:
+- Python dependencies: `requests`, `pydantic`, `python-dotenv`
+- Environment variable: `ES_COOKIE` (set in GitHub Secrets)
+- No proxy servers needed!
 
 ## Configuration
 
@@ -329,6 +384,42 @@ Use the Control Panel (gear icon) for real-time configuration:
 - **Min Daily Volume**: Filter out low-traffic cards (100 default)
 - **Time Range**: Data window from 1h to 48h (12h default) or custom time ranges
 - **Auto Refresh**: Toggle and set interval (60s default)
+
+### Centralized Configuration Management 🆕
+
+The dashboard now features centralized configuration with:
+
+**Configuration File**: `config/settings.json`
+- Single source of truth for all settings
+- Type-safe with Pydantic validation
+- JSON format for easy version control
+
+**Config Service API**:
+```javascript
+// Get current configuration
+const config = ConfigService.getConfig();
+
+// Update configuration
+await ConfigService.updateConfig({
+    baselineStart: '2025-07-01',
+    highVolumeThreshold: 2000
+});
+
+// Subscribe to changes
+ConfigService.subscribe(({event, newConfig}) => {
+    console.log('Config updated:', newConfig);
+});
+```
+
+**Config Editor UI**:
+- Access via "Advanced Configuration Editor" in the control panel
+- Load, edit, save, and reset configuration
+- Organized sections for processing, dashboard, and Elasticsearch settings
+
+**Initialize Configuration**:
+```bash
+node scripts/setup/init-config.js
+```
 
 ### Custom Time Ranges
 
@@ -721,7 +812,15 @@ The project now includes a FastAPI-based development server that provides enhanc
 - Ping/pong heartbeat mechanism for connection health
 - Reconnection logic with exponential backoff
 
-**3. Request/Response Validation**
+**3. Production-Ready Enhancements** 🚀
+- **Rate Limiting**: Protects against DoS attacks (10/min for queries, 30/min for config)
+- **Circuit Breaker**: Prevents cascade failures when Elasticsearch is down
+- **Exponential Backoff**: Smart WebSocket reconnection with jitter
+- **Structured Logging**: JSON logs for better observability and debugging
+
+See [docs/PRODUCTION_ENHANCEMENTS.md](docs/PRODUCTION_ENHANCEMENTS.md) for detailed implementation.
+
+**4. Request/Response Validation**
 All API endpoints use Pydantic v2 models for validation:
 
 ```python
@@ -735,12 +834,12 @@ class DashboardConfig(BaseModel):
     medium_volume_threshold: int = Field(default=100, ge=1)
 ```
 
-**4. Auto-Generated Documentation**
+**5. Auto-Generated Documentation**
 - Interactive API documentation at http://localhost:8000/docs
 - OpenAPI schema at http://localhost:8000/openapi.json
 - Try out endpoints directly from the browser
 
-**5. JavaScript Client Library**
+**6. JavaScript Client Library**
 A comprehensive client library (`api-client-fastapi.js`) provides:
 - WebSocket connection management with auto-reconnect
 - Typed API methods for all endpoints
@@ -945,6 +1044,40 @@ npm run test:run      # Single run
 npm run test:coverage # With coverage report
 ```
 
+#### Test Infrastructure
+The test suite includes comprehensive helper functions for reliable testing:
+
+**Authentication Helpers:**
+```javascript
+// Set up proper authentication for tests
+setupTestAuthentication('test_cookie_value');
+// Creates properly formatted elastic cookie with expiration
+```
+
+**Configuration Helpers:**
+```javascript
+// Set up consistent test configuration
+setupTestConfiguration({
+  baseline_start: '2025-06-01',
+  baseline_end: '2025-06-09',
+  time_range: 'now-12h'
+});
+```
+
+**Mock Response Builders:**
+```javascript
+// Create mock API responses
+createMockResponse(data, status);
+createElasticsearchResponse(buckets);
+createBucket(name, baseline, current);
+```
+
+**Global Mocks:**
+- `localStorage` with accessible data store
+- `window.location` with proper mocking
+- `fetch` with response builders
+- `WebSocket` with event simulation
+
 ### Python Tests (pytest)
 - **60+ tests** including unit and integration tests
 - **Unit tests**: CORS proxy, data models, processors, API endpoints
@@ -1000,6 +1133,37 @@ python3 verify_integration_tests.py
 - **Parallel execution**: JavaScript, Python, and Bash tests run simultaneously
 - **Error reporting**: Detailed logs and failure notifications
 - **Security**: Dependency vulnerability scanning
+
+### Troubleshooting Test Failures
+
+**Common Test Issues:**
+
+1. **Authentication Failures**
+   - Ensure tests use `setupTestAuthentication()` helper
+   - Check localStorage key is `'elasticCookie'` (not `'elastic_cookie'`)
+   - Verify cookie JSON format includes `cookie`, `expires`, and `saved` fields
+
+2. **WebSocket Test Failures**
+   - Mock must include event listener methods: `addEventListener`, `removeEventListener`
+   - Simulate events by calling the registered event handlers
+   - Set `readyState` to `WebSocket.OPEN` before triggering events
+
+3. **Integration Test Issues**
+   - Use global test helpers from `tests/setup.js`
+   - Ensure localStorage changes persist using `global.localStorage.data`
+   - Mock window.location using `Object.defineProperty` for proper isolation
+
+4. **Running Specific Tests**
+   ```bash
+   # Run a specific test file
+   npx vitest run tests/fastapiClient.test.js
+   
+   # Run tests matching a pattern
+   npm test -- --grep "WebSocket"
+   
+   # Debug a specific test
+   npx vitest --inspect-brk tests/integration.test.js
+   ```
 
 ## Performance Metrics
 

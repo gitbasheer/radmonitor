@@ -112,6 +112,12 @@ export const UIUpdater = (() => {
         const envStatusEl = document.getElementById('envStatus');
         const cookieStatusEl = document.getElementById('cookieStatus');
 
+        // Don't override authentication error messages
+        if (statusEl && statusEl.dataset.authRequired === 'true') {
+            console.log('⏭️ SKIPPING status update - authentication error is showing');
+            return;
+        }
+
         // Update environment status
         if (envStatusEl) {
             envStatusEl.textContent = isLocalhost ? 'Local Dev' : 'GitHub Pages';
@@ -133,13 +139,30 @@ export const UIUpdater = (() => {
                 corsStatusEl.style.color = proxyRunning ? '#388e3c' : '#d32f2f';
             }
 
-            // Update main status message
-            if (proxyRunning && hasCookie) {
-                statusEl.innerHTML = `Ready for real-time! | <a href="#" onclick="Dashboard.testApiConnection(); return false;" style="color: #333;">Test API</a> | <a href="#" onclick="Dashboard.showApiSetupInstructions(); return false;" style="color: #333;">Setup</a>`;
-            } else if (proxyRunning) {
-                statusEl.innerHTML = `CORS proxy ready - need cookie | <a href="#" onclick="Dashboard.setCookieForRealtime(); return false;" style="color: #333;">Set Cookie</a> | <a href="#" onclick="Dashboard.showApiSetupInstructions(); return false;" style="color: #333;">Setup</a>`;
-            } else {
-                statusEl.innerHTML = `Start CORS proxy for real-time | <a href="#" onclick="Dashboard.showApiSetupInstructions(); return false;" style="color: #333;">Instructions</a>`;
+            // Update main status message (only if no auth error is showing)
+            if (statusEl) {
+                if (!proxyRunning) {
+                    statusEl.innerHTML = `Start CORS proxy for real-time | <a href="#" onclick="Dashboard.showApiSetupInstructions(); return false;" style="color: #333;">Instructions</a>`;
+                } else if (!hasCookie) {
+                    statusEl.innerHTML = `CORS proxy ready - need cookie | <a href="#" onclick="Dashboard.setCookieForRealtime(); return false;" style="color: #333;">Set Cookie</a> | <a href="#" onclick="Dashboard.showApiSetupInstructions(); return false;" style="color: #333;">Setup</a>`;
+                } else {
+                    // We have both proxy and cookie - but need to validate the cookie actually works
+                    statusEl.innerHTML = `Testing authentication... | <a href="#" onclick="Dashboard.setCookieForRealtime(); return false;" style="color: #333;">Update Cookie</a>`;
+                    
+                    // Test the cookie by attempting a simple query
+                    try {
+                        const testResult = await ApiClient.testAuthentication();
+                        if (testResult.success) {
+                            statusEl.innerHTML = `Ready for real-time! | <a href="#" onclick="Dashboard.testApiConnection(); return false;" style="color: #333;">Test API</a> | <a href="#" onclick="Dashboard.showApiSetupInstructions(); return false;" style="color: #333;">Setup</a>`;
+                        } else {
+                            statusEl.innerHTML = `Cookie invalid - need valid cookie | <a href="#" onclick="Dashboard.setCookieForRealtime(); return false;" style="color: #d32f2f;">Fix Cookie</a> | <a href="#" onclick="Dashboard.showApiSetupInstructions(); return false;" style="color: #333;">Help</a>`;
+                        }
+                    } catch (error) {
+                        statusEl.innerHTML = `Cookie test failed | <a href="#" onclick="Dashboard.setCookieForRealtime(); return false;" style="color: #d32f2f;">Fix Cookie</a> | <a href="#" onclick="Dashboard.showApiSetupInstructions(); return false;" style="color: #333;">Help</a>`;
+                    }
+                }
+                // Clear auth flag when successfully updating status
+                delete statusEl.dataset.authRequired;
             }
         } else {
             // GitHub Pages - no CORS proxy needed
@@ -148,10 +171,27 @@ export const UIUpdater = (() => {
                 corsStatusEl.style.color = '#666';
             }
 
-            if (hasCookie) {
-                statusEl.innerHTML = `Real-time enabled | <a href="#" onclick="Dashboard.testApiConnection(); return false;" style="color: #333;">Test API</a> | <a href="#" onclick="Dashboard.setCookieForRealtime(); return false;" style="color: #333;">Update Cookie</a>`;
-            } else {
-                statusEl.innerHTML = `Auto-refresh: 45 minutes | <a href="#" onclick="Dashboard.setCookieForRealtime(); return false;" style="color: #333;">Enable Real-time</a>`;
+            if (statusEl) {
+                if (!hasCookie) {
+                    statusEl.innerHTML = `Auto-refresh: 45 minutes | <a href="#" onclick="Dashboard.setCookieForRealtime(); return false;" style="color: #333;">Enable Real-time</a>`;
+                } else {
+                    // We have a cookie - but need to validate it actually works (same logic as localhost)
+                    statusEl.innerHTML = `Testing authentication... | <a href="#" onclick="Dashboard.setCookieForRealtime(); return false;" style="color: #333;">Update Cookie</a>`;
+                    
+                    // Test the cookie by attempting a simple query
+                    try {
+                        const testResult = await ApiClient.testAuthentication();
+                        if (testResult.success) {
+                            statusEl.innerHTML = `Real-time enabled | <a href="#" onclick="Dashboard.testApiConnection(); return false;" style="color: #333;">Test API</a> | <a href="#" onclick="Dashboard.setCookieForRealtime(); return false;" style="color: #333;">Update Cookie</a>`;
+                        } else {
+                            statusEl.innerHTML = `Cookie invalid - need valid cookie | <a href="#" onclick="Dashboard.setCookieForRealtime(); return false;" style="color: #d32f2f;">Fix Cookie</a>`;
+                        }
+                    } catch (error) {
+                        statusEl.innerHTML = `Cookie test failed | <a href="#" onclick="Dashboard.setCookieForRealtime(); return false;" style="color: #d32f2f;">Fix Cookie</a>`;
+                    }
+                }
+                // Clear auth flag when successfully updating status
+                delete statusEl.dataset.authRequired;
             }
         }
     }
@@ -291,8 +331,18 @@ export const UIUpdater = (() => {
                 `;
 
                 const container = document.querySelector('.container');
-                const timestamp = container.querySelector('.timestamp');
-                container.insertBefore(banner, timestamp.nextSibling);
+                const footer = container.querySelector('.footer-content') || container.querySelector('footer');
+                if (footer) {
+                    container.insertBefore(banner, footer.parentElement);
+                } else {
+                    // Fallback: insert before the first table if footer not found
+                    const table = container.querySelector('table');
+                    if (table) {
+                        container.insertBefore(banner, table);
+                    } else {
+                        container.appendChild(banner);
+                    }
+                }
             }
         }
     }
@@ -394,3 +444,4 @@ export const UIUpdater = (() => {
 
 // ESM: Export as default for convenience
 export default UIUpdater;
+

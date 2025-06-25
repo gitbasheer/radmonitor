@@ -27,6 +27,7 @@ global.clearTimeout = vi.fn();
 // Mock localStorage with proper functionality
 const localStorageData = {};
 global.localStorage = {
+  data: localStorageData, // Make data accessible for tests
   getItem: vi.fn((key) => localStorageData[key] || null),
   setItem: vi.fn((key, value) => {
     localStorageData[key] = value;
@@ -123,4 +124,36 @@ global.createBucket = (key, baselineCount, currentCount) => {
     baseline: { doc_count: baselineCount },
     current: { doc_count: currentCount }
   };
+};
+
+// Helper to set up proper authentication for tests
+global.setupTestAuthentication = (cookieValue = 'test_cookie') => {
+  const cookieData = {
+    cookie: cookieValue,
+    expires: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+    saved: new Date().toISOString()
+  };
+  localStorage.setItem('elasticCookie', JSON.stringify(cookieData));
+  // Also ensure localStorage mock tracks this
+  localStorageData['elasticCookie'] = JSON.stringify(cookieData);
+};
+
+// Helper to set up test configuration
+global.setupTestConfiguration = (config = {}) => {
+  const defaultConfig = {
+    baselineStart: '2025-06-01',
+    baselineEnd: '2025-06-09',
+    currentTimeRange: 'now-12h',
+    highVolumeThreshold: 1000,
+    mediumVolumeThreshold: 100,
+    minDailyVolume: 100,
+    criticalThreshold: -80,
+    warningThreshold: -50,
+    autoRefreshEnabled: true,
+    autoRefreshInterval: 300000
+  };
+  const fullConfig = { ...defaultConfig, ...config };
+  localStorage.setItem('radMonitorConfig', JSON.stringify(fullConfig));
+  // Also ensure localStorage mock tracks this
+  localStorageData['radMonitorConfig'] = JSON.stringify(fullConfig);
 };
