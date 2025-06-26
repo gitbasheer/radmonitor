@@ -3,11 +3,10 @@
  * This provides immediate functionality while proxy issues are resolved
  */
 
-// Wait for page load then override the API client
-document.addEventListener('DOMContentLoaded', function() {
-    
-    // Wait a bit for the main API client to initialize
-    setTimeout(() => {
+// Override immediately when script loads
+(function() {
+    // Function to apply the override
+    function applyCorsOverride() {
         console.log('🔧 Initializing CORS Direct Override...');
         
         if (window.UnifiedAPIClient) {
@@ -122,7 +121,23 @@ document.addEventListener('DOMContentLoaded', function() {
         } else {
             console.warn('⚠️ UnifiedAPIClient not found - CORS override not applied');
         }
-        
-    }, 2000); // Wait 2 seconds for initialization
+    }
     
-}); 
+    // Try to apply immediately, then retry if needed
+    applyCorsOverride();
+    
+    // If UnifiedAPIClient wasn't ready, try again after page load
+    if (!window.UnifiedAPIClient) {
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(applyCorsOverride, 100);
+        });
+    }
+    
+    // Also try to trigger a dashboard refresh after override is applied
+    setTimeout(() => {
+        if (window.Dashboard && window.Dashboard.refresh) {
+            console.log('🔄 Triggering dashboard refresh after CORS override');
+            window.Dashboard.refresh();
+        }
+    }, 1000);
+})(); 
