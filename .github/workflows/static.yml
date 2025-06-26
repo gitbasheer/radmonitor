@@ -49,6 +49,17 @@ jobs:
           cp -r config/ _site/config/
           
                     # Create production config override with secrets
+          ELASTICSEARCH_COOKIE="${{ secrets.ELASTICSEARCH_COOKIE }}"
+          SKIP_COOKIE_PROMPT="false"
+          
+          # Check if cookie is available and not empty
+          if [ -n "$ELASTICSEARCH_COOKIE" ] && [ "$ELASTICSEARCH_COOKIE" != "" ]; then
+            SKIP_COOKIE_PROMPT="true"
+            echo "🔐 Auto-authentication enabled"
+          else
+            echo "🔐 No auto-authentication - cookie prompt will be shown"
+          fi
+          
           cat > _site/config/production.json << EOF
           {
             "environment": "production",
@@ -63,7 +74,7 @@ jobs:
               "directConnection": false,
               "url": "https://usieventho-prod-usw2.kb.us-west-2.aws.found.io:9243",
               "path": "/elasticsearch/usi*/_search",
-              "preConfiguredCookie": "${{ secrets.ELASTICSEARCH_COOKIE }}"
+              "preConfiguredCookie": "$ELASTICSEARCH_COOKIE"
             },
             "features": {
               "fastapi": false,
@@ -74,7 +85,7 @@ jobs:
             },
             "dashboard": {
               "autoLoadCookie": true,
-              "skipCookiePrompt": ${{ secrets.ELASTICSEARCH_COOKIE != '' && 'true' || 'false' }}
+              "skipCookiePrompt": $SKIP_COOKIE_PROMPT
             }
           }
           EOF

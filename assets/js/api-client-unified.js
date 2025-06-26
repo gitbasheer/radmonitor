@@ -16,11 +16,15 @@ export class UnifiedAPIClient {
         // Environment detection
         this.isLocalDev = window.location.hostname === 'localhost' || 
                          window.location.hostname === '127.0.0.1';
+        this.isProduction = window.location.hostname.includes('github.io');
         
         // Base URLs - unified server handles everything
         this.baseUrl = this.isLocalDev ? 'http://localhost:8000' : '';
         this.apiV1 = `${this.baseUrl}/api/v1`;
         this.wsUrl = this.isLocalDev ? 'ws://localhost:8000/ws' : null;
+        
+        // Production mode uses proxy, not direct API calls
+        this.useProxy = this.isProduction;
         
         // WebSocket state
         this.websocket = null;
@@ -343,16 +347,47 @@ export class UnifiedAPIClient {
             }
         }
         
-        // Execute query via unified server
-        // Note: The server expects the query as the raw body, not wrapped
-        const result = await this.request(`${this.apiV1}/kibana/proxy`, {
-            method: 'POST',
-            body: JSON.stringify(query),
-            headers: {
-                'Content-Type': 'application/json',
-                'X-Elastic-Cookie': auth.cookie
+        let result;
+        
+        if (this.useProxy) {
+            // Production mode: use proxy service
+            const config = ConfigService.getConfig();
+            const proxyUrl = config.corsProxy?.url;
+            
+            if (!proxyUrl) {
+                return {
+                    success: false,
+                    error: 'Proxy service not configured for production mode'
+                };
             }
-        });
+            
+            // Build proxy request URL
+            const esUrl = config.elasticsearch?.url || 'https://usieventho-prod-usw2.kb.us-west-2.aws.found.io:9243';
+            const esPath = config.elasticsearch?.path || '/elasticsearch/usi*/_search';
+            
+            const proxyRequestUrl = new URL(proxyUrl);
+            proxyRequestUrl.searchParams.set('esUrl', esUrl);
+            proxyRequestUrl.searchParams.set('esPath', esPath);
+            proxyRequestUrl.searchParams.set('cookie', auth.cookie);
+            
+            result = await this.request(proxyRequestUrl.toString(), {
+                method: 'POST',
+                body: JSON.stringify(query),
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+        } else {
+            // Development mode: use unified server
+            result = await this.request(`${this.apiV1}/kibana/proxy`, {
+                method: 'POST',
+                body: JSON.stringify(query),
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Elastic-Cookie': auth.cookie
+                }
+            });
+        }
         
         // Cache successful results
         if (result.success) {
@@ -377,6 +412,18 @@ export class UnifiedAPIClient {
      * Health check
      */
     async checkHealth() {
+        if (this.useProxy) {
+            // In production, we don't have a health endpoint
+            // Instead, check if we have authentication
+            const auth = await this.getAuthenticationDetails();
+            return { 
+                healthy: auth.valid, 
+                mode: 'production-proxy',
+                authenticated: auth.valid,
+                message: auth.valid ? 'Proxy authentication ready' : 'No authentication cookie'
+            };
+        }
+        
         const result = await this.request(`${this.baseUrl}/health`);
         return result.success ? result.data : { healthy: false, error: result.error };
     }

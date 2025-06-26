@@ -1,6 +1,6 @@
 # RAD Traffic Health Monitor
 
-Real-time monitoring dashboard for RAD cards traffic health. Automatically detects and alerts on traffic anomalies across all RAD cards.
+Real-time monitoring dashboard for RAD cards traffic health. Automatically detects and alerts on traffic anomalies using statistical analysis and visual indicators.
 
 ## Overview
 
@@ -10,222 +10,28 @@ This dashboard monitors impression and click traffic for RAD cards, comparing cu
 - **Automatic anomaly detection** using statistical analysis
 - **Visual status indicators** (Critical/Warning/Normal/Increased)
 - **Detailed metrics** including score, percentage change, and impact
-- **GitHub Pages hosting** with automatic updates every 45 minutes
+- **GitHub Pages hosting** with automatic updates
 
-## 🎉 Recent Achievements (Project 85% Complete)
-
-### Latest Updates:
-
-1. **Advanced Configuration Editor** ✅ (NEW)
-   - Live Elasticsearch query preview with real-time updates
-   - Editable query parameters (Event ID Pattern, Aggregation Size)
-   - One-click query copy with visual feedback
-   - Simplified UI with fixed values for Host Filter and Event ID Field
-   - Integrated with ConfigService for persistent settings
-
-2. **Loading State Management** ✅ (NEW)
-   - Fixed persistent "Refreshing dashboard..." message issue
-   - Proper coordination between loading indicators and status messages
-   - Visual loading spinner synced with data fetching
-   - Auto-clear status messages after operations complete
-   - Streamlined loading flow across all UI components
-
-3. **Dark Theme Support** ✅ (NEW)
-   - Full dark mode implementation for comfortable viewing
-   - Theme toggle in Configuration Settings
-   - Persistent theme preference across sessions
-   - All UI elements properly themed
-   - Respects system dark mode preferences
-
-4. **Configuration Architecture Improved** ✅
-   - Consolidated ConfigManager and ConfigService into single system
-   - ConfigService is now the single source of truth
-   - ConfigManager remains as thin UI wrapper for backward compatibility
-   - Added centralized API endpoints configuration in `/config/api-endpoints.json`
-   - All hardcoded URLs now easily configurable
-
-5. **Summary Cards Fixed** ✅
-   - Fixed connection between data and UI card counts
-   - Updated element selectors to use correct IDs
-   - Improved descriptions for non-technical users:
-     - CRITICAL: "Traffic dropped >80%"
-     - WARNING: "Traffic dropped 50-80%"
-     - NORMAL: "Traffic as expected"
-     - INCREASED: "Traffic higher than usual"
-
-6. **Console Logging Optimized** ✅
-   - Implemented verbosity levels (quiet/normal/verbose)
-   - Fixed state logging demo auto-running issue
-   - Consolidated performance metrics display
-   - Added ConsoleControl commands for easy debugging
-   - Clean, structured startup messages
-
-7. **UI Improvements** ✅
-   - Implemented fixed sidebar layout (280px wide)
-   - Consolidated redundant UI elements
-   - Enhanced connection status indicator
-   - Improved configuration panel organization
-   - Added missing CSS for loading indicators and filters
-
-8. **CORS Error Resolution** ✅
-   - Auto-skip backend on localhost development
-   - Changed error logging to debug level
-   - Prevents console pollution with expected errors
-
-9. **Deployment Pipeline Fixed** ✅
-   - Direct Elasticsearch API support for GitHub Actions
-   - No proxy servers needed for production deployment
-   - Fixed ES_COOKIE vs ELASTIC_COOKIE configuration issue
-   - Python processing bug resolved
-
-See `progress.md` for detailed completion status of all features.
-
-## 🆕 Latest Updates: Enhanced User Experience
-
-### **📖 Interactive Documentation** (NEW!)
-The dashboard now includes a **"How It Works"** button in the header that explains all monitoring math in plain English:
-- **📊 Baseline comparison calculations** with real examples
-- **🚨 Status classification rules** (Critical/Warning/Normal/Increased)
-- **⏰ Time range effects** on sensitivity and accuracy
-- **🎛️ Configuration tips** for different use cases
-- **🔍 Special features** like Inspection Mode and volume filtering
-
-Click the "📖 How It Works" button to see comprehensive explanations of every calculation and monitoring decision the system makes!
-
-### **🔍 Enhanced Search & Filter System** (NEW!)
-- **Real-time search** on event IDs with instant filtering
-- **Status-based filters** (All/Critical/Warning/Normal/Increased) 
-- **Combined filtering** - search and status filters work together
-- **Persistent state** - filters remain active when data refreshes
-- **Results counter** showing "X of Y events matching 'search' (status only)"
-
-### **🚀 Meaningful Console Logs** (NEW!)
-Replaced generic logging with detailed, actionable information:
-- **Kibana Query details** showing exact time ranges, filters, and aggregations
-- **Response summaries** with hit counts, data sizes, and processing times
-- **Performance warnings** properly classified (not errors)
-- **Configuration tracking** showing what settings are used for each refresh
-
-### **⚡ Unified Development Server**
-**One command to rule them all!** The RAD Monitor features an intelligent development server that automatically chooses the best mode:
-
-```bash
-npm run dev    # Just works - auto-detects FastAPI or falls back to simple mode
-```
-
-- **🧠 Smart detection** of your environment capabilities
-- **🚀 Automatic setup** of FastAPI features when available
-- **⚡ Fast fallback** to simple mode when needed
-- **🛡️ Zero failures** - always gives you a working development server
-
-## Key Features
+## Features
 
 ### Live Data Functionality
-- **Real-time API calls** to Elasticsearch/Kibana
-- **CORS proxy support** for local development
-- **Automatic refresh** with configurable intervals
-- **Cookie-based authentication** for secure access
-- **🎯 Console Dashboard** - ASCII bar charts in browser console for every data fetch!
+- Real-time API calls to Elasticsearch/Kibana
+- CORS proxy support for local development
+- Automatic refresh with configurable intervals
+- Cookie-based authentication for secure access
 
-### Performance Monitoring & Health Tracking
-- **Real-time performance metrics** tracking every query and API call
-- **CORS proxy health monitoring** with visual indicators (🟢/🔴)
-- **Intelligent auto-refresh** that adapts based on performance
-- **Cache optimization** with hit rate tracking
-- **Performance warnings** for slow queries (>3s API, >5s DataLayer)
-- **Console command**: `Dashboard.showPerformanceStats()` for detailed metrics
-- **Health status API**: `Dashboard.getHealthStatus()` for overall system health
+### Intelligent Monitoring
+- Statistical analysis combining percentage change and z-score
+- Volume-weighted scoring to prioritize high-traffic cards
+- Customizable thresholds for alerts
+- Historical baseline comparison (8-day average)
 
-### Intelligent Scoring System
-- **Statistical analysis** combining percentage change and z-score
-- **Volume-weighted scoring** to prioritize high-traffic cards
-- **Customizable thresholds** for alerts
-- **Historical baseline comparison** (8-day average)
-
-### Dashboard Layout & Controls
-The dashboard features a **modern sidebar layout** with better organization:
-
-**Fixed Sidebar Control Panel** (280px wide):
-- **Connection Status**: Real-time API connection status with visual indicator
-- **Time Range Configuration**: Preset buttons (6H, 12H, 24H, 3D) and custom ranges
-- **Baseline Period**: Configurable date range for comparison data
-- **Volume Thresholds**: High/Medium volume event thresholds
-- **Quick Actions**: Apply changes, refresh data, export config
-- **Advanced Options**: Config editor, API setup, and help
-
-**Main Content Area**:
-- **Header**: Title with "📖 How It Works" button and timestamp
-- **Summary Cards**: CRITICAL/WARNING/NORMAL/INCREASED counts with clear descriptions
-- **Search & Filters**: Real-time search input and status filter buttons
-- **Data Table**: Enhanced headers ("Traffic Event Identifier", "Health Status", "Change %", etc.)
-- **Results Info**: Shows filtered counts and active search terms
-
-> **Design Note**: The sidebar layout consolidates all controls while keeping the main content clean and focused on data visualization.
-
-### State Management & Redux-Style Logging
-The dashboard uses a centralized DataLayer state management system with comprehensive Redux-style action logging:
-
-```javascript
-// Every state action is logged with:
-action DASHBOARD_REFRESH_START @ 23:24:09.821
-prev state {activeQueries: {…}, responseCache: {…}, parsedCache: {…}}
-action     {type: 'DASHBOARD_REFRESH_START', refreshId: 'refresh_1234', timestamp: '...'}
-next state {activeQueries: {size: 1}, responseCache: {…}, parsedCache: {…}}
-```
-
-#### Console Logging Verbosity Control
-The dashboard provides fine-grained control over console output with three verbosity levels:
-
-```javascript
-// Quiet mode (default) - Minimal logging for important actions only
-ConsoleControl.quiet();
-
-// Normal mode - Balanced logging with key state changes
-ConsoleControl.normal();
-
-// Verbose mode - Full Redux-style logging for debugging
-ConsoleControl.enableVerbose();
-
-// Disable all state logging
-ConsoleControl.disableLogging();
-
-// Show available commands
-ConsoleControl.showHelp();
-```
-
-**Key Features:**
-- **Quiet Mode**: Only shows dashboard init, data fetch complete, and errors
-- **Normal Mode**: Includes authentication, search, and configuration changes
-- **Verbose Mode**: Full state logging with all actions and state changes
-- **Auto-collapsed**: Logs are collapsed by default to reduce visual noise
-- **Clean startup**: Structured initialization messages with status indicators
-
-This provides complete visibility into data flow while keeping the console clean during normal operation.
-
-### Automated Deployment
-- **GitHub Actions** updates dashboard every 45 minutes
-- **GitHub Pages hosting** for production deployment
-- **Automatic error recovery** and retry logic
-- **No server required** - runs entirely in the browser
-
-### NPM Commands
-All common tasks can be run via npm:
-
-| Command | Description |
-|---------|-------------|
-| `npm run dev` | **🎯 Unified server** - All features in one server (recommended) |
-| `npm run dev:simple` | **Legacy** - Simple HTTP server + CORS proxy |
-| `npm run dev:fastapi` | **Legacy** - Old FastAPI server (use unified server instead) |
-| `npm run dev:setup` | **First-time setup** - Install dependencies and run unified server |
-| `npm run cors-proxy` | Start only the CORS proxy server (port 8889) |
-| `npm run serve` | Start only the web server (port 8000) |
-| `npm run generate` | Generate dashboard with latest data |
-| `npm test` | Run JavaScript tests in watch mode |
-| `npm run test:run` | Run JavaScript tests once |
-| `npm run test:coverage` | Run tests with coverage report |
-| `npm run test:python` | Run Python tests |
-| `npm run test:bash` | Run Bash tests (requires bats) |
-| `npm run test:all` | Run complete test suite (JS, Python, Bash) |
+### UI
+- Fixed sidebar layout with organized controls
+- Real-time search and filtering
+- Dark theme support
+- Interactive configuration editor
+- Performance monitoring dashboard
 
 ## Quick Start
 
@@ -233,1244 +39,269 @@ All common tasks can be run via npm:
 - Node.js and npm
 - Python 3.x
 - Git
-- Web browser
 - Elasticsearch/Kibana access with valid cookie
-- bats (optional, for bash tests): `brew install bats-core` (macOS) or `apt-get install bats` (Linux)
 
-### Quick Start - Development
+### Installation
 
+1. **Clone and install dependencies**
 ```bash
-# Clone and navigate
 git clone https://github.com/balkhalil/rad_monitor.git
 cd rad_monitor
+   npm install
+   ```
 
-# Development mode (auto-detects FastAPI or falls back to simple)
+2. **Start development server**
+```bash
 npm run dev
+   ```
+   The unified server automatically detects your environment and starts the best available mode.
 
-# Force specific mode
-npm run dev:simple    # Force simple HTTP server
-npm run dev:fastapi   # Force FastAPI with WebSocket
+3. **Configure authentication**
+   - Get your Elasticsearch cookie from Kibana (Developer Tools → Network → Copy `sid` value)
+   - Set environment variable: `export ES_COOKIE="your_cookie_here"`
+   - Or use the dashboard UI: Click gear icon → "Set Cookie for Real-time"
 
-# Advanced options
-python3 bin/dev_server_unified.py --help
-python3 bin/dev_server_unified.py --mode simple
-python3 bin/dev_server_unified.py --setup
-```
+4. **Access dashboard**
+   - Open http://localhost:8000
+   - Click "Test Connection" to verify setup
+   - Dashboard will start displaying real-time data
 
-### Generate Dashboard
+### Production Deployment
 
-```bash
-# Using npm script (recommended)
-npm run generate
+For GitHub Pages deployment:
 
-# Using wrapper script
-./scripts/generate_dashboard_refactored.sh
+1. **Configure GitHub repository**
+   - Enable GitHub Pages in Settings → Pages
+   - Add `ELASTIC_COOKIE` secret in Settings → Secrets and variables → Actions
 
-# Direct Python (if wrapper fails)
-# or: python3 bin/generate_dashboard.py
-```
-
-## Unified Development Server
-
-The RAD Monitor now features an **intelligent unified development server** that automatically chooses the best mode for your environment. This eliminates the confusion of multiple development commands and provides a seamless experience.
-
-### 🎯 How It Works
-
-```mermaid
-graph TD
-    A["npm run dev"] --> B{FastAPI Available?}
-    B -->|Yes| C[FastAPI Mode<br/>Full Features]
-    B -->|No| D{Can Setup FastAPI?}
-    D -->|Yes| E[Offer Auto-Setup<br/>npm run dev:setup]
-    D -->|No| F[Simple Mode<br/>Always Works]
-    E --> C
-
-    C --> G[✅ WebSocket Updates<br/>✅ API Endpoints<br/>✅ Validation<br/>✅ Interactive Docs]
-    F --> H[✅ Fast Startup<br/>✅ Basic Features<br/>✅ CORS Proxy]
-```
-
-### 🚀 Development Modes
-
-| Mode | Startup Time | Features | Best For |
-|------|-------------|----------|----------|
-| **Smart (auto)** | Variable | Best available | Daily development |
-| **FastAPI** | ~3-5 seconds | Full feature set | Full-stack work |
-| **Simple** | Instant | HTTP + CORS | Frontend testing |
-
-### 💡 Key Benefits
-
-- **🧠 Intelligent**: One command that adapts to your environment
-- **🛡️ Reliable**: Graceful fallbacks prevent development blocks
-- **⚡ Fast**: Optimized startup for your specific needs
-- **🔧 Flexible**: Override options when you need specific behavior
-- **🎯 Simple**: No more confusion about which command to use
-
-### Development Workflow Examples
-
-```bash
-# Morning standup - just get started quickly
-npm run dev
-
-# Working on API integration - need full features
-npm run dev:setup
-
-# Quick CSS fix - want instant startup
-npm run dev:simple
-
-# Testing WebSocket features - force FastAPI mode
-npm run dev:fastapi
-```
-
-## Dependencies
-
-### NPM Dependencies (JavaScript)
-
-All dependencies are installed with `npm install`:
-
-| Package | Version | Purpose |
-|---------|---------|---------|
-| **vitest** | ^1.2.1 | Primary test runner for JavaScript tests |
-| **@vitest/coverage-v8** | ^1.2.1 | Code coverage reporting for tests |
-| **jsdom** | ^24.0.0 | DOM environment for testing (simulates browser) |
-| **concurrently** | ^8.2.2 | Runs multiple processes (CORS proxy + web server) |
-
-### Python Dependencies
-
-**Runtime (built-in modules only):**
-- Python 3.x standard library
-- No external packages required for running the dashboard
-
-**Enhanced Proxy (optional):**
-Install with: `pip install -r requirements-enhanced.txt`
-- **FastAPI** (0.104.0+) - Modern web framework for building APIs
-- **Pydantic v2** (2.5.0+) - Data validation using Python type annotations
-- **Uvicorn** (0.24.0+) - ASGI server for FastAPI
-- **python-dateutil** (2.8.2+) - Date/time parsing utilities
-
-**Testing (optional):**
-Install with: `pip install -r tests/requirements.txt`
-- pytest (8.3.2) - Test runner
-- pytest-cov (5.0.0) - Coverage reporting
-- pytest-mock (3.14.0) - Mocking utilities
-- pytest-asyncio (0.23.8) - Async test support
-- requests (2.32.3) - HTTP client for tests
-- responses (0.25.3) - HTTP mocking
-
-### External Tools
-
-| Tool | Required For | Installation |
-|------|--------------|--------------|
-| **Python 3.x** | Core functionality | Pre-installed on most systems |
-| **bats** | Bash tests only | `brew install bats-core` (macOS)<br>`apt-get install bats` (Linux) |
-
-### Port Configuration
-
-| Service | Port | Purpose |
-|---------|------|---------|
-| **CORS Proxy** | 8889 | Proxies Kibana API requests with CORS headers |
-| **Web Server** | 8000 | Serves the dashboard HTML/JS/CSS |
-
-**Note**: If you see "Address already in use" errors, ensure no other processes are using these ports:
-```bash
-# Check what's using the ports
-lsof -i :8889 -i :8000
-
-# Kill processes if needed
-kill -9 <PID>
-```
-
-## Authentication
-
-The dashboard requires an Elasticsearch session cookie to fetch data.
-
-### How to get your Elastic cookie:
-1. Open Kibana (your Elasticsearch dashboard)
-2. Open browser Developer Tools → Network tab
-3. Find any request to Kibana
-4. Look for `Cookie: sid=...` in request headers
-5. Copy the entire sid value
-
-**GitHub Actions (for automated updates):**
-1. Go to your repo's Settings → Secrets and variables → Actions
-2. Add new secret named `ELASTIC_COOKIE`
-3. Paste your sid value
-
-### Setting the Cookie:
-
-**For local development:**
-```bash
-# Note: Use ES_COOKIE for the centralized config system
-export ES_COOKIE="Fe26.2**your_cookie_here**"
-# For backward compatibility, also set:
-export ELASTIC_COOKIE="Fe26.2**your_cookie_here**"
-```
-
-**For GitHub deployment:**
-1. Go to your repo's Settings → Secrets and variables → Actions
-2. Add a new secret named `ELASTIC_COOKIE`
-3. Paste your cookie value (without the `sid=` prefix)
-
-**In the dashboard UI:**
-1. Click the gear icon
-2. Click "Set Cookie for Real-time"
-3. Paste your Elastic cookie
-4. Click "Test Connection" to verify
-
-**Important Notes:**
-- The system expects `ES_COOKIE` environment variable (not `ELASTIC_COOKIE`) for the new centralized config
-- GitHub Actions workflow sets both for compatibility
-- Direct API calls require `sid={cookie}` format in the Cookie header
-
-## GitHub Pages Deployment
-
-The dashboard is automatically deployed to GitHub Pages:
-
-1. **Automatic Updates**: GitHub Actions runs every 45 minutes
-2. **URL**: `https://{username}.github.io/{repo-name}/`
-3. **Live Data**: Works without CORS proxy on GitHub Pages
-4. **Fallback**: Shows static data when real-time is unavailable
-
-### Direct API Support for GitHub Actions 🆕
-
-The deployment pipeline now includes direct Elasticsearch API support:
-- Automatically falls back to direct HTTPS API when proxy servers are unavailable
-- No local dependencies required for GitHub Actions
-- Proper authentication with `sid={cookie}` format
-- Full error handling and retry logic
-
-### Manual Deployment
-
-```bash
-# Generate dashboard (now with direct API support)
-python3 bin/generate_dashboard.py
-# or use the wrapper: ./scripts/generate_dashboard_refactored.sh
-
-# Commit and push
-git add index.html data/
-git commit -m "Update dashboard"
-git push
-```
-
-**Deployment Requirements**:
-- Python dependencies: `requests`, `pydantic`, `python-dotenv`
-- Environment variable: `ES_COOKIE` (set in GitHub Secrets)
-- No proxy servers needed!
+2. **Automatic updates**
+   - GitHub Actions runs every 45 minutes
+   - Dashboard generates fresh data and updates automatically
+   - No server required - runs entirely in the browser
 
 ## Configuration
 
 ### Dashboard Settings
 
-Use the Control Panel (gear icon) for real-time configuration:
+Use the Control Panel (gear icon) to configure:
 
-- **Critical Threshold**: Percentage drop for critical alerts (-80% default)
-- **Warning Threshold**: Percentage drop for warnings (-50% default)
-- **Min Daily Volume**: Filter out low-traffic cards (100 default)
-- **Time Range**: Data window from 1h to 48h (12h default) or custom time ranges
-- **Auto Refresh**: Toggle and set interval (60s default)
+- **Time Range**: Data window (1h to 48h, default 12h)
+- **Thresholds**: Critical (-80%) and Warning (-50%) alert levels
+- **Volume Filters**: Minimum daily volume to include events
+- **Auto Refresh**: Toggle and interval settings
+- **Theme**: Light/dark mode toggle
 
-### Advanced Configuration Editor 🆕
+### Advanced Configuration
 
-The dashboard now includes a comprehensive Advanced Configuration Editor accessible via the ⚙️ Configuration Settings button:
+The dashboard includes an Advanced Configuration Editor with:
+- Live Elasticsearch query preview
+- Customizable event ID patterns
+- Aggregation size controls
+- One-click query copy for testing
 
-#### Key Features:
-1. **Live Query Preview**: See the exact Elasticsearch query that will be executed based on your configuration
-2. **Real-time Updates**: Query preview updates instantly as you modify settings
-3. **Query Customization**:
-   - **Event ID Pattern**: Customize the wildcard pattern for event filtering (default: `pandc.vnext.recommendations.feed.feed*`)
-   - **Aggregation Size**: Control the maximum number of events to retrieve (default: 500)
-4. **Copy Query**: One-click copy of the generated query for testing in Kibana
-5. **Visual Feedback**: Copy button shows confirmation when query is copied
+## NPM Commands
 
-The Host Filter and Event ID Field are fixed values that cannot be modified:
-- Host Filter: Always `dashboard.godaddy.com`
-- Event ID Field: Always `detail.event.data.traffic.eid.keyword`
-
-### Dark Theme Support 🌙
-
-The dashboard now includes a dark theme option for comfortable viewing in low-light environments:
-
-1. **Toggle Theme**: Click the theme selector in the Configuration Settings
-2. **Persistent Preference**: Theme choice is saved and remembered across sessions
-3. **System Integration**: Respects browser/OS dark mode preferences
-4. **Optimized Colors**: All UI elements, charts, and visualizations adapt to the selected theme
-
-### Centralized Configuration Management 🆕
-
-The dashboard now features centralized configuration with multiple layers:
-
-**API Endpoints Configuration**: `config/api-endpoints.json`
-```json
-{
-  "kibana": {
-    "url": "https://usieventho-prod-usw2.kb.us-west-2.aws.found.io:9243"
-  },
-  "corsProxy": {
-    "url": "http://localhost:8889",
-    "path": "/kibana-proxy"
-  },
-  "fastapi": {
-    "url": "http://localhost:8000"
-  },
-  "searchDefaults": {
-    "minEventDate": "2025-05-19T04:00:00.000Z",
-    "defaultTimeRange": "now-12h",
-    "queryEventPattern": "pandc.vnext.recommendations.feed.feed*",
-    "queryAggSize": 500
-  }
-}
-```
-
-**Query Configuration**: The dashboard now supports customizable query parameters that affect how data is fetched:
-- **Event ID Pattern**: Wildcard pattern for filtering events (e.g., `pandc.vnext.*`)
-- **Aggregation Size**: Maximum number of events to retrieve (100-10000)
-
-These values are integrated throughout the system:
-- Saved persistently in ConfigService
-- Used by api-interface.js and data-layer.js when building queries
-- Visible and editable in the Advanced Configuration Editor
-- Applied in real-time when refreshing the dashboard
-
-**Settings Configuration**: `config/settings.json`
-- Single source of truth for all runtime settings
-- Type-safe with Pydantic validation
-- JSON format for easy version control
-
-**Unified Config Service API**:
-```javascript
-// ConfigService is now the primary configuration system
-const config = ConfigService.getConfig();
-
-// Update configuration
-await ConfigService.updateConfig({
-    baselineStart: '2025-07-01',
-    highVolumeThreshold: 2000
-});
-
-// UI helpers (migrated from ConfigManager)
-ConfigService.setPresetTimeRange('12h');
-ConfigService.loadConfigurationIntoDOM();
-
-// Subscribe to changes
-ConfigService.subscribe(({event, newConfig}) => {
-    console.log('Config updated:', newConfig);
-});
-```
-
-**Architecture**:
-- **ConfigService**: Primary configuration logic and storage
-- **ConfigManager**: Thin UI wrapper for backward compatibility
-- **config-loader.js**: Loads API endpoints at startup
-- Clear separation of concerns with single source of truth
-
-**Initialize Configuration**:
-```bash
-node scripts/setup/init-config.js
-```
-
-### Custom Time Ranges
-
-The dashboard now supports custom time ranges for analyzing specific time periods in the past:
-
-**Standard Formats (existing):**
-- `now-6h` - Last 6 hours from now
-- `now-12h` - Last 12 hours from now (default)
-- `now-24h` - Last 24 hours from now
-- `now-3d` - Last 3 days from now
-
-**New Custom Formats:**
-- `-3h-6h` - From 3 hours ago TO 6 hours ago (3-hour window)
-- `-1h-4h` - From 1 hour ago TO 4 hours ago (3-hour window)
-- `-2h-8h` - From 2 hours ago TO 8 hours ago (6-hour window)
-- `-2h-1d` - From 2 hours ago TO 1 day ago (22-hour window)
-- `-1d-2d` - Yesterday TO day before yesterday (24-hour window)
-
-**Special Time Range:**
-- `inspection_time` - A predefined 16-hour inspection window (from 24h ago to 8h ago)
-  - Perfect for post-incident analysis
-  - Useful for scheduled maintenance reviews
-  - Avoids recent data that might still be processing
-
-**Real-World Examples:**
-- **Incident Analysis**: `-2h-5h` - Analyze a 3-hour incident window
-- **Maintenance Window**: `-4h-6h` - Review 2-hour maintenance period
-- **Compare Time Periods**: `-168h-180h` - Same time last week (12-hour window)
-- **After-hours Traffic**: `-12h-24h` - Yesterday's afternoon vs today's afternoon
-
-**How to Use:**
-1. In the dashboard control panel, enter a custom time range like `-3h-6h`
-2. Click "APPLY CONFIGURATION" or "REFRESH NOW"
-3. The dashboard will show traffic data for that specific time window
-
-### Console Dashboard (Hack Mode!)
-
-The dashboard includes an **ASCII visualization** that appears in your browser console every time data is fetched!
-
-**Features:**
-- **Live ASCII bar charts** showing Current vs Assumed traffic
-- **Status indicators** (CRIT, WARN, NORM, HIGH)
-- **Time window info** displays exactly what data range you're viewing
-- **Active filters** shows search terms and filters applied
-- **Summary statistics** with counts
-- **Performance metrics** showing query time, cache rate, reliability
-- **CORS proxy status** for localhost development
-
-**How to Access:**
-1. Open your browser Developer Tools (F12)
-2. Go to the Console tab
-3. Load the dashboard - you'll see a welcome message
-4. Every time you refresh or change settings, new bar charts appear!
-
-**Example Console Output:**
-```
-RAD MONITOR - CONSOLE DASHBOARD
-===============================================================================
-TIME WINDOW: 6/18/2025, 12:00:00 PM -> 6/18/2025, 3:00:00 PM (3h)
--------------------------------------------------------------------------------
-TRAFFIC VISUALIZATION (Current vs Assumed)
-
-[CRIT] feed_apmc                   -90%
-   Current  ███░░░░░░░░░░░░░░░░░░░░░░░░░░░░░ 100
-   Assumed  ██████████████████████████████ 1,000
-
-[NORM] feed_marketing               -4%
-   Current  ██████████████░░░░░░░░░░░░░░░░ 480
-   Assumed  ███████████████░░░░░░░░░░░░░░░ 500
-
--------------------------------------------------------------------------------
-SUMMARY: 1 Critical | 0 Warning | 1 Normal | 0 Increased
-FETCH TIME: 6/18/2025, 6:26:34 PM
-===============================================================================
-```
-
-**Perfect for:**
-- **Debugging** - See exactly what data is being fetched
-- **Monitoring** - Keep console open while doing other work
-- **Analysis** - Quick visual comparison of time periods
-- **Hack Vibes** - Because ASCII art in production is awesome!
-
-### Performance Monitoring Dashboard
-
-The dashboard includes comprehensive performance monitoring that tracks every operation:
-
-**Performance Widget:**
-A real-time performance widget displays key metrics directly on the dashboard:
-- **Average Query Time** - Color-coded (green <1s, yellow <3s, red >3s)
-- **Cache Hit Rate** - Shows efficiency of caching (target: >70%)
-- **Failed Queries** - Count of failed operations
-- **Reliability** - Overall system reliability percentage
-
-**Console Commands:**
-```javascript
-// View detailed performance statistics
-Dashboard.showPerformanceStats()
-
-// Get system health status with score
-Dashboard.getHealthStatus()
-
-// Access raw performance metrics
-DataLayer.getPerformanceMetrics()
-
-// Reset performance metrics
-DataLayer.resetPerformanceMetrics()
-```
-
-**Tracked Metrics:**
-- Query duration for every API call and DataLayer operation
-- Cache hit/miss rates for optimizing performance
-- Authentication resolution times
-- Data processing performance (with 100ms warning threshold)
-- CORS proxy health status (localhost only)
-- Configuration change impacts on performance
-
-**Intelligent Behaviors:**
-- **Auto-refresh skipping** when average query time exceeds 10 seconds
-- **Performance warnings** logged for slow operations
-- **Adaptive thresholds** based on operation type
-- **Historical tracking** with rolling averages and hourly maximums
-
-**Performance Thresholds:**
-| Operation | Warning Threshold | Critical Threshold |
-|-----------|------------------|-------------------|
-| API Calls | 3 seconds | 5 seconds |
-| DataLayer Queries | 5 seconds | 10 seconds |
-| Data Processing | 100ms | 500ms |
-| Cache Hit Rate | <70% | <50% |
-| Reliability | <90% | <80% |
-
-**CORS Proxy Monitoring (localhost):**
-- Health checks every 60 seconds
-- Visual indicator next to dashboard title
-- Warning banner when proxy is down
-- Automatic status updates in performance metrics
-
-### CORS Proxy Settings
-
-In `bin/cors_proxy.py`:
-```python
-port = 8889  # Proxy port (line 133)
-KIBANA_URL = "https://usieventho-prod-usw2.kb.us-west-2.aws.found.io:9243"
-```
-
-### GitHub Actions Schedule
-
-In `.github/workflows/update-dashboard.yml`:
-```yaml
-schedule:
-  - cron: '*/45 * * * *'  # Every 45 minutes
-```
-
-## How It Works
-
-### Interactive Documentation
-Click the **"📖 How It Works"** button in the dashboard header for a comprehensive, plain-English explanation of all monitoring mathematics including:
-- Baseline comparison calculations with real examples
-- Status classification rules and thresholds
-- Time range effects on monitoring sensitivity  
-- Configuration recommendations for different use cases
-- Special features like Inspection Mode and volume filtering
-
-### Score Calculation
-
-The dashboard uses a sophisticated scoring system:
-
-```javascript
-// Percentage change from baseline
-const percentChange = ((current - baseline) / baseline) * 100;
-
-// Status determination based on thresholds
-if (percentChange <= criticalThreshold) status = 'CRITICAL';
-else if (percentChange <= warningThreshold) status = 'WARNING';
-else if (percentChange <= 0) status = 'NORMAL';
-else status = 'INCREASED';
-```
-
-### Data Flow
-
-```
-Elasticsearch/Kibana API
-        ↓
-[Local: CORS Proxy / Production: Direct API]
-        ↓
-Dashboard JavaScript
-        ↓
-Visual Display (HTML/CSS)
-        ↓
-Automatic Updates (GitHub Actions)
-```
-
-### Live Updates
-- **Local Development**: Uses CORS proxy for API calls
-- **GitHub Pages**: Direct API calls with credentials
-- **Fallback**: Static data embedded in HTML
+| Command | Description |
+|---------|-------------|
+| `npm run dev` | Start unified development server (recommended) |
+| `npm run generate` | Generate dashboard with latest data |
+| `npm test` | Run JavaScript tests |
+| `npm run test:all` | Run complete test suite (JS, Python, Bash) |
+| `npm run cors-proxy` | Start CORS proxy only |
+| `npm run serve` | Start web server only |
 
 ## Project Structure
 
 ```
 rad_monitor/
-├── index.html                   # Main dashboard with live functionality
-├── bin/                         # Python executables
-│   ├── generate_dashboard.py    # Python dashboard generator (main script)
-│   ├── server.py               # Unified server with all features
-│   ├── dev_server_unified.py   # Launcher for unified server
-│   ├── cors_proxy.py           # (deprecated - built into unified server)
-│   ├── dev_server.py           # (deprecated - use unified server)
-│   ├── dev_server_fastapi.py   # (deprecated - merged into unified server)
-│   ├── centralized_api.py      # (deprecated - merged into unified server)
-│   ├── cleanup_ports.py        # Port cleanup utility
-│   ├── validate_connections.py # Connection validation utility
-│   ├── health_check.py         # Health check utility
-│   └── test_full_integration.py # Full integration test script
-├── scripts/
-│   ├── runners/                 # Execution scripts
-│   │   ├── run_with_cors.sh   # Primary local development script
-│   │   ├── run_enhanced_cors.sh # Run enhanced CORS proxy
-│   │   ├── run_all_tests.sh   # Comprehensive test runner
-│   │   └── run_fastapi_dev.sh # Run FastAPI development server
-│   ├── tests/                   # Test scripts
-│   │   ├── test_locally.sh    # Quick test script
-│   │   └── test_refactored.sh # Test refactored components
-│   ├── setup/                   # Utility scripts
-│   │   ├── cleanup-ports.sh   # Port cleanup wrapper
-│   │   ├── validate_connections.sh # Connection validation wrapper
-│   │   ├── setup_and_run.sh   # Setup and run script
-│   │   └── ensure_correct_dashboard.sh # Dashboard validation
-│   ├── generate_dashboard_refactored.sh  # Wrapper for Python version
-│   └── lib/                     # Utility functions
-├── config/                      # Configuration files
-│   ├── api-endpoints.json       # Centralized API URLs and search defaults
-│   ├── settings.json           # Runtime configuration settings
-│   ├── dashboard.config.sh      # Environment variables
-│   └── queries/                 # Elasticsearch queries
-├── src/                         # Source code
-│   └── data/                    # Data processing
-│       ├── process_data.py      # Python orchestrator
-│       └── processors/          # Processing modules
-├── assets/                      # Frontend assets
-│   ├── css/                     # Stylesheets
-│   │   ├── dashboard.css        # Main dashboard styles with sidebar layout
-│   │   └── dashboard-consolidated.css # Consolidated UI styles (unused)
-│   ├── js/                      # JavaScript modules
-│   │   ├── config-loader.js     # Loads API endpoints at startup
-│   │   ├── config-service.js    # Primary configuration service
-│   │   ├── config-manager.js    # UI wrapper for backward compatibility
-│   │   ├── config-editor.js     # Advanced configuration editor with query preview
-│   │   ├── api-client.js        # API client with centralized endpoints
-│   │   ├── api-interface.js     # Unified API interface for FastAPI/Legacy
-│   │   ├── api-client-fastapi.js # FastAPI-specific client implementation
-│   │   ├── data-layer.js        # State management system
-│   │   ├── data-processor.js    # Data processing and calculations
-│   │   ├── dashboard-main.js    # Main dashboard initialization
-│   │   ├── console-visualizer.js # ASCII visualization in console
-│   │   ├── theme-manager.js     # Dark/light theme handling
-│   │   ├── state-logging-demo.js # Redux-style logging demo
-│   │   ├── ui-consolidation.js  # UI state management module
-│   │   ├── ui-updater.js        # UI update coordination and loading states
-│   │   ├── search-filter.js     # Search and filter functionality
-│   │   └── main.js              # Application entry point
-│   └── templates/               # HTML templates (deprecated)
-├── tests/                       # Comprehensive test suite
-│   ├── *.test.js               # JavaScript tests (Vitest)
-│   ├── test_*.py               # Python tests (pytest)
-│   ├── test_*.bats             # Bash tests (bats)
-│   └── requirements.txt        # Test dependencies
-├── data/
-│   └── raw_response.json       # Latest API response (generated)
-├── .github/
-│   └── workflows/
-│       ├── update-dashboard.yml # Auto-update workflow (every 45 min)
-│       ├── test.yml            # CI test workflow
-│       └── test-comprehensive.yml # Full test suite
-├── package.json               # Node.js dependencies
-├── vitest.config.js           # JavaScript test configuration
-├── .gitignore                 # Git ignore patterns
-├── .nojekyll                  # Disable Jekyll for GitHub Pages
-├── docs/                          # All documentation files
-│   ├── Architecture & Design
-│   ├── Migration Guides
-│   ├── Feature Documentation
-│   └── Development Guides
-├── requirements-enhanced.txt       # Dependencies for enhanced proxy
-├── index.html                     # Main dashboard HTML
-├── start-correct-server.sh        # Auto-detect and start appropriate server
-├── cleanup-old-templates.sh       # Cleanup deprecated template files
-├── migrate_to_refactored.sh       # Migration helper script
-├── progress.md                    # Project progress tracking
-└── README.md                      # This file
+├── index.html                 # Main dashboard
+├── bin/                       # Python executables
+│   ├── generate_dashboard.py  # Dashboard generator
+│   └── server.py              # Unified development server
+├── assets/                    # Frontend assets
+│   ├── css/                   # Stylesheets
+│   └── js/                    # JavaScript modules
+├── config/                    # Configuration files
+│   ├── api-endpoints.json     # API configuration
+│   └── settings.json          # Runtime settings
+├── tests/                     # Test suite
+├── scripts/                   # Utility scripts
+└── docs/                      # Documentation
 ```
 
-## Architecture & Test Coverage
+## Authentication
 
-<details>
-<summary>📊 <b>View Application Architecture Diagram</b> (Click to expand)</summary>
+The dashboard requires an Elasticsearch session cookie for data access.
 
-```mermaid
-graph TB
-    subgraph "Frontend Components"
-        UI[UI Layer]
-        UI --> UIUpdater["UIUpdater<br/>❌ 7 failures"]
-        UI --> ConsoleViz["ConsoleVisualizer<br/>✅ All passing"]
-        UI --> DashboardMain["Dashboard Main<br/>❌ Integration issues"]
-    end
+### Getting Your Cookie
 
-    subgraph "Data Processing Layer"
-        DataProc["DataProcessor<br/>✅ All passing"]
-        DataProc --> ScoreCalc["Score Calculation<br/>✅ All passing"]
-        DataProc --> StatusDet["Status Determination<br/>✅ All passing"]
-    end
+1. Open Kibana in your browser
+2. Open Developer Tools → Network tab
+3. Find any request to Kibana
+4. Copy the `sid` value from the Cookie header
 
-    subgraph "API & Network Layer"
-        ApiClient["ApiClient<br/>❌ 4 failures"]
-        ApiClient --> CorsProxy["CORS Proxy<br/>❌ Check fails"]
-        ApiClient --> Auth["Authentication<br/>✅ All passing"]
-        ApiClient --> KibanaAPI["Kibana API<br/>❌ Fetch fails"]
+### Setting the Cookie
 
-        FastAPI["FastAPIClient<br/>❌ 6 failures"]
-        FastAPI --> WebSocket["WebSocket<br/>❌ 3 failures"]
-        FastAPI --> RestAPI["REST API<br/>✅ Passing"]
-    end
-
-    subgraph "Configuration & State"
-        ConfigMgr["ConfigManager<br/>✅ All passing"]
-        TimeRange["TimeRangeUtils<br/>❌ 1 failure"]
-        CookieMgmt["Cookie Management<br/>❌ 1 failure"]
-        PrefMgmt["Preference Management<br/>❌ 2 failures"]
-    end
-
-    subgraph "Business Logic"
-        Integration["Integration Tests<br/>❌ 13 failures"]
-        Integration --> UpdateDash["updateDashboardRealtime<br/>❌ 6 failures"]
-        Integration --> AutoRefresh["Auto-refresh<br/>❌ 5 failures"]
-        Integration --> E2E["End-to-End<br/>❌ 2 failures"]
-
-        SearchFilter["Search & Filter<br/>❌ 1 failure"]
-        DataFetch["fetchTrafficData<br/>✅ All passing"]
-    end
-
-    subgraph "Compatibility Layer"
-        CompatLayer["src/dashboard.js<br/>Compatibility Layer"]
-        CompatLayer --> AllModules["Re-exports all modules"]
-    end
-
-    %% Key connections
-    DashboardMain --> ApiClient
-    DashboardMain --> DataProc
-    DashboardMain --> UIUpdater
-    DashboardMain --> ConfigMgr
-
-    ApiClient --> Auth
-    ApiClient --> CorsProxy
-
-    Integration --> CompatLayer
-    UpdateDash --> ApiClient
-    UpdateDash --> DataProc
-
-    UIUpdater --> DataProc
-    SearchFilter --> DataProc
-
-    ConfigMgr --> TimeRange
-    ConfigMgr --> PrefMgmt
-
-    style UIUpdater fill:#ff9999
-    style ApiClient fill:#ff9999
-    style FastAPI fill:#ff9999
-    style Integration fill:#ff9999
-    style CookieMgmt fill:#ffcccc
-    style TimeRange fill:#ffcccc
-    style PrefMgmt fill:#ffcccc
-    style SearchFilter fill:#ffcccc
-    style UpdateDash fill:#ff9999
-    style AutoRefresh fill:#ff9999
-    style E2E fill:#ff9999
-    style WebSocket fill:#ff9999
-    style CorsProxy fill:#ff9999
-    style KibanaAPI fill:#ff9999
-
-    style DataProc fill:#99ff99
-    style ScoreCalc fill:#99ff99
-    style StatusDet fill:#99ff99
-    style ConsoleViz fill:#99ff99
-    style ConfigMgr fill:#99ff99
-    style Auth fill:#99ff99
-    style RestAPI fill:#99ff99
-    style DataFetch fill:#99ff99
-```
-
-</details>
-
-### Module Overview
-
-The application follows a modular architecture with clear separation of concerns:
-
-- **Frontend Components**: Handle UI rendering and user interactions
-- **Data Processing Layer**: Core business logic for score calculation and status determination
-- **API & Network Layer**: Manages all external communications
-- **Configuration & State**: Centralized state management and configuration
-- **Business Logic**: High-level orchestration and integration
-- **Compatibility Layer**: Bridges old test expectations with new modular structure
-
-## FastAPI Development Server
-
-The project now includes a FastAPI-based development server that provides enhanced capabilities over the standard Python HTTP server.
-
-### Key Features
-
-**1. REST API with Validation**
-- **GET /api/config** - Retrieve current dashboard configuration
-- **POST /api/config** - Update configuration with Pydantic validation
-- **GET /api/stats** - Get current dashboard statistics
-- **POST /api/refresh** - Refresh dashboard data with new configuration
-- **POST /api/fetch-kibana-data** - Execute Elasticsearch queries with caching and performance tracking (NEW!)
-- **GET /health** - Server health check with system status
-
-**2. WebSocket Support**
-- Real-time bidirectional communication at `ws://localhost:8000/ws`
-- Automatic broadcasting of configuration changes to all connected clients
-- Ping/pong heartbeat mechanism for connection health
-- Reconnection logic with exponential backoff
-
-**3. Production-Ready Enhancements** 🚀
-- **Rate Limiting**: Protects against DoS attacks (10/min for queries, 30/min for config)
-- **Circuit Breaker**: Prevents cascade failures when Elasticsearch is down
-- **Exponential Backoff**: Smart WebSocket reconnection with jitter
-- **Structured Logging**: JSON logs for better observability and debugging
-
-See [docs/PRODUCTION_ENHANCEMENTS.md](docs/PRODUCTION_ENHANCEMENTS.md) for detailed implementation.
-
-**4. Request/Response Validation**
-All API endpoints use Pydantic v2 models for validation:
-
-```python
-class DashboardConfig(BaseModel):
-    baseline_start: str = Field(..., pattern=r'^\d{4}-\d{2}-\d{2}$')
-    baseline_end: str = Field(..., pattern=r'^\d{4}-\d{2}-\d{2}$')
-    time_range: str = "now-12h"
-    critical_threshold: int = Field(default=-80, le=0)
-    warning_threshold: int = Field(default=-50, le=0)
-    high_volume_threshold: int = Field(default=1000, ge=1)
-    medium_volume_threshold: int = Field(default=100, ge=1)
-```
-
-**5. Auto-Generated Documentation**
-- Interactive API documentation at http://localhost:8000/docs
-- OpenAPI schema at http://localhost:8000/openapi.json
-- Try out endpoints directly from the browser
-
-**6. JavaScript Client Library**
-A comprehensive client library (`api-client-fastapi.js`) provides:
-- WebSocket connection management with auto-reconnect
-- Typed API methods for all endpoints
-- Configuration validation helpers
-- Event-based architecture for real-time updates
-
-### New Kibana Data Endpoint
-
-The `/api/fetch-kibana-data` endpoint replaces the functionality of the old bash script with a modern, typed FastAPI endpoint. The data fetching is now handled by `bin/generate_dashboard.py` which automatically tries the FastAPI endpoint first, then falls back to the CORS proxy if needed:
-
-**Features:**
-- **Type-safe queries** with Pydantic validation (requires `events` aggregation)
-- **Built-in caching** with MD5-based cache keys (5-minute TTL)
-- **Performance tracking** with WebSocket broadcasts for real-time monitoring
-- **Comprehensive error handling** for auth failures, timeouts, and ES errors
-- **Automatic performance warnings** for slow queries (>3s warning, >5s critical)
-
-**Request Format:**
-```javascript
-const response = await FastAPIClient.fetchKibanaData({
-  size: 0,
-  query: {
-    bool: {
-      filter: [
-        { wildcard: { "detail.event.data.traffic.eid.keyword": { value: "pandc.vnext.*" } } },
-        { range: { "@timestamp": { gte: "now-12h" } } }
-      ]
-    }
-  },
-  aggs: {
-    events: {  // Required aggregation
-      terms: { field: "detail.event.data.traffic.eid.keyword", size: 500 }
-    }
-  }
-}, forceRefresh = false);
-```
-
-**Performance Metrics Broadcast:**
-```javascript
-// Listen for performance updates
-FastAPIClient.on('performance_metrics', (metrics) => {
-  console.log(`Query ${metrics.query_id} took ${metrics.duration_ms}ms`);
-  if (metrics.is_slow) {
-    console.warn('Slow query detected!');
-  }
-});
-```
-
-**Authentication:**
-The endpoint requires the Elastic cookie via `X-Elastic-Cookie` header. The client automatically:
-1. Checks localStorage for `elastic_cookie`
-2. Checks document cookies for `sid`
-3. Falls back to `window.ELASTIC_COOKIE`
-
-### Usage Example
-
-```javascript
-// Initialize the FastAPI client
-await FastAPIClient.initialize();
-
-// Listen for real-time updates
-FastAPIClient.on('config', (newConfig) => {
-    console.log('Configuration updated:', newConfig);
-});
-
-FastAPIClient.on('stats', (newStats) => {
-    console.log('Statistics updated:', newStats);
-});
-
-// Update configuration
-const newConfig = FastAPIClient.buildConfig({
-    baseline_start: '2025-07-01',
-    time_range: 'now-24h',
-    critical_threshold: -90
-});
-
-// Validate before sending
-const errors = FastAPIClient.validateConfig(newConfig);
-if (errors.length === 0) {
-    await FastAPIClient.updateConfig(newConfig);
-}
-
-// Refresh dashboard
-await FastAPIClient.refreshDashboard(newConfig, true);
-```
-
-### Testing
-
-The FastAPI server includes comprehensive test coverage:
-
+**Local Development:**
 ```bash
-# Run Python tests for FastAPI server
-python -m pytest tests/test_dev_server_fastapi.py -v
-
-# Run JavaScript tests for client library
-npm test tests/fastapiClient.test.js
+export ES_COOKIE="your_cookie_value"
 ```
 
-### Benefits Over Standard Server
+**GitHub Actions:**
+1. Go to repository Settings → Secrets and variables → Actions
+2. Add secret named `ELASTIC_COOKIE`
+3. Paste your cookie value
 
-1. **Type Safety**: Full request/response validation prevents runtime errors
-2. **Real-time Updates**: WebSocket support enables instant UI updates
-3. **Better Error Handling**: Detailed validation errors with helpful messages
-4. **API Documentation**: Auto-generated, interactive API docs
-5. **Performance**: Async request handling for better concurrency
-6. **Developer Experience**: Modern tooling with hot reload support
+**Dashboard UI:**
+1. Click gear icon in dashboard
+2. Select "Set Cookie for Real-time"
+3. Paste cookie and test connection
 
-## Installation
+## How It Works
 
-### Full Setup
+The dashboard uses a sophisticated scoring system:
 
-1. **Install dependencies**
-   ```bash
-   # Install Node.js dependencies (required)
-   npm install
+1. **Baseline Comparison**: Compares current traffic against 8-day historical average
+2. **Status Classification**: 
+   - CRITICAL: Traffic dropped >80%
+   - WARNING: Traffic dropped 50-80%
+   - NORMAL: Traffic as expected
+   - INCREASED: Traffic higher than usual
+3. **Volume Weighting**: Prioritizes high-traffic events for alerting
 
-   # For Python tests (optional)
-   pip install -r tests/requirements.txt
+### Data Flow
 
-   # For Bash tests (optional)
-   brew install bats-core  # macOS
-   sudo apt-get install bats  # Linux
-   ```
-
-2. **Configure GitHub Actions**
-   - Add `ELASTIC_COOKIE` secret to your repository
-   - Enable GitHub Pages from Settings → Pages
-   - Select "Deploy from a branch" → main → / (root)
-
-3. **Test locally**
-   ```bash
-   ./scripts/runners/run_with_cors.sh
-   ```
-
-## Troubleshooting
-
-### Common Issues
-
-**502 Bad Gateway / Authentication Error:**
-- Cookie has expired
-- Get a fresh cookie from Kibana
-- Update locally: `export ELASTIC_COOKIE="new_cookie"`
-- Update GitHub Secret for automated updates
-
-**CORS Errors (local only):**
-- Use the unified development server: `npm run dev`
-- Or start CORS proxy manually: `npm run cors-proxy`
-- Check proxy is running on port 8889
-
-**"Address already in use" error:**
-- The unified development server automatically cleans up ports
-- If issues persist, run: `npm run cleanup`
-- Or manually check: `lsof -i :8889 -i :8000`
-- Kill existing processes: `kill -9 <PID>`
-
-**No Real-time Updates:**
-- Click gear icon → "Set Cookie for Real-time"
-- Test connection with "Test API Connection"
-- Check browser console for errors
-
-**Dashboard Not Updating on GitHub:**
-- Check Actions tab for workflow runs
-- Verify ELASTIC_COOKIE secret is set
-- Check workflow logs for errors
-
-**Development Server Issues:**
-- **FastAPI setup fails**: Run `npm run dev:simple` for basic functionality
-- **Auto-detection not working**: Use `python3 bin/dev_server_unified.py --help` for options
-- **Want to force a specific mode**: Use `npm run dev:fastapi` or `npm run dev:simple`
-- **First time setup**: Use `npm run dev:setup` to install FastAPI dependencies
-
-### Debug Commands
-
-```bash
-# Test CORS proxy
-curl http://localhost:8889/health
-
-# Check if cookie is valid
-python3 bin/generate_dashboard.py
-
-# View recent GitHub Actions logs
-gh run list --workflow=update-dashboard.yml
-
-# Test all components
-./scripts/runners/run_all_tests.sh
+```
+Elasticsearch/Kibana API → CORS Proxy/Direct API → Dashboard → Visual Display
 ```
 
 ## Testing
 
-The project includes comprehensive test coverage with unit, integration, and end-to-end tests:
+The project includes comprehensive test coverage:
 
-### JavaScript Tests (Vitest)
-- **160+ tests** covering dashboard functionality
-- **Real-time features**: Cookie handling, API calls, UI updates
-- **Data processing**: Scoring, filtering, sorting algorithms
-- **User interactions**: Control panel, authentication, search
-
-Run with:
+### JavaScript Tests
 ```bash
-npm test              # Watch mode (development)
+npm test              # Watch mode
 npm run test:run      # Single run
-npm run test:coverage # With coverage report
+npm run test:coverage # With coverage
 ```
 
-#### Test Infrastructure
-The test suite includes comprehensive helper functions for reliable testing:
-
-**Authentication Helpers:**
-```javascript
-// Set up proper authentication for tests
-setupTestAuthentication('test_cookie_value');
-// Creates properly formatted elastic cookie with expiration
-```
-
-**Configuration Helpers:**
-```javascript
-// Set up consistent test configuration
-setupTestConfiguration({
-  baseline_start: '2025-06-01',
-  baseline_end: '2025-06-09',
-  time_range: 'now-12h'
-});
-```
-
-**Mock Response Builders:**
-```javascript
-// Create mock API responses
-createMockResponse(data, status);
-createElasticsearchResponse(buckets);
-createBucket(name, baseline, current);
-```
-
-**Global Mocks:**
-- `localStorage` with accessible data store
-- `window.location` with proper mocking
-- `fetch` with response builders
-- `WebSocket` with event simulation
-
-### Python Tests (pytest)
-- **60+ tests** including unit and integration tests
-- **Unit tests**: CORS proxy, data models, processors, API endpoints
-- **Integration tests**: Dashboard generation, full system flow, GitHub Pages
-- **Component tests**: Kibana endpoint, Config API, FastAPI server
-
-Run with:
+### Python Tests
 ```bash
-cd tests && python -m pytest --cov=.. test_*.py      # All Python tests
-python3 tests/test_dashboard_generation.py            # Dashboard generator tests
-python3 bin/test_full_integration.py                      # Full system integration
-```
-
-### Integration Tests
-The following integration tests are automatically included in the main test suite:
-- **Dashboard Generation**: Tests Python implementation and wrapper compatibility
-- **Full System Integration**: Tests all components working together
-- **GitHub Pages Integration**: Tests deployment workflow
-- **Kibana Endpoint**: Tests FastAPI data fetching endpoint
-- **Config API**: Tests configuration management endpoints
-- **Data Models**: Tests Pydantic models and validation
-
-### Bash Tests (bats)
-- **20+ tests** for script execution and error handling
-- **Process management**: Server startup, cleanup, error recovery
-- **File operations**: Generation, validation, deployment
-- **Environment**: PATH issues, dependency checking
-
-Run with:
-```bash
-bats tests/test_bash_scripts.bats
-bats tests/test_refactored_bash.bats
+python -m pytest tests/test_*.py
 ```
 
 ### Complete Test Suite
-```bash
-./scripts/runners/run_all_tests.sh     # All tests with detailed output
-npm run test:all       # Same via npm
-
-# Verify integration test setup
-python3 verify_integration_tests.py
+   ```bash
+npm run test:all
 ```
 
-**Test Coverage:**
-- JavaScript: 95%+ line coverage
-- Python: 90%+ line coverage (including integration tests)
-- Bash: 85%+ function coverage
-- Integration: 100% critical path coverage
-
-### Continuous Integration
-- **GitHub Actions**: Runs essential tests on every PR/push
-- **Comprehensive suite**: Weekly full test runs including all integration tests
-- **Parallel execution**: JavaScript, Python, and Bash tests run simultaneously
-- **Error reporting**: Detailed logs and failure notifications
-- **Security**: Dependency vulnerability scanning
-
-### Troubleshooting Test Failures
-
-**Common Test Issues:**
-
-1. **Authentication Failures**
-   - Ensure tests use `setupTestAuthentication()` helper
-   - Check localStorage key is `'elasticCookie'` (not `'elastic_cookie'`)
-   - Verify cookie JSON format includes `cookie`, `expires`, and `saved` fields
-
-2. **WebSocket Test Failures**
-   - Mock must include event listener methods: `addEventListener`, `removeEventListener`
-   - Simulate events by calling the registered event handlers
-   - Set `readyState` to `WebSocket.OPEN` before triggering events
-
-3. **Integration Test Issues**
-   - Use global test helpers from `tests/setup.js`
-   - Ensure localStorage changes persist using `global.localStorage.data`
-   - Mock window.location using `Object.defineProperty` for proper isolation
-
-4. **Running Specific Tests**
-   ```bash
-   # Run a specific test file
-   npx vitest run tests/fastapiClient.test.js
-   
-   # Run tests matching a pattern
-   npm test -- --grep "WebSocket"
-   
-   # Debug a specific test
-   npx vitest --inspect-brk tests/integration.test.js
-   ```
-
-## Performance Metrics
+## Performance
 
 - **Update Frequency**: Every 45 minutes (automated) or on-demand
 - **Data Period**: Last 12 hours vs 8-day baseline
 - **Response Time**: < 2 seconds for API calls
 - **Browser Support**: Chrome, Firefox, Safari, Edge
 
+## Troubleshooting
+
+### Common Issues
+
+**Authentication Error / 502 Bad Gateway:**
+- Cookie has expired - get fresh cookie from Kibana
+- Update environment variable or GitHub secret
+
+**CORS Errors (local development):**
+- Ensure development server is running: `npm run dev`
+- Check CORS proxy on port 8889
+
+**No Real-time Updates:**
+- Verify cookie is set correctly
+- Test connection in dashboard settings
+- Check browser console for errors
+
+**Development Server Issues:**
+- Use `npm run dev` for automatic mode detection
+- Force specific mode: `npm run dev:simple` or `npm run dev:fastapi`
+- Check ports 8000 and 8889 are available
+
+### Debug Commands
+
+```bash
+# Test connection
+python3 bin/generate_dashboard.py
+
+# Check proxy health
+curl http://localhost:8889/health
+
+# View GitHub Actions logs
+gh run list --workflow=update-dashboard.yml
+```
+
 ## Contributing
 
+We welcome contributions! Here's how to get started:
+
+### Development Setup
+
 1. Fork the repository
-2. Create a feature branch
-3. Run tests: `./scripts/runners/run_all_tests.sh`
-4. Submit a pull request
+2. Create a feature branch: `git checkout -b feature-name`
+3. Make your changes
+4. Run tests: `npm run test:all`
+5. Submit a pull request
 
-### Enhancement Opportunities
+### Code Style
 
-We're actively migrating to modern Python tooling. See `docs/FASTAPI_OPPORTUNITIES.md` for:
-- FastAPI migration roadmap
-- Pydantic v2 validation opportunities
-- Type safety improvements
-- Areas where you can contribute
+- JavaScript: ES6+ modules, async/await patterns
+- Python: PEP 8 compliant, type hints preferred
+- Tests: Comprehensive coverage for new features
 
-Priority areas:
-1. **Data Pipeline** - Add Pydantic models to `src/data/processors/`
-2. **Dev Server** - Convert `dev_server.py` to FastAPI
-3. **Configuration** - Centralize config management with validation
+### Areas for Contribution
 
-## DataLayer: Querying Elasticsearch
+- **Multi-RAD Support**: Extend monitoring beyond current focus
+- **Data Visualization**: Enhanced charts and graphs
+- **Performance Optimization**: Query optimization and caching
+- **Mobile Responsiveness**: Improve mobile experience
+- **Documentation**: API documentation and tutorials
 
-The dashboard uses a powerful DataLayer abstraction (`assets/js/data-layer.js`) to manage all Elasticsearch queries and state. This provides a clean, consistent interface for building and executing queries.
+### Testing Your Changes
 
-### Query Templates
+```bash
+# Run all tests
+npm run test:all
 
-DataLayer includes pre-built query templates for common operations:
+# Test specific components
+npm test -- --grep "your-feature"
+python -m pytest tests/test_your_feature.py
 
-- **`trafficAnalysis`** - Main dashboard query comparing current vs baseline traffic
-- **`timeSeries`** - Time-based analysis with configurable intervals
-- **`errorAnalysis`** - Error tracking and categorization
-- **`health`** - Simple connection test
-
-### Building Custom Queries
-
-Use the QueryBuilder API for flexible query construction:
-
-```javascript
-// Build a custom query
-const query = DataLayer.QueryBuilder.base();
-DataLayer.QueryBuilder.wildcard(query, 'event_id.keyword', 'feed_*');
-DataLayer.QueryBuilder.timeRange(query, '@timestamp', 'now-7d', 'now');
-DataLayer.QueryBuilder.termsAgg(query, 'feeds', 'event_id.keyword', 20);
-
-// Execute the query
-const result = await DataLayer.fetchAndParse('my_analysis', {
-    type: 'custom',
-    query: query
-});
+# Test dashboard generation
+npm run generate
 ```
 
-### Using Predefined Templates
+## Next Steps
 
-For standard analyses, use the built-in templates:
+**Planned Enhancements:**
+- Formula filtering system using Lens formulas (`lens_formula_reference.md`)
+- Discover integration with Elasticsearch querying
+- Multi-RAD support beyond venture-feed
+- Python-based visualizations 
+- FullStory hyperlinks for each EID
+- Experiment tracking capabilities
 
-```javascript
-// Fetch traffic data with baseline comparison
-const result = await DataLayer.fetchAndParse('traffic_check', {
-    type: 'trafficAnalysis',
-    params: {
-        baselineStart: '2025-06-01',
-        baselineEnd: '2025-06-09',
-        currentTimeRange: 'now-12h'
-    }
-});
-```
-
-### Examples and Documentation
-
-See `examples/data-layer-example.js` for comprehensive examples including:
-- Query building patterns
-- Response parsing
-- Data transformation
-- State inspection
-- Performance optimization
-
-The DataLayer handles caching, performance tracking, and error handling automatically, making it the recommended way to interact with Elasticsearch data.
+*Open for developers and PMs to create tickets and add to Quokkas backlog.*
 
 ## License
 
-MIT License - see LICENSE file for details
+MIT License - see LICENSE file for details.
 
 ## Support
 
-For issues or questions:
-1. Check troubleshooting section
-2. Review GitHub Actions logs
-3. Open an issue with details
-4. Contact the team
+- **Issues**: Use GitHub Issues for bug reports and feature requests
+- **Documentation**: Check the `docs/` directory for detailed guides
+- **Troubleshooting**: See troubleshooting section above
 
 ---
 
-**Last Updated**: Check the dashboard timestamp for the latest data update
-
-### Enhanced API Endpoints
-
-When using the enhanced CORS proxy (`run_enhanced_cors.sh`), you get typed endpoints:
-
-**Traffic Analysis** (`POST /api/traffic-analysis`):
-```typescript
-// Using the enhanced API client
-const result = await EnhancedApiClient.getCurrentTrafficData('inspection_time');
-```
-
-**Time Series** (`POST /api/time-series`):
-```typescript
-const timeSeries = await EnhancedApiClient.getTimeSeries({
-  start: new Date(Date.now() - 24 * 60 * 60 * 1000),
-  end: new Date(Date.now() - 8 * 60 * 60 * 1000),
-  interval: '1h'
-});
-```
-
-**Error Analysis** (`POST /api/error-analysis`):
-```typescript
-const errors = await EnhancedApiClient.getErrorAnalysis({
-  start: '2025-06-18T00:00:00Z',
-  end: '2025-06-18T23:59:59Z'
-});
-```
-
-### FAQ
-
-**Q: How is the data fetched from Kibana?**
-A: Initially, the data was fetched using a bash script (`fetch_kibana_data.sh`). This has been replaced with more robust solutions. The data fetching is now handled by `bin/generate_dashboard.py` which automatically tries the FastAPI endpoint first, then falls back to the CORS proxy if needed:
-# Triggering rebuild with .nojekyll
+**Live Dashboard**: Available at your GitHub Pages URL  
+**Update Frequency**: Every 45 minutes via GitHub Actions  
+**Data Source**: Elasticsearch/Kibana with real-time API access

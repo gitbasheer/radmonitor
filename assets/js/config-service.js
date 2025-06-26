@@ -382,8 +382,27 @@ export const ConfigService = (() => {
      */
     function getConfig() {
         if (!isInitialized) {
-            console.warn('⚠️ Config requested before initialization');
-            return getDefaultConfig();
+            console.warn('⚠️ Config requested before initialization - returning defaults');
+            const defaultConfig = getDefaultConfig();
+            
+            // For production, add basic proxy settings even in defaults
+            if (isProduction()) {
+                return {
+                    ...defaultConfig,
+                    environment: 'production',
+                    corsProxy: {
+                        enabled: true,
+                        url: "https://rad-monitor-demo-jbgygggfw-basheers-projects-d3b7a207.vercel.app/api/proxy"
+                    },
+                    features: {
+                        fastapi: false,
+                        localServer: false,
+                        corsProxy: true
+                    }
+                };
+            }
+            
+            return defaultConfig;
         }
         return { ...config };
     }

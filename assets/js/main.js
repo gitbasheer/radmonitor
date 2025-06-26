@@ -56,13 +56,29 @@ async function initializeDashboard() {
     // Show clean startup header
     console.log('%c🚀 RAD Monitor Dashboard', 'color: #4CAF50; font-size: 18px; font-weight: bold;');
     
+    // Wait for ConfigService to initialize first
+    try {
+        await ConfigService.initialize();
+        console.log('📝 Configuration service ready');
+    } catch (error) {
+        console.warn('⚠️ Config service initialization failed, continuing with defaults:', error.message);
+    }
+    
     await Dashboard.init();
     
     // Show environment status in structured format
     const localCookie = localStorage.getItem('elasticCookie');
     const envCookie = window.ELASTIC_COOKIE;
-    const authStatus = localCookie ? (envCookie && localCookie === envCookie ? 'Cookie loaded automatically' : 'Cookie found in localStorage') : 
-                      (envCookie ? 'Environment cookie available' : 'No cookie - click "Set Cookie"');
+    const config = ConfigService.getConfig();
+    
+    let authStatus = 'No cookie - click "Set Cookie"';
+    if (config.dashboard?.autoAuthenticated) {
+        authStatus = 'Auto-authenticated via GitHub Secrets';
+    } else if (localCookie) {
+        authStatus = envCookie && localCookie === envCookie ? 'Cookie loaded automatically' : 'Cookie found in localStorage';
+    } else if (envCookie) {
+        authStatus = 'Environment cookie available';
+    }
     
     console.log(`├── ✅ Environment: ${authStatus}`);
     
