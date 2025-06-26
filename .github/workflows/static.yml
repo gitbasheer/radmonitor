@@ -54,18 +54,21 @@ jobs:
             "environment": "production",
             "baseUrl": "https://balkhalil-godaddy.github.io/vh-rad-traffic-monitor",
             "corsProxy": {
-              "enabled": false,
-              "message": "Direct Elasticsearch connection required in production"
+              "enabled": true,
+              "url": "https://rad-monitor-proxy.vercel.app/api/proxy",
+              "fallbackToDirect": true,
+              "message": "Using serverless proxy to avoid CORS issues"
             },
             "elasticsearch": {
-              "directConnection": true,
+              "directConnection": false,
               "url": "https://usieventho-prod-usw2.kb.us-west-2.aws.found.io:9243",
               "path": "/elasticsearch/usi*/_search"
             },
             "features": {
               "fastapi": false,
               "localServer": false,
-              "corsProxy": false
+              "corsProxy": true,
+              "proxyFallback": true
             }
           }
           EOF

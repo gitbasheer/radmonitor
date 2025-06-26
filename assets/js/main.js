@@ -22,6 +22,7 @@ import StateLoggingDemo from './state-logging-demo.js';
 import UIConsolidation from './ui-consolidation.js';
 import SearchFilter from './search-filter.js';
 import ThemeManager from './theme-manager.js';
+import { ProxyClient } from './proxy-client.js';
 
 // Make modules available globally for backward compatibility
 window.TimeRangeUtils = TimeRangeUtils;
@@ -41,6 +42,7 @@ window.StateLoggingDemo = StateLoggingDemo;
 window.UIConsolidation = UIConsolidation;
 window.SearchFilter = SearchFilter;
 window.ThemeManager = ThemeManager;
+window.ProxyClient = ProxyClient;
 
 // Configure logging to be less verbose by default (MUST be set before any initialization)
 DataLayer.configureLogging({
@@ -179,5 +181,6 @@ export {
     StateLoggingDemo,
     UIConsolidation,
     SearchFilter,
-    ThemeManager
+    ThemeManager,
+    ProxyClient
 };
