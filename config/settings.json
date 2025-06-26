@@ -1,0 +1,62 @@
+{
+  "app_name": "RAD Monitor",
+  "debug": false,
+  "log_level": "INFO",
+  "elasticsearch": {
+    "url": "https://usieventho-prod-usw2.es.us-west-2.aws.found.io:9243/",
+    "cookie": null,
+    "index_pattern": "traffic-*",
+    "timeout": 30
+  },
+  "kibana": {
+    "url": "https://usieventho-prod-usw2.kb.us-west-2.aws.found.io:9243/",
+    "discover_path": "/app/discover#/",
+    "search_path": "/api/console/proxy?path=traffic-*/_search&method=POST"
+  },
+  "processing": {
+    "baseline_start": "2025-06-01",
+    "baseline_end": "2025-06-09",
+    "current_time_range": "now-12h",
+    "high_volume_threshold": 1000,
+    "medium_volume_threshold": 100,
+    "critical_threshold": -80,
+    "warning_threshold": -50,
+    "min_daily_volume": 100
+  },
+  "rad_types": {
+    "venture_feed": {
+      "pattern": "pandc.vnext.recommendations.feed.feed*",
+      "display_name": "Venture Feed",
+      "enabled": true,
+      "color": "#4CAF50",
+      "description": "Venture recommendations feed"
+    },
+    "cart_recommendations": {
+      "pattern": "pandc.vnext.recommendations.cart*",
+      "display_name": "Cart Recommendations",
+      "enabled": false,
+      "color": "#2196F3",
+      "description": "Shopping cart recommendations"
+    },
+    "product_recommendations": {
+      "pattern": "pandc.vnext.recommendations.product*",
+      "display_name": "Product Recommendations",
+      "enabled": false,
+      "color": "#FF9800",
+      "description": "Product page recommendations"
+    }
+  },
+  "dashboard": {
+    "refresh_interval": 300,
+    "max_events_display": 200,
+    "enable_websocket": true,
+    "theme": "light",
+    "console_chart_width": 30,
+    "console_top_results": 20
+  },
+  "cors_proxy": {
+    "port": 8000,
+    "allowed_origins": "*",
+    "proxy_timeout": 30
+  }
+}

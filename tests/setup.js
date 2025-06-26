@@ -1,13 +1,7 @@
 // tests/setup.js - Global test setup for Vitest
 
 import { vi } from 'vitest';
-import createFetchMock from 'vitest-fetch-mock';
 import { JSDOM } from 'jsdom';
-
-const fetchMocker = createFetchMock(vi);
-
-// Enable fetch mocking
-fetchMocker.enableMocks();
 
 // Setup DOM environment
 const dom = new JSDOM('<!DOCTYPE html><html><body></body></html>', {
@@ -33,6 +27,7 @@ global.clearTimeout = vi.fn();
 // Mock localStorage with proper functionality
 const localStorageData = {};
 global.localStorage = {
+  data: localStorageData, // Make data accessible for tests
   getItem: vi.fn((key) => localStorageData[key] || null),
   setItem: vi.fn((key, value) => {
     localStorageData[key] = value;
@@ -73,28 +68,44 @@ Object.defineProperty(document, 'cookie', {
 
 // Helper to change location
 global.setLocation = (hostname = 'localhost') => {
-  const url = hostname === 'localhost' || hostname === '127.0.0.1' 
-    ? `http://${hostname}` 
+  const url = hostname === 'localhost' || hostname === '127.0.0.1'
+    ? `http://${hostname}`
     : `https://${hostname}`;
   dom.reconfigure({ url });
 };
 
 // Reset mocks before each test
 beforeEach(() => {
-  fetchMocker.resetMocks();
+  global.fetch.mockReset();
+  
+  // Clear localStorage data
+  Object.keys(localStorageData).forEach(key => delete localStorageData[key]);
+  
+  // Reset localStorage mocks but restore implementations
   localStorage.getItem.mockReset();
   localStorage.setItem.mockReset();
   localStorage.removeItem.mockReset();
   localStorage.clear.mockReset();
-  // Clear localStorage data
-  Object.keys(localStorageData).forEach(key => delete localStorageData[key]);
-  cookies = {};
   
+  // Restore implementations
+  localStorage.getItem.mockImplementation((key) => localStorageData[key] || null);
+  localStorage.setItem.mockImplementation((key, value) => {
+    localStorageData[key] = value;
+  });
+  localStorage.removeItem.mockImplementation((key) => {
+    delete localStorageData[key];
+  });
+  localStorage.clear.mockImplementation(() => {
+    Object.keys(localStorageData).forEach(key => delete localStorageData[key]);
+  });
+  
+  cookies = {};
+
   // Reset DOM
   document.body.innerHTML = '';
   vi.clearAllMocks();
   document.cookie = '';
-  
+
   // Reset location to localhost
   global.setLocation('localhost');
 });
@@ -129,4 +140,36 @@ global.createBucket = (key, baselineCount, currentCount) => {
     baseline: { doc_count: baselineCount },
     current: { doc_count: currentCount }
   };
-}; 
+};
+
+// Helper to set up proper authentication for tests
+global.setupTestAuthentication = (cookieValue = 'test_cookie') => {
+  const cookieData = {
+    cookie: cookieValue,
+    expires: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+    saved: new Date().toISOString()
+  };
+  localStorage.setItem('elasticCookie', JSON.stringify(cookieData));
+  // Also ensure localStorage mock tracks this
+  localStorageData['elasticCookie'] = JSON.stringify(cookieData);
+};
+
+// Helper to set up test configuration
+global.setupTestConfiguration = (config = {}) => {
+  const defaultConfig = {
+    baselineStart: '2025-06-01',
+    baselineEnd: '2025-06-09',
+    currentTimeRange: 'now-12h',
+    highVolumeThreshold: 1000,
+    mediumVolumeThreshold: 100,
+    minDailyVolume: 100,
+    criticalThreshold: -80,
+    warningThreshold: -50,
+    autoRefreshEnabled: true,
+    autoRefreshInterval: 300000
+  };
+  const fullConfig = { ...defaultConfig, ...config };
+  localStorage.setItem('radMonitorConfig', JSON.stringify(fullConfig));
+  // Also ensure localStorage mock tracks this
+  localStorageData['radMonitorConfig'] = JSON.stringify(fullConfig);
+};

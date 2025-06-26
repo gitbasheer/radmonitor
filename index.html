@@ -1,1553 +1,518 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>RAD Traffic Monitor</title>
-    <meta http-equiv="refresh" content="300">
-    <meta charset="utf-8">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RAD Monitor - Traffic Health Dashboard</title>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    
+    <!-- Dashboard CSS with sidebar layout -->
+    <link rel="stylesheet" href="assets/css/dashboard.css">
+    
+    <!-- JavaScript Entry Point -->
+    <script type="module" src="assets/js/main.js?v=10"></script>
+</head>
+<body>
+    <!-- Hidden input for server-side cookie -->
+    <input type="hidden" id="elasticCookie" value="">
+    
+    <!-- Sidebar Control Panel -->
+    <div class="control-panel">
+        <div class="control-header">
+            CONTROL PANEL
+        </div>
+        
+        <div class="control-content">
+            <!-- Connection Status -->
+            <div class="control-section">
+                <label class="control-label">Connection Status</label>
+                <div id="connectionStatus" style="font-size: 12px; padding: 5px; background: #f0f0f0; text-align: center; border-radius: 3px;">
+                    <span class="status-dot" style="display: inline-block; width: 8px; height: 8px; background: #ccc; border-radius: 50%; margin-right: 5px;"></span>
+                    <span class="status-text">Connecting...</span>
+                </div>
+                <div style="margin-top: 10px;">
+                    <button onclick="Dashboard.testApiConnection()" class="control-button secondary">Test Connection</button>
+                </div>
+            </div>
+            
+            <!-- Quick Actions -->
+            <div class="control-section">
+                <label class="control-label">Quick Actions</label>
+                <button onclick="Dashboard.refresh()" class="control-button" style="background: #2196F3; width: 100%; margin-bottom: 8px;">
+                    <span style="font-size: 16px;">🔄</span> REFRESH DATA
+                </button>
+                <button onclick="showAdvancedEditor()" class="control-button" style="background: #4CAF50; width: 100%;">
+                    <span style="font-size: 16px;">⚙️</span> CONFIGURATION
+                </button>
+                <div class="refresh-status" id="refreshStatus" style="margin-top: 8px;">Ready</div>
+            </div>
+            
+            <!-- Additional Options -->
+            <div class="control-section">
+                <label class="control-label">Tools</label>
+                <button onclick="ConfigManager.exportConfiguration()" class="control-button secondary" style="width: 100%; margin-bottom: 5px;">Export Config</button>
+                <button onclick="Dashboard.showApiSetupInstructions()" class="control-button secondary" style="width: 100%;">Help</button>
+            </div>
+            
+            <!-- Quick Stats -->
+            <div class="control-section">
+                <label class="control-label">Current Settings</label>
+                <div style="font-size: 11px; color: #666; line-height: 1.6;">
+                    <div><strong>Time Range:</strong> <span id="quickTimeRange">now-12h</span></div>
+                    <div><strong>Baseline:</strong> <span id="quickBaseline">Loading...</span></div>
+                    <div><strong>Theme:</strong> <span id="quickTheme">light</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Main Content Area -->
+    <div class="main-content">
+        <div class="container">
+            <!-- Header -->
+            <div class="header">
+                <h1>RAD Traffic Health Monitor</h1>
+                <div class="header-controls">
+                    <button id="howItWorksBtn" class="info-button" onclick="showHowItWorksModal()">📖 How It Works</button>
+                    <div class="timestamp">Last updated: <span id="lastUpdate">Never</span></div>
+                </div>
+            </div>
+            
+            <div class="content">
+                <!-- Summary Cards -->
+                <div class="summary">
+                    <div class="card critical">
+                        <div class="label">CRITICAL</div>
+                        <div id="criticalCount" class="value">0</div>
+                        <div class="subtitle">Traffic dropped &gt;80%</div>
+                    </div>
+                    <div class="card warning">
+                        <div class="label">WARNING</div>
+                        <div id="warningCount" class="value">0</div>
+                        <div class="subtitle">Traffic dropped 50-80%</div>
+                    </div>
+                    <div class="card normal">
+                        <div class="label">NORMAL</div>
+                        <div id="normalCount" class="value">0</div>
+                        <div class="subtitle">Traffic as expected</div>
+                    </div>
+                    <div class="card increased">
+                        <div class="label">INCREASED</div>
+                        <div id="increasedCount" class="value">0</div>
+                        <div class="subtitle">Traffic higher than usual</div>
+                    </div>
+                </div>
+                
+                <!-- Search and Filters -->
+                <div class="filters">
+                    <input type="text" id="searchInput" placeholder="Search events..." class="search-input">
+                    <div class="filter-buttons">
+                        <button class="filter-btn active" data-filter="all">ALL</button>
+                        <button class="filter-btn" data-filter="critical">CRITICAL</button>
+                        <button class="filter-btn" data-filter="warning">WARNING</button>
+                        <button class="filter-btn" data-filter="normal">NORMAL</button>
+                        <button class="filter-btn" data-filter="increased">INCREASED</button>
+                    </div>
+                </div>
+                
+                <!-- RAD Type Filters -->
+                <div class="rad-filters" style="margin-top: 10px;">
+                    <label style="font-weight: 600; margin-right: 10px;">RAD Types:</label>
+                    <div id="radTypeButtons" class="filter-buttons" style="display: inline-flex;">
+                        <!-- RAD type buttons will be dynamically inserted here -->
+                    </div>
+                </div>
+                
+                <!-- Loading Indicator -->
+                <div id="loadingIndicator" class="loading" style="display: none;">
+                    <div class="spinner"></div>
+                    <span>Loading data...</span>
+                </div>
+                
+                <!-- Results Info -->
+                <div id="resultsInfo" class="results-info"></div>
+                
+                <!-- Data Table -->
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th data-sort="event_id" style="width: 35%">Traffic Event Identifier</th>
+                            <th data-sort="rad_type" style="width: 12%">RAD Type</th>
+                            <th data-sort="status" style="width: 10%">Health Status</th>
+                            <th data-sort="score" style="width: 8%">Change %</th>
+                            <th data-sort="current" style="width: 10%; text-align: right">Current Count</th>
+                            <th data-sort="baseline12h" style="width: 10%; text-align: right">Expected Count</th>
+                            <th data-sort="change" style="width: 15%">Business Impact</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody">
+                        <!-- Data rows will be inserted here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Hidden elements for compatibility -->
+    <div style="display: none;">
+        <!-- API Status -->
+        <span id="apiStatus"></span>
+        
+        <!-- Hidden form elements for ConfigEditor compatibility -->
+        <button id="testApiBtn">Test API</button>
+    </div>
+    
+    <!-- How It Works Modal -->
+    <div id="howItWorksModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>📖 How RAD Monitor Works</h2>
+                <span class="close" onclick="closeHowItWorksModal()">&times;</span>
+            </div>
+            <div class="modal-body" id="howItWorksContent">
+                <!-- Content will be loaded dynamically -->
+            </div>
+        </div>
+    </div>
+    
+    <!-- Advanced Editor Modal -->
+    <div id="advancedEditorModal" class="modal" style="display: none;">
+        <div class="modal-content" style="max-width: 900px; max-height: 90vh; overflow-y: auto;">
+            <div class="modal-header">
+                <h2>⚙️ Configuration Settings</h2>
+                <span class="close" onclick="closeAdvancedEditor()">&times;</span>
+            </div>
+            <div class="modal-body" style="padding: 20px;">
+                <div id="configEditorFields">
+                    <!-- Config fields will be loaded here -->
+                </div>
+                <div id="configEditorStatus" style="margin: 15px 0 10px 0; font-size: 13px; color: #666; text-align: center;"></div>
+                <div style="margin-top: 15px; display: flex; gap: 10px; justify-content: center;">
+                    <button onclick="ConfigEditor.saveConfig()" class="control-button" style="background: #4CAF50; padding: 8px 20px;">Apply Changes</button>
+                    <button onclick="ConfigEditor.resetToDefaults()" class="control-button secondary" style="padding: 8px 20px;">Reset to Defaults</button>
+                    <button onclick="closeAdvancedEditor()" class="control-button secondary" style="padding: 8px 20px;">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
     <style>
-        body { 
-            font-family: -apple-system, Arial, sans-serif; 
-            margin: 0; 
-            padding: 20px;
-            background: #f8f9fa;
-        }
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-            background: white;
-            padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        h1 { 
-            font-size: 28px;
-            margin: 0 0 10px 0;
-            color: #1a1a1a;
-        }
-        .timestamp { 
-            color: #6c757d;
-            font-size: 14px;
+        /* Header controls styling */
+        .container .header {
+            display: flex !important;
+            justify-content: space-between !important;
+            align-items: center !important;
             margin-bottom: 30px;
         }
         
-        /* Summary Cards */
-        .summary {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        .header-controls {
+            display: flex;
+            align-items: center;
             gap: 20px;
-            margin-bottom: 40px;
-        }
-        .card {
-            padding: 24px;
-            border-radius: 8px;
-            text-align: center;
-            background: #f8f9fa;
-            border: 1px solid #dee2e6;
-        }
-        .card.critical {
-            background: #fee;
-            border-color: #fcc;
-        }
-        .card.warning {
-            background: #fff8e1;
-            border-color: #ffe082;
-        }
-        .card.normal {
-            background: #e8f5e9;
-            border-color: #a5d6a7;
-        }
-        .card.increased {
-            background: #e3f2fd;
-            border-color: #90caf9;
-        }
-        .card-number {
-            font-size: 48px;
-            font-weight: 300;
-            margin: 10px 0;
-            line-height: 1;
-        }
-        .card-label {
-            font-size: 14px;
-            color: #6c757d;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
         }
         
-        /* Table */
-        table { 
-            width: 100%; 
-            border-collapse: collapse;
+        .info-button {
+            background: #2196F3;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
             font-size: 14px;
-            margin-top: 20px;
+            font-weight: 500;
+            transition: background 0.2s;
         }
-        thead {
-            background: #f8f9fa;
+        
+        .info-button:hover {
+            background: #1976D2;
         }
-        th { 
-            padding: 16px 12px;
-            text-align: left;
-            font-weight: 600;
-            color: #495057;
-            border-bottom: 2px solid #dee2e6;
-            white-space: nowrap;
+        
+        /* Modal styling */
+        .modal {
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            backdrop-filter: blur(2px);
         }
-        td { 
-            padding: 14px 12px;
+        
+        .modal-content {
+            background-color: white;
+            margin: 2% auto;
+            padding: 0;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 900px;
+            max-height: 85vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 30px;
             border-bottom: 1px solid #eee;
-        }
-        tbody tr:hover { 
             background: #f8f9fa;
+            border-radius: 12px 12px 0 0;
         }
         
-        /* Event names */
-        .event-name {
-            font-family: 'SF Mono', Monaco, monospace;
-            font-size: 13px;
-            color: #495057;
+        .modal-header h2 {
+            margin: 0;
+            color: #333;
+            font-size: 24px;
         }
         
-        /* Status badges */
-        .badge {
-            display: inline-block;
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        .badge.critical {
-            background: #dc3545;
-            color: white;
-        }
-        .badge.warning {
-            background: #ffc107;
-            color: #000;
-        }
-        .badge.normal {
-            background: #28a745;
-            color: white;
-        }
-        .badge.increased {
-            background: #17a2b8;
-            color: white;
+        .close {
+            color: #666;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 50%;
+            transition: background 0.2s;
         }
         
-        /* Score */
-        .score {
-            font-family: 'SF Mono', Monaco, monospace;
-            font-size: 16px;
-            font-weight: 600;
-        }
-        .score.negative {
-            color: #dc3545;
-        }
-        .score.positive {
-            color: #28a745;
+        .close:hover {
+            background: #e0e0e0;
         }
         
-        /* Numbers */
-        .number {
-            text-align: right;
-            font-family: 'SF Mono', Monaco, monospace;
-            font-size: 13px;
+        .modal-body {
+            padding: 20px 25px;
+            line-height: 1.5;
+            color: #333;
         }
         
-        /* Impact */
-        .impact {
-            font-size: 13px;
-            color: #6c757d;
-        }
-        .impact.loss {
-            color: #dc3545;
-        }
-        .impact.gain {
-            color: #28a745;
+        .math-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #2196F3;
         }
         
-        /* Footer */
-        .footer {
-            margin-top: 40px;
-            padding-top: 20px;
-            border-top: 1px solid #dee2e6;
-            text-align: center;
+        .math-section h3 {
+            margin: 0 0 15px 0;
+            color: #1976D2;
+            font-size: 18px;
         }
-        .footer a {
-            color: #007bff;
-            text-decoration: none;
-            margin: 0 15px;
+        
+        .math-section p {
+            margin: 10px 0;
         }
-        .footer a:hover {
-            text-decoration: underline;
+        
+        .formula {
+            background: #e3f2fd;
+            padding: 10px 15px;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            margin: 10px 0;
+            border: 1px solid #bbdefb;
+        }
+        
+        .example {
+            background: #fff3e0;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 10px 0;
+            border: 1px solid #ffcc02;
+        }
+        
+        .example strong {
+            color: #f57c00;
         }
     </style>
-</head>
-<body>
-    <div class="container">
-        <h1>🚨 RAD Traffic Health Monitor</h1>
-        <div class="timestamp">
-            Last Updated: Wed Jun 18 16:55:03 EDT 2025 | Auto-refresh: 5 minutes
-        </div>
+    
+    <script>
+        // How It Works Modal Functions
+        function showHowItWorksModal() {
+            const modal = document.getElementById('howItWorksModal');
+            const content = document.getElementById('howItWorksContent');
+            
+            // Load the content
+            content.innerHTML = generateHowItWorksContent();
+            
+            // Show modal
+            modal.style.display = 'block';
+            
+            // Close on outside click
+            modal.onclick = function(event) {
+                if (event.target === modal) {
+                    closeHowItWorksModal();
+                }
+            };
+        }
         
-        <div class="summary">
-            <div class="card critical">
-                <div class="card-label">Critical</div>
-                <div class="card-number" style="color: #dc3545;">12</div>
-                <div class="card-label">Traffic drops &gt; 80%</div>
-            </div>
-            <div class="card warning">
-                <div class="card-label">Warning</div>
-                <div class="card-number" style="color: #ffc107;">12</div>
-                <div class="card-label">Traffic drops 50-80%</div>
-            </div>
-            <div class="card normal">
-                <div class="card-label">Normal</div>
-                <div class="card-number" style="color: #28a745;">25</div>
-                <div class="card-label">Operating normally</div>
-            </div>
-            <div class="card increased">
-                <div class="card-label">Increased</div>
-                <div class="card-number" style="color: #17a2b8;">96</div>
-                <div class="card-label">Traffic increased</div>
-            </div>
-        </div>
+        function closeHowItWorksModal() {
+            document.getElementById('howItWorksModal').style.display = 'none';
+        }
         
-        <h2 style="font-size: 20px; margin-top: 40px; margin-bottom: 20px;">Detailed Analysis</h2>
+        // Advanced Editor Modal Functions
+        async function showAdvancedEditor() {
+            const modal = document.getElementById('advancedEditorModal');
+            
+            // Load the configuration
+            await ConfigEditor.loadConfig();
+            
+            // Show modal
+            modal.style.display = 'block';
+            
+            // Close on outside click
+            modal.onclick = function(event) {
+                if (event.target === modal) {
+                    closeAdvancedEditor();
+                }
+            };
+        }
         
-        <table>
-            <thead>
-                <tr>
-                    <th>Event ID</th>
-                    <th>Status</th>
-                    <th style="text-align: right;">Score</th>
-                    <th style="text-align: right;">Current (12h)</th>
-                    <th style="text-align: right;">Expected (12h)</th>
-                    <th style="text-align: right;">Daily Avg</th>
-                    <th>Impact</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td><span class="event-name">feed_anotherdomain/index_4.impression</span></td>
-                    <td><span class="badge critical">CRITICAL</span></td>
-                    <td class="number"><span class="score negative">-97%</span></td>
-                    <td class="number">48</td>
-                    <td class="number">1,598</td>
-                    <td class="number">3,196</td>
-                    <td><span class="impact loss">Lost ~1,550 impressions</span></td>
-                </tr>
-                <tr>
-                    <td><span class="event-name">feed_domain/index_6.impression</span></td>
-                    <td><span class="badge critical">CRITICAL</span></td>
-                    <td class="number"><span class="score negative">-96%</span></td>
-                    <td class="number">5</td>
-                    <td class="number">138</td>
-                    <td class="number">275</td>
-                    <td><span class="impact loss">Lost ~133 impressions</span></td>
-                </tr>
-                <tr>
-                    <td><span class="event-name">feed_anotherdomain/index_3.impression</span></td>
-                    <td><span class="badge critical">CRITICAL</span></td>
-                    <td class="number"><span class="score negative">-93%</span></td>
-                    <td class="number">182</td>
-                    <td class="number">2,717</td>
-                    <td class="number">5,434</td>
-                    <td><span class="impact loss">Lost ~2,535 impressions</span></td>
-                </tr>
-                <tr>
-                    <td><span class="event-name">feed_domain/index_2.impression</span></td>
-                    <td><span class="badge critical">CRITICAL</span></td>
-                    <td class="number"><span class="score negative">-93%</span></td>
-                    <td class="number">137</td>
-                    <td class="number">1,895</td>
-                    <td class="number">3,790</td>
-                    <td><span class="impact loss">Lost ~1,758 impressions</span></td>
-                </tr>
-                <tr>
-                    <td><span class="event-name">feed_domain/index_5.impression</span></td>
-                    <td><span class="badge critical">CRITICAL</span></td>
-                    <td class="number"><span class="score negative">-93%</span></td>
-                    <td class="number">50</td>
-                    <td class="number">749</td>
-                    <td class="number">1,499</td>
-                    <td><span class="impact loss">Lost ~699 impressions</span></td>
-                </tr>
-                <tr>
-                    <td><span class="event-name">feed_domain.click</span></td>
-                    <td><span class="badge critical">CRITICAL</span></td>
-                    <td class="number"><span class="score negative">-91%</span></td>
-                    <td class="number">8</td>
-                    <td class="number">90</td>
-                    <td class="number">180</td>
-                    <td><span class="impact loss">Lost ~82 impressions</span></td>
-                </tr>
-                <tr>
-                    <td><span class="event-name">feed_domain/index_4.impression</span></td>
-                    <td><span class="badge critical">CRITICAL</span></td>
-                    <td class="number"><span class="score negative">-91%</span></td>
-                    <td class="number">116</td>
-                    <td class="number">1,274</td>
-                    <td class="number">2,547</td>
-                    <td><span class="impact loss">Lost ~1,158 impressions</span></td>
-                </tr>
-                <tr>
-                    <td><span class="event-name">feed_anotherdomain/index_2.impression</span></td>
-                    <td><span class="badge critical">CRITICAL</span></td>
-                    <td class="number"><span class="score negative">-88%</span></td>
-                    <td class="number">540</td>
-                    <td class="number">4,404</td>
-                    <td class="number">8,807</td>
-                    <td><span class="impact loss">Lost ~3,864 impressions</span></td>
-                </tr>
-                <tr>
-                    <td><span class="event-name">feed_anotherdomain/index_5.impression</span></td>
-                    <td><span class="badge critical">CRITICAL</span></td>
-                    <td class="number"><span class="score negative">-87%</span></td>
-                    <td class="number">84</td>
-                    <td class="number">646</td>
-                    <td class="number">1,292</td>
-                    <td><span class="impact loss">Lost ~562 impressions</span></td>
-                </tr>
-                <tr>
-                    <td><span class="event-name">feed_domain/index_3.impression</span></td>
-                    <td><span class="badge critical">CRITICAL</span></td>
-                    <td class="number"><span class="score negative">-87%</span></td>
-                    <td class="number">224</td>
-                    <td class="number">1,702</td>
-                    <td class="number">3,404</td>
-                    <td><span class="impact loss">Lost ~1,478 impressions</span></td>
-                </tr>
-                <tr>
-                    <td><span class="event-name">feed_anotherdomain.impression</span></td>
-                    <td><span class="badge critical">CRITICAL</span></td>
-                    <td class="number"><span class="score negative">-81%</span></td>
-                    <td class="number">4,307</td>
-                    <td class="number">23,004</td>
-                    <td class="number">46,009</td>
-                    <td><span class="impact loss">Lost ~18,697 impressions</span></td>
-                </tr>
-                <tr>
-                    <td><span class="event-name">feed_domain.impression</span></td>
-                    <td><span class="badge critical">CRITICAL</span></td>
-                    <td class="number"><span class="score negative">-81%</span></td>
-                    <td class="number">3,524</td>
-                    <td class="number">18,465</td>
-                    <td class="number">36,931</td>
-                    <td><span class="impact loss">Lost ~14,941 impressions</span></td>
-                </tr>
-                <tr>
-                    <td><span class="event-name">feed_domain/index_0.impression</span></td>
-                    <td><span class="badge warning">WARNING</span></td>
-                    <td class="number"><span class="score negative">-78%</span></td>
-                    <td class="number">2,656</td>
-                    <td class="number">12,013</td>
-                    <td class="number">24,027</td>
-                    <td><span class="impact loss">Lost ~9,357 impressions</span></td>
-                </tr>
-                <tr>
-                    <td><span class="event-name">feed_anotherdomain/index_0.impression</span></td>
-                    <td><span class="badge warning">WARNING</span></td>
-                    <td class="number"><span class="score negative">-76%</span></td>
-                    <td class="number">1,825</td>
-                    <td class="number">7,620</td>
-                    <td class="number">15,241</td>
-                    <td><span class="impact loss">Lost ~5,795 impressions</span></td>
-                </tr>
-                <tr>
-                    <td><span class="event-name">feed_startseo/index_7.impression</span></td>
-                    <td><span class="badge warning">WARNING</span></td>
-                    <td class="number"><span class="score negative">-75%</span></td>
-                    <td class="number">37</td>
-                    <td class="number">151</td>
-                    <td class="number">302</td>
-                    <td><span class="impact loss">Lost ~114 impressions</span></td>
-                </tr>
-                <tr>
-                    <td><span class="event-name">feed_anotherdomain/index_1.impression</span></td>
-                    <td><span class="badge warning">WARNING</span></td>
-                    <td class="number"><span class="score negative">-73%</span></td>
-                    <td class="number">2,167</td>
-                    <td class="number">8,064</td>
-                    <td class="number">16,127</td>
-                    <td><span class="impact loss">Lost ~5,897 impressions</span></td>
-                </tr>
-                <tr>
-                    <td><span class="event-name">feed_gdconversations_free/index_1.impression</span></td>
-                    <td><span class="badge warning">WARNING</span></td>
-                    <td class="number"><span class="score negative">-73%</span></td>
-                    <td class="number">3,052</td>
-                    <td class="number">11,168</td>
-                    <td class="number">22,337</td>
-                    <td><span class="impact loss">Lost ~8,116 impressions</span></td>
-                </tr>
-                <tr>
-                    <td><span class="event-name">feed_anotherdomain/index_6.impression</span></td>
-                    <td><span class="badge warning">WARNING</span></td>
-                    <td class="number"><span class="score negative">-72%</span></td>
-                    <td class="number">20</td>
-                    <td class="number">72</td>
-                    <td class="number">144</td>
-                    <td><span class="impact loss">Lost ~52 impressions</span></td>
-                </tr>
-                <tr>
-                    <td><span class="event-name">feed_domain/index_1.impression</span></td>
-                    <td><span class="badge warning">WARNING</span></td>
-                    <td class="number"><span class="score negative">-63%</span></td>
-                    <td class="number">645</td>
-                    <td class="number">1,744</td>
-                    <td class="number">3,488</td>
-                    <td><span class="impact loss">Lost ~1,099 impressions</span></td>
-                </tr>
-                <tr>
-                    <td><span class="event-name">feed_gdconversations/index_4.impression</span></td>
-                    <td><span class="badge warning">WARNING</span></td>
-                    <td class="number"><span class="score negative">-59%</span></td>
-                    <td class="number">117</td>
-                    <td class="number">287</td>
-                    <td class="number">574</td>
-                    <td><span class="impact loss">Lost ~170 impressions</span></td>
-                </tr>
-                <tr>
-                    <td><span class="event-name">feed_creategmb/index_7.impression</span></td>
-                    <td><span class="badge warning">WARNING</span></td>
-                    <td class="number"><span class="score negative">-54%</span></td>
-                    <td class="number">265</td>
-                    <td class="number">579</td>
-                    <td class="number">1,158</td>
-                    <td><span class="impact loss">Lost ~314 impressions</span></td>
-                </tr>
-                <tr>
-                    <td><span class="event-name">feed_creategmb/index_4.impression</span></td>
-                    <td><span class="badge warning">WARNING</span></td>
-                    <td class="number"><span class="score negative">-52%</span></td>
-                    <td class="number">1,997</td>
-                    <td class="number">4,137</td>
-                    <td class="number">8,275</td>
-                    <td><span class="impact loss">Lost ~2,140 impressions</span></td>
-                </tr>
-                <tr>
-                    <td><span class="event-name">feed_startseo/index_5.impression</span></td>
-                    <td><span class="badge warning">WARNING</span></td>
-                    <td class="number"><span class="score negative">-51%</span></td>
-                    <td class="number">871</td>
-                    <td class="number">1,780</td>
-                    <td class="number">3,561</td>
-                    <td><span class="impact loss">Lost ~909 impressions</span></td>
-                </tr>
-                <tr>
-                    <td><span class="event-name">feed_startseo/index_6.impression</span></td>
-                    <td><span class="badge warning">WARNING</span></td>
-                    <td class="number"><span class="score negative">-50%</span></td>
-                    <td class="number">359</td>
-                    <td class="number">711</td>
-                    <td class="number">1,422</td>
-                    <td><span class="impact loss">Lost ~352 impressions</span></td>
-                </tr>
-                <tr>
-                    <td><span class="event-name">feed_domainforwarding/index_4.click</span></td>
-                    <td><span class="badge normal">NORMAL</span></td>
-                    <td class="number"><span class="score negative">-49%</span></td>
-                    <td class="number">78</td>
-                    <td class="number">152</td>
-                    <td class="number">304</td>
-                    <td><span class="impact loss">Lost ~74 impressions</span></td>
-                </tr>
-                <tr>
-                    <td><span class="event-name">feed_creategmb/index_5.impression</span></td>
-                    <td><span class="badge normal">NORMAL</span></td>
-                    <td class="number"><span class="score negative">-46%</span></td>
-                    <td class="number">2,082</td>
-                    <td class="number">3,885</td>
-                    <td class="number">7,770</td>
-                    <td><span class="impact loss">Lost ~1,803 impressions</span></td>
-                </tr>
-                <tr>
-                    <td><span class="event-name">feed_gdconversations/index_3.impression</span></td>
-                    <td><span class="badge normal">NORMAL</span></td>
-                    <td class="number"><span class="score negative">-44%</span></td>
-                    <td class="number">51</td>
-                    <td class="number">92</td>
-                    <td class="number">183</td>
-                    <td><span class="impact ">Normal variance</span></td>
-                </tr>
-                <tr>
-                    <td><span class="event-name">feed_logo/index_4.impression</span></td>
-                    <td><span class="badge normal">NORMAL</span></td>
-                    <td class="number"><span class="score negative">-44%</span></td>
-                    <td class="number">167</td>
-                    <td class="number">298</td>
-                    <td class="number">595</td>
-                    <td><span class="impact loss">Lost ~131 impressions</span></td>
-                </tr>
-                <tr>
-                    <td><span class="event-name">feed_creategmb/index_6.impression</span></td>
-                    <td><span class="badge normal">NORMAL</span></td>
-                    <td class="number"><span class="score negative">-41%</span></td>
-                    <td class="number">1,160</td>
-                    <td class="number">1,982</td>
-                    <td class="number">3,963</td>
-                    <td><span class="impact loss">Lost ~822 impressions</span></td>
-                </tr>
-                <tr>
-                    <td><span class="event-name">feed_conversations_telephony_paid-wam/index_1.impression</span></td>
-                    <td><span class="badge normal">NORMAL</span></td>
-                    <td class="number"><span class="score negative">-40%</span></td>
-                    <td class="number">7,266</td>
-                    <td class="number">12,015</td>
-                    <td class="number">24,030</td>
-                    <td><span class="impact loss">Lost ~4,749 impressions</span></td>
-                </tr>
-                <tr>
-                    <td><span class="event-name">feed_gdploan/index_2.impression</span></td>
-                    <td><span class="badge normal">NORMAL</span></td>
-                    <td class="number"><span class="score negative">-35%</span></td>
-                    <td class="number">233</td>
-                    <td class="number">359</td>
-                    <td class="number">718</td>
-                    <td><span class="impact loss">Lost ~126 impressions</span></td>
-                </tr>
-                <tr>
-                    <td><span class="event-name">feed_startseo/index_4.impression</span></td>
-                    <td><span class="badge normal">NORMAL</span></td>
-                    <td class="number"><span class="score negative">-29%</span></td>
-                    <td class="number">1,656</td>
-                    <td class="number">2,342</td>
-                    <td class="number">4,684</td>
-                    <td><span class="impact loss">Lost ~686 impressions</span></td>
-                </tr>
-                <tr>
-                    <td><span class="event-name">feed_startseo/index_3.impression</span></td>
-                    <td><span class="badge normal">NORMAL</span></td>
-                    <td class="number"><span class="score negative">-27%</span></td>
-                    <td class="number">513</td>
-                    <td class="number">705</td>
-                    <td class="number">1,410</td>
-                    <td><span class="impact loss">Lost ~192 impressions</span></td>
-                </tr>
-                <tr>
-                    <td><span class="event-name">feed_commerce_ps_generalsavings20/index_2.impression</span></td>
-                    <td><span class="badge normal">NORMAL</span></td>
-                    <td class="number"><span class="score negative">-20%</span></td>
-                    <td class="number">1,680</td>
-                    <td class="number">2,088</td>
-                    <td class="number">4,177</td>
-                    <td><span class="impact loss">Lost ~408 impressions</span></td>
-                </tr>
-                <tr>
-                    <td><span class="event-name">feed_gdconversations_free.impression</span></td>
-                    <td><span class="badge normal">NORMAL</span></td>
-                    <td class="number"><span class="score negative">-20%</span></td>
-                    <td class="number">38,777</td>
-                    <td class="number">48,568</td>
-                    <td class="number">97,136</td>
-                    <td><span class="impact loss">Lost ~9,791 impressions</span></td>
-                </tr>
-                <tr>
-                    <td><span class="event-name">feed_gdconversations_free/index_0.impression</span></td>
-                    <td><span class="badge normal">NORMAL</span></td>
-                    <td class="number"><span class="score negative">-20%</span></td>
-                    <td class="number">33,774</td>
-                    <td class="number">42,384</td>
-                    <td class="number">84,768</td>
-                    <td><span class="impact loss">Lost ~8,610 impressions</span></td>
-                </tr>
-                <tr>
-                    <td><span class="event-name">feed_gdconversations/index_5.impression</span></td>
-                    <td><span class="badge normal">NORMAL</span></td>
-                    <td class="number"><span class="score negative">-19%</span></td>
-                    <td class="number">98</td>
-                    <td class="number">122</td>
-                    <td class="number">243</td>
-                    <td><span class="impact ">Normal variance</span></td>
-                </tr>
-                <tr>
-                    <td><span class="event-name">feed_domainforwarding/index_3.click</span></td>
-                    <td><span class="badge normal">NORMAL</span></td>
-                    <td class="number"><span class="score negative">-16%</span></td>
-                    <td class="number">308</td>
-                    <td class="number">368</td>
-                    <td class="number">736</td>
-                    <td><span class="impact loss">Lost ~60 impressions</span></td>
-                </tr>
-                <tr>
-                    <td><span class="event-name">feed_domainforwarding/index_4.impression</span></td>
-                    <td><span class="badge normal">NORMAL</span></td>
-                    <td class="number"><span class="score negative">-15%</span></td>
-                    <td class="number">10,162</td>
-                    <td class="number">11,987</td>
-                    <td class="number">23,974</td>
-                    <td><span class="impact loss">Lost ~1,825 impressions</span></td>
-                </tr>
-                <tr>
-                    <td><span class="event-name">feed_gdconversations.impression</span></td>
-                    <td><span class="badge normal">NORMAL</span></td>
-                    <td class="number"><span class="score negative">-15%</span></td>
-                    <td class="number">423</td>
-                    <td class="number">500</td>
-                    <td class="number">1,000</td>
-                    <td><span class="impact loss">Lost ~77 impressions</span></td>
-                </tr>
-                <tr>
-                    <td><span class="event-name">feed_domainforwarding/index_2.click</span></td>
-                    <td><span class="badge normal">NORMAL</span></td>
-                    <td class="number"><span class="score negative">-12%</span></td>
-                    <td class="number">208</td>
-                    <td class="number">236</td>
-                    <td class="number">473</td>
-                    <td><span class="impact ">Normal variance</span></td>
-                </tr>
-                <tr>
-                    <td><span class="event-name">feed_marketing/index_0.impression</span></td>
-                    <td><span class="badge normal">NORMAL</span></td>
-                    <td class="number"><span class="score negative">-12%</span></td>
-                    <td class="number">50,994</td>
-                    <td class="number">58,203</td>
-                    <td class="number">116,406</td>
-                    <td><span class="impact loss">Lost ~7,209 impressions</span></td>
-                </tr>
-                <tr>
-                    <td><span class="event-name">feed_connectinstagram/index_4.impression</span></td>
-                    <td><span class="badge normal">NORMAL</span></td>
-                    <td class="number"><span class="score negative">-11%</span></td>
-                    <td class="number">7,000</td>
-                    <td class="number">7,847</td>
-                    <td class="number">15,694</td>
-                    <td><span class="impact loss">Lost ~847 impressions</span></td>
-                </tr>
-                <tr>
-                    <td><span class="event-name">feed_logo/index_3.impression</span></td>
-                    <td><span class="badge normal">NORMAL</span></td>
-                    <td class="number"><span class="score negative">-10%</span></td>
-                    <td class="number">869</td>
-                    <td class="number">963</td>
-                    <td class="number">1,926</td>
-                    <td><span class="impact loss">Lost ~94 impressions</span></td>
-                </tr>
-                <tr>
-                    <td><span class="event-name">feed_creategmb/index_2.impression</span></td>
-                    <td><span class="badge normal">NORMAL</span></td>
-                    <td class="number"><span class="score negative">-8%</span></td>
-                    <td class="number">14,491</td>
-                    <td class="number">15,826</td>
-                    <td class="number">31,652</td>
-                    <td><span class="impact loss">Lost ~1,335 impressions</span></td>
-                </tr>
-                <tr>
-                    <td><span class="event-name">feed_creategmb/index_3.impression</span></td>
-                    <td><span class="badge normal">NORMAL</span></td>
-                    <td class="number"><span class="score negative">-7%</span></td>
-                    <td class="number">4,790</td>
-                    <td class="number">5,152</td>
-                    <td class="number">10,304</td>
-                    <td><span class="impact loss">Lost ~362 impressions</span></td>
-                </tr>
-                <tr>
-                    <td><span class="event-name">feed_commerce_ps_generalsavings20/index_1.impression</span></td>
-                    <td><span class="badge normal">NORMAL</span></td>
-                    <td class="number"><span class="score negative">-6%</span></td>
-                    <td class="number">2,463</td>
-                    <td class="number">2,618</td>
-                    <td class="number">5,235</td>
-                    <td><span class="impact loss">Lost ~155 impressions</span></td>
-                </tr>
-                <tr>
-                    <td><span class="event-name">feed_ssl/index_4.impression</span></td>
-                    <td><span class="badge normal">NORMAL</span></td>
-                    <td class="number"><span class="score negative">-4%</span></td>
-                    <td class="number">494</td>
-                    <td class="number">514</td>
-                    <td class="number">1,028</td>
-                    <td><span class="impact ">Normal variance</span></td>
-                </tr>
-                <tr>
-                    <td><span class="event-name">feed_airo_consultant_get_started/index_0.impression</span></td>
-                    <td><span class="badge normal">NORMAL</span></td>
-                    <td class="number"><span class="score positive">+0%</span></td>
-                    <td class="number">63,805</td>
-                    <td class="number">63,869</td>
-                    <td class="number">127,738</td>
-                    <td><span class="impact loss">Lost ~64 impressions</span></td>
-                </tr>
-                <tr>
-                    <td><span class="event-name">feed_compliance_privacy.impression</span></td>
-                    <td><span class="badge increased">INCREASED</span></td>
-                    <td class="number"><span class="score positive">+2%</span></td>
-                    <td class="number">134</td>
-                    <td class="number">131</td>
-                    <td class="number">262</td>
-                    <td><span class="impact ">Normal variance</span></td>
-                </tr>
-                <tr>
-                    <td><span class="event-name">feed_domainforwarding/index_5.impression</span></td>
-                    <td><span class="badge increased">INCREASED</span></td>
-                    <td class="number"><span class="score positive">+2%</span></td>
-                    <td class="number">7,629</td>
-                    <td class="number">7,496</td>
-                    <td class="number">14,991</td>
-                    <td><span class="impact gain">Gained ~133 impressions</span></td>
-                </tr>
-                <tr>
-                    <td><span class="event-name">feed_commerce_ps_freesmarterminaloffer_racmodal/index_1.impression</span></td>
-                    <td><span class="badge increased">INCREASED</span></td>
-                    <td class="number"><span class="score positive">+3%</span></td>
-                    <td class="number">8,256</td>
-                    <td class="number">7,980</td>
-                    <td class="number">15,960</td>
-                    <td><span class="impact gain">Gained ~276 impressions</span></td>
-                </tr>
-                <tr>
-                    <td><span class="event-name">feed_gallery/index_1.impression</span></td>
-                    <td><span class="badge increased">INCREASED</span></td>
-                    <td class="number"><span class="score positive">+3%</span></td>
-                    <td class="number">21,230</td>
-                    <td class="number">20,546</td>
-                    <td class="number">41,092</td>
-                    <td><span class="impact gain">Gained ~684 impressions</span></td>
-                </tr>
-                <tr>
-                    <td><span class="event-name">feed_gallery/index_2.impression</span></td>
-                    <td><span class="badge increased">INCREASED</span></td>
-                    <td class="number"><span class="score positive">+4%</span></td>
-                    <td class="number">9,108</td>
-                    <td class="number">8,776</td>
-                    <td class="number">17,552</td>
-                    <td><span class="impact gain">Gained ~332 impressions</span></td>
-                </tr>
-                <tr>
-                    <td><span class="event-name">feed_airo_consultant_get_started.impression</span></td>
-                    <td><span class="badge increased">INCREASED</span></td>
-                    <td class="number"><span class="score positive">+6%</span></td>
-                    <td class="number">60,005</td>
-                    <td class="number">56,354</td>
-                    <td class="number">112,708</td>
-                    <td><span class="impact gain">Gained ~3,651 impressions</span></td>
-                </tr>
-                <tr>
-                    <td><span class="event-name">feed_domainforwarding/index_3.impression</span></td>
-                    <td><span class="badge increased">INCREASED</span></td>
-                    <td class="number"><span class="score positive">+6%</span></td>
-                    <td class="number">25,501</td>
-                    <td class="number">24,144</td>
-                    <td class="number">48,289</td>
-                    <td><span class="impact gain">Gained ~1,357 impressions</span></td>
-                </tr>
-                <tr>
-                    <td><span class="event-name">feed_domainforwarding/index_6.impression</span></td>
-                    <td><span class="badge increased">INCREASED</span></td>
-                    <td class="number"><span class="score positive">+7%</span></td>
-                    <td class="number">4,602</td>
-                    <td class="number">4,310</td>
-                    <td class="number">8,621</td>
-                    <td><span class="impact gain">Gained ~292 impressions</span></td>
-                </tr>
-                <tr>
-                    <td><span class="event-name">feed_ssl/index_0.impression</span></td>
-                    <td><span class="badge increased">INCREASED</span></td>
-                    <td class="number"><span class="score positive">+8%</span></td>
-                    <td class="number">10,294</td>
-                    <td class="number">9,518</td>
-                    <td class="number">19,036</td>
-                    <td><span class="impact gain">Gained ~776 impressions</span></td>
-                </tr>
-                <tr>
-                    <td><span class="event-name">feed_social.impression</span></td>
-                    <td><span class="badge increased">INCREASED</span></td>
-                    <td class="number"><span class="score positive">+10%</span></td>
-                    <td class="number">139</td>
-                    <td class="number">126</td>
-                    <td class="number">253</td>
-                    <td><span class="impact ">Normal variance</span></td>
-                </tr>
-                <tr>
-                    <td><span class="event-name">feed_connectinstagram/index_3.impression</span></td>
-                    <td><span class="badge increased">INCREASED</span></td>
-                    <td class="number"><span class="score positive">+11%</span></td>
-                    <td class="number">16,506</td>
-                    <td class="number">14,898</td>
-                    <td class="number">29,796</td>
-                    <td><span class="impact gain">Gained ~1,608 impressions</span></td>
-                </tr>
-                <tr>
-                    <td><span class="event-name">feed_difywds/index_2.impression</span></td>
-                    <td><span class="badge increased">INCREASED</span></td>
-                    <td class="number"><span class="score positive">+14%</span></td>
-                    <td class="number">6,462</td>
-                    <td class="number">5,656</td>
-                    <td class="number">11,313</td>
-                    <td><span class="impact gain">Gained ~806 impressions</span></td>
-                </tr>
-                <tr>
-                    <td><span class="event-name">feed_airo_consultant_get_started/index_0.click</span></td>
-                    <td><span class="badge increased">INCREASED</span></td>
-                    <td class="number"><span class="score positive">+16%</span></td>
-                    <td class="number">116</td>
-                    <td class="number">100</td>
-                    <td class="number">200</td>
-                    <td><span class="impact ">Normal variance</span></td>
-                </tr>
-                <tr>
-                    <td><span class="event-name">feed_domainforwarding/index_7.impression</span></td>
-                    <td><span class="badge increased">INCREASED</span></td>
-                    <td class="number"><span class="score positive">+16%</span></td>
-                    <td class="number">2,078</td>
-                    <td class="number">1,791</td>
-                    <td class="number">3,581</td>
-                    <td><span class="impact gain">Gained ~287 impressions</span></td>
-                </tr>
-                <tr>
-                    <td><span class="event-name">feed_gallery.impression</span></td>
-                    <td><span class="badge increased">INCREASED</span></td>
-                    <td class="number"><span class="score positive">+16%</span></td>
-                    <td class="number">60,541</td>
-                    <td class="number">52,330</td>
-                    <td class="number">104,661</td>
-                    <td><span class="impact gain">Gained ~8,211 impressions</span></td>
-                </tr>
-                <tr>
-                    <td><span class="event-name">feed_creategmb/index_1.impression</span></td>
-                    <td><span class="badge increased">INCREASED</span></td>
-                    <td class="number"><span class="score positive">+17%</span></td>
-                    <td class="number">13,471</td>
-                    <td class="number">11,468</td>
-                    <td class="number">22,937</td>
-                    <td><span class="impact gain">Gained ~2,003 impressions</span></td>
-                </tr>
-                <tr>
-                    <td><span class="event-name">feed_domainforwarding/index_2.impression</span></td>
-                    <td><span class="badge increased">INCREASED</span></td>
-                    <td class="number"><span class="score positive">+18%</span></td>
-                    <td class="number">21,152</td>
-                    <td class="number">17,999</td>
-                    <td class="number">35,998</td>
-                    <td><span class="impact gain">Gained ~3,153 impressions</span></td>
-                </tr>
-                <tr>
-                    <td><span class="event-name">feed_domainforwarding/index_5.click</span></td>
-                    <td><span class="badge increased">INCREASED</span></td>
-                    <td class="number"><span class="score positive">+18%</span></td>
-                    <td class="number">83</td>
-                    <td class="number">70</td>
-                    <td class="number">141</td>
-                    <td><span class="impact ">Normal variance</span></td>
-                </tr>
-                <tr>
-                    <td><span class="event-name">feed_difywdsdomainonly/index_0.impression</span></td>
-                    <td><span class="badge increased">INCREASED</span></td>
-                    <td class="number"><span class="score positive">+20%</span></td>
-                    <td class="number">20,777</td>
-                    <td class="number">17,386</td>
-                    <td class="number">34,773</td>
-                    <td><span class="impact gain">Gained ~3,391 impressions</span></td>
-                </tr>
-                <tr>
-                    <td><span class="event-name">feed_gallery.click</span></td>
-                    <td><span class="badge increased">INCREASED</span></td>
-                    <td class="number"><span class="score positive">+24%</span></td>
-                    <td class="number">100</td>
-                    <td class="number">81</td>
-                    <td class="number">162</td>
-                    <td><span class="impact ">Normal variance</span></td>
-                </tr>
-                <tr>
-                    <td><span class="event-name">feed_gallery/index_0.impression</span></td>
-                    <td><span class="badge increased">INCREASED</span></td>
-                    <td class="number"><span class="score positive">+24%</span></td>
-                    <td class="number">29,921</td>
-                    <td class="number">24,187</td>
-                    <td class="number">48,375</td>
-                    <td><span class="impact gain">Gained ~5,734 impressions</span></td>
-                </tr>
-                <tr>
-                    <td><span class="event-name">feed_compliance_privacy/index_1.impression</span></td>
-                    <td><span class="badge increased">INCREASED</span></td>
-                    <td class="number"><span class="score positive">+28%</span></td>
-                    <td class="number">149</td>
-                    <td class="number">116</td>
-                    <td class="number">233</td>
-                    <td><span class="impact ">Normal variance</span></td>
-                </tr>
-                <tr>
-                    <td><span class="event-name">feed_domainforwarding.click</span></td>
-                    <td><span class="badge increased">INCREASED</span></td>
-                    <td class="number"><span class="score positive">+28%</span></td>
-                    <td class="number">1,628</td>
-                    <td class="number">1,276</td>
-                    <td class="number">2,553</td>
-                    <td><span class="impact gain">Gained ~352 impressions</span></td>
-                </tr>
-                <tr>
-                    <td><span class="event-name">feed_airo_consultant_get_started.click</span></td>
-                    <td><span class="badge increased">INCREASED</span></td>
-                    <td class="number"><span class="score positive">+30%</span></td>
-                    <td class="number">130</td>
-                    <td class="number">100</td>
-                    <td class="number">200</td>
-                    <td><span class="impact ">Normal variance</span></td>
-                </tr>
-                <tr>
-                    <td><span class="event-name">feed_ssl/index_3.impression</span></td>
-                    <td><span class="badge increased">INCREASED</span></td>
-                    <td class="number"><span class="score positive">+30%</span></td>
-                    <td class="number">2,215</td>
-                    <td class="number">1,705</td>
-                    <td class="number">3,411</td>
-                    <td><span class="impact gain">Gained ~510 impressions</span></td>
-                </tr>
-                <tr>
-                    <td><span class="event-name">feed_conversations/index_0.impression</span></td>
-                    <td><span class="badge increased">INCREASED</span></td>
-                    <td class="number"><span class="score positive">+31%</span></td>
-                    <td class="number">14,106</td>
-                    <td class="number">10,796</td>
-                    <td class="number">21,592</td>
-                    <td><span class="impact gain">Gained ~3,310 impressions</span></td>
-                </tr>
-                <tr>
-                    <td><span class="event-name">feed_creategmb.click</span></td>
-                    <td><span class="badge increased">INCREASED</span></td>
-                    <td class="number"><span class="score positive">+31%</span></td>
-                    <td class="number">224</td>
-                    <td class="number">172</td>
-                    <td class="number">343</td>
-                    <td><span class="impact gain">Gained ~52 impressions</span></td>
-                </tr>
-                <tr>
-                    <td><span class="event-name">feed_connectinstagram/index_1.click</span></td>
-                    <td><span class="badge increased">INCREASED</span></td>
-                    <td class="number"><span class="score positive">+32%</span></td>
-                    <td class="number">78</td>
-                    <td class="number">59</td>
-                    <td class="number">118</td>
-                    <td><span class="impact ">Normal variance</span></td>
-                </tr>
-                <tr>
-                    <td><span class="event-name">feed_conversations_telephony_paid-wam.impression</span></td>
-                    <td><span class="badge increased">INCREASED</span></td>
-                    <td class="number"><span class="score positive">+32%</span></td>
-                    <td class="number">17,319</td>
-                    <td class="number">13,144</td>
-                    <td class="number">26,287</td>
-                    <td><span class="impact gain">Gained ~4,175 impressions</span></td>
-                </tr>
-                <tr>
-                    <td><span class="event-name">feed_connectinstagram/index_5.impression</span></td>
-                    <td><span class="badge increased">INCREASED</span></td>
-                    <td class="number"><span class="score positive">+33%</span></td>
-                    <td class="number">2,645</td>
-                    <td class="number">1,987</td>
-                    <td class="number">3,974</td>
-                    <td><span class="impact gain">Gained ~658 impressions</span></td>
-                </tr>
-                <tr>
-                    <td><span class="event-name">feed_creategmb/index_8.impression</span></td>
-                    <td><span class="badge increased">INCREASED</span></td>
-                    <td class="number"><span class="score positive">+33%</span></td>
-                    <td class="number">98</td>
-                    <td class="number">74</td>
-                    <td class="number">148</td>
-                    <td><span class="impact ">Normal variance</span></td>
-                </tr>
-                <tr>
-                    <td><span class="event-name">feed_marketing.impression</span></td>
-                    <td><span class="badge increased">INCREASED</span></td>
-                    <td class="number"><span class="score positive">+33%</span></td>
-                    <td class="number">154,558</td>
-                    <td class="number">115,976</td>
-                    <td class="number">231,952</td>
-                    <td><span class="impact gain">Gained ~38,582 impressions</span></td>
-                </tr>
-                <tr>
-                    <td><span class="event-name">feed_commerce_ps_freesmarterminaloffer_racmodal.impression</span></td>
-                    <td><span class="badge increased">INCREASED</span></td>
-                    <td class="number"><span class="score positive">+35%</span></td>
-                    <td class="number">22,075</td>
-                    <td class="number">16,340</td>
-                    <td class="number">32,681</td>
-                    <td><span class="impact gain">Gained ~5,735 impressions</span></td>
-                </tr>
-                <tr>
-                    <td><span class="event-name">feed_social/index_0.impression</span></td>
-                    <td><span class="badge increased">INCREASED</span></td>
-                    <td class="number"><span class="score positive">+36%</span></td>
-                    <td class="number">149</td>
-                    <td class="number">110</td>
-                    <td class="number">219</td>
-                    <td><span class="impact ">Normal variance</span></td>
-                </tr>
-                <tr>
-                    <td><span class="event-name">feed_commerce_ps_generalsavings20.impression</span></td>
-                    <td><span class="badge increased">INCREASED</span></td>
-                    <td class="number"><span class="score positive">+38%</span></td>
-                    <td class="number">7,422</td>
-                    <td class="number">5,368</td>
-                    <td class="number">10,735</td>
-                    <td><span class="impact gain">Gained ~2,054 impressions</span></td>
-                </tr>
-                <tr>
-                    <td><span class="event-name">feed_logo/index_2.impression</span></td>
-                    <td><span class="badge increased">INCREASED</span></td>
-                    <td class="number"><span class="score positive">+38%</span></td>
-                    <td class="number">3,660</td>
-                    <td class="number">2,654</td>
-                    <td class="number">5,308</td>
-                    <td><span class="impact gain">Gained ~1,006 impressions</span></td>
-                </tr>
-                <tr>
-                    <td><span class="event-name">feed_domainforwarding/index_1.click</span></td>
-                    <td><span class="badge increased">INCREASED</span></td>
-                    <td class="number"><span class="score positive">+39%</span></td>
-                    <td class="number">175</td>
-                    <td class="number">126</td>
-                    <td class="number">251</td>
-                    <td><span class="impact ">Normal variance</span></td>
-                </tr>
-                <tr>
-                    <td><span class="event-name">feed_conversations/index_1.impression</span></td>
-                    <td><span class="badge increased">INCREASED</span></td>
-                    <td class="number"><span class="score positive">+42%</span></td>
-                    <td class="number">9,400</td>
-                    <td class="number">6,597</td>
-                    <td class="number">13,193</td>
-                    <td><span class="impact gain">Gained ~2,803 impressions</span></td>
-                </tr>
-                <tr>
-                    <td><span class="event-name">feed_creategmb.impression</span></td>
-                    <td><span class="badge increased">INCREASED</span></td>
-                    <td class="number"><span class="score positive">+42%</span></td>
-                    <td class="number">59,417</td>
-                    <td class="number">41,697</td>
-                    <td class="number">83,394</td>
-                    <td><span class="impact gain">Gained ~17,720 impressions</span></td>
-                </tr>
-                <tr>
-                    <td><span class="event-name">feed_marketing/index_1.impression</span></td>
-                    <td><span class="badge increased">INCREASED</span></td>
-                    <td class="number"><span class="score positive">+43%</span></td>
-                    <td class="number">46,081</td>
-                    <td class="number">32,192</td>
-                    <td class="number">64,383</td>
-                    <td><span class="impact gain">Gained ~13,889 impressions</span></td>
-                </tr>
-                <tr>
-                    <td><span class="event-name">feed_commerce_ps_freesmarterminaloffer_racmodal/index_0.impression</span></td>
-                    <td><span class="badge increased">INCREASED</span></td>
-                    <td class="number"><span class="score positive">+44%</span></td>
-                    <td class="number">8,604</td>
-                    <td class="number">5,972</td>
-                    <td class="number">11,945</td>
-                    <td><span class="impact gain">Gained ~2,632 impressions</span></td>
-                </tr>
-                <tr>
-                    <td><span class="event-name">feed_difywdsdomainonly.impression</span></td>
-                    <td><span class="badge increased">INCREASED</span></td>
-                    <td class="number"><span class="score positive">+47%</span></td>
-                    <td class="number">24,290</td>
-                    <td class="number">16,476</td>
-                    <td class="number">32,953</td>
-                    <td><span class="impact gain">Gained ~7,814 impressions</span></td>
-                </tr>
-                <tr>
-                    <td><span class="event-name">feed_commerce_ps_freesmarterminaloffer_racmodal/index_2.impression</span></td>
-                    <td><span class="badge increased">INCREASED</span></td>
-                    <td class="number"><span class="score positive">+51%</span></td>
-                    <td class="number">5,914</td>
-                    <td class="number">3,911</td>
-                    <td class="number">7,822</td>
-                    <td><span class="impact gain">Gained ~2,003 impressions</span></td>
-                </tr>
-                <tr>
-                    <td><span class="event-name">feed_conversations.impression</span></td>
-                    <td><span class="badge increased">INCREASED</span></td>
-                    <td class="number"><span class="score positive">+52%</span></td>
-                    <td class="number">23,991</td>
-                    <td class="number">15,747</td>
-                    <td class="number">31,494</td>
-                    <td><span class="impact gain">Gained ~8,244 impressions</span></td>
-                </tr>
-                <tr>
-                    <td><span class="event-name">feed_connectinstagram.click</span></td>
-                    <td><span class="badge increased">INCREASED</span></td>
-                    <td class="number"><span class="score positive">+54%</span></td>
-                    <td class="number">248</td>
-                    <td class="number">161</td>
-                    <td class="number">323</td>
-                    <td><span class="impact gain">Gained ~87 impressions</span></td>
-                </tr>
-                <tr>
-                    <td><span class="event-name">feed_marketing.click</span></td>
-                    <td><span class="badge increased">INCREASED</span></td>
-                    <td class="number"><span class="score positive">+55%</span></td>
-                    <td class="number">199</td>
-                    <td class="number">128</td>
-                    <td class="number">256</td>
-                    <td><span class="impact gain">Gained ~71 impressions</span></td>
-                </tr>
-                <tr>
-                    <td><span class="event-name">feed_gallery/index_3.impression</span></td>
-                    <td><span class="badge increased">INCREASED</span></td>
-                    <td class="number"><span class="score positive">+56%</span></td>
-                    <td class="number">4,203</td>
-                    <td class="number">2,686</td>
-                    <td class="number">5,373</td>
-                    <td><span class="impact gain">Gained ~1,517 impressions</span></td>
-                </tr>
-                <tr>
-                    <td><span class="event-name">feed_ssl.impression</span></td>
-                    <td><span class="badge increased">INCREASED</span></td>
-                    <td class="number"><span class="score positive">+56%</span></td>
-                    <td class="number">28,597</td>
-                    <td class="number">18,316</td>
-                    <td class="number">36,632</td>
-                    <td><span class="impact gain">Gained ~10,281 impressions</span></td>
-                </tr>
-                <tr>
-                    <td><span class="event-name">feed_marketing/index_3.impression</span></td>
-                    <td><span class="badge increased">INCREASED</span></td>
-                    <td class="number"><span class="score positive">+61%</span></td>
-                    <td class="number">17,462</td>
-                    <td class="number">10,852</td>
-                    <td class="number">21,703</td>
-                    <td><span class="impact gain">Gained ~6,610 impressions</span></td>
-                </tr>
-                <tr>
-                    <td><span class="event-name">feed_ssl/index_1.impression</span></td>
-                    <td><span class="badge increased">INCREASED</span></td>
-                    <td class="number"><span class="score positive">+61%</span></td>
-                    <td class="number">8,535</td>
-                    <td class="number">5,310</td>
-                    <td class="number">10,620</td>
-                    <td><span class="impact gain">Gained ~3,225 impressions</span></td>
-                </tr>
-                <tr>
-                    <td><span class="event-name">feed_connectinstagram/index_6.impression</span></td>
-                    <td><span class="badge increased">INCREASED</span></td>
-                    <td class="number"><span class="score positive">+62%</span></td>
-                    <td class="number">381</td>
-                    <td class="number">236</td>
-                    <td class="number">471</td>
-                    <td><span class="impact gain">Gained ~145 impressions</span></td>
-                </tr>
-                <tr>
-                    <td><span class="event-name">feed_connectinstagram.impression</span></td>
-                    <td><span class="badge increased">INCREASED</span></td>
-                    <td class="number"><span class="score positive">+66%</span></td>
-                    <td class="number">159,812</td>
-                    <td class="number">96,236</td>
-                    <td class="number">192,471</td>
-                    <td><span class="impact gain">Gained ~63,576 impressions</span></td>
-                </tr>
-                <tr>
-                    <td><span class="event-name">feed_connectinstagram/index_1.impression</span></td>
-                    <td><span class="badge increased">INCREASED</span></td>
-                    <td class="number"><span class="score positive">+67%</span></td>
-                    <td class="number">70,921</td>
-                    <td class="number">42,422</td>
-                    <td class="number">84,844</td>
-                    <td><span class="impact gain">Gained ~28,499 impressions</span></td>
-                </tr>
-                <tr>
-                    <td><span class="event-name">feed_difywds/index_0.impression</span></td>
-                    <td><span class="badge increased">INCREASED</span></td>
-                    <td class="number"><span class="score positive">+67%</span></td>
-                    <td class="number">39,025</td>
-                    <td class="number">23,409</td>
-                    <td class="number">46,818</td>
-                    <td><span class="impact gain">Gained ~15,616 impressions</span></td>
-                </tr>
-                <tr>
-                    <td><span class="event-name">feed_ssl.click</span></td>
-                    <td><span class="badge increased">INCREASED</span></td>
-                    <td class="number"><span class="score positive">+73%</span></td>
-                    <td class="number">115</td>
-                    <td class="number">66</td>
-                    <td class="number">133</td>
-                    <td><span class="impact ">Normal variance</span></td>
-                </tr>
-                <tr>
-                    <td><span class="event-name">feed_marketing/index_2.impression</span></td>
-                    <td><span class="badge increased">INCREASED</span></td>
-                    <td class="number"><span class="score positive">+74%</span></td>
-                    <td class="number">37,422</td>
-                    <td class="number">21,566</td>
-                    <td class="number">43,132</td>
-                    <td><span class="impact gain">Gained ~15,856 impressions</span></td>
-                </tr>
-                <tr>
-                    <td><span class="event-name">feed_domainforwarding.impression</span></td>
-                    <td><span class="badge increased">INCREASED</span></td>
-                    <td class="number"><span class="score positive">+78%</span></td>
-                    <td class="number">182,523</td>
-                    <td class="number">102,432</td>
-                    <td class="number">204,863</td>
-                    <td><span class="impact gain">Gained ~80,091 impressions</span></td>
-                </tr>
-                <tr>
-                    <td><span class="event-name">feed_gdploan.impression</span></td>
-                    <td><span class="badge increased">INCREASED</span></td>
-                    <td class="number"><span class="score positive">+83%</span></td>
-                    <td class="number">1,348</td>
-                    <td class="number">735</td>
-                    <td class="number">1,471</td>
-                    <td><span class="impact gain">Gained ~613 impressions</span></td>
-                </tr>
-                <tr>
-                    <td><span class="event-name">feed_difywds.impression</span></td>
-                    <td><span class="badge increased">INCREASED</span></td>
-                    <td class="number"><span class="score positive">+86%</span></td>
-                    <td class="number">77,482</td>
-                    <td class="number">41,662</td>
-                    <td class="number">83,325</td>
-                    <td><span class="impact gain">Gained ~35,820 impressions</span></td>
-                </tr>
-                <tr>
-                    <td><span class="event-name">feed_commerce_ps_generalsavings20/index_0.impression</span></td>
-                    <td><span class="badge increased">INCREASED</span></td>
-                    <td class="number"><span class="score positive">+88%</span></td>
-                    <td class="number">1,968</td>
-                    <td class="number">1,046</td>
-                    <td class="number">2,092</td>
-                    <td><span class="impact gain">Gained ~922 impressions</span></td>
-                </tr>
-                <tr>
-                    <td><span class="event-name">feed_gdconversations_free/index_2.impression</span></td>
-                    <td><span class="badge increased">INCREASED</span></td>
-                    <td class="number"><span class="score positive">+95%</span></td>
-                    <td class="number">629</td>
-                    <td class="number">322</td>
-                    <td class="number">644</td>
-                    <td><span class="impact gain">Gained ~307 impressions</span></td>
-                </tr>
-                <tr>
-                    <td><span class="event-name">feed_commerce_ps_generalsavings20/index_3.impression</span></td>
-                    <td><span class="badge increased">INCREASED</span></td>
-                    <td class="number"><span class="score positive">+96%</span></td>
-                    <td class="number">775</td>
-                    <td class="number">396</td>
-                    <td class="number">791</td>
-                    <td><span class="impact gain">Gained ~379 impressions</span></td>
-                </tr>
-                <tr>
-                    <td><span class="event-name">feed_difywds/index_1.impression</span></td>
-                    <td><span class="badge increased">INCREASED</span></td>
-                    <td class="number"><span class="score positive">+96%</span></td>
-                    <td class="number">30,409</td>
-                    <td class="number">15,485</td>
-                    <td class="number">30,969</td>
-                    <td><span class="impact gain">Gained ~14,924 impressions</span></td>
-                </tr>
-                <tr>
-                    <td><span class="event-name">feed_connectinstagram/index_2.impression</span></td>
-                    <td><span class="badge increased">INCREASED</span></td>
-                    <td class="number"><span class="score positive">+97%</span></td>
-                    <td class="number">35,388</td>
-                    <td class="number">17,939</td>
-                    <td class="number">35,877</td>
-                    <td><span class="impact gain">Gained ~17,449 impressions</span></td>
-                </tr>
-                <tr>
-                    <td><span class="event-name">feed_logo.impression</span></td>
-                    <td><span class="badge increased">INCREASED</span></td>
-                    <td class="number"><span class="score positive">+107%</span></td>
-                    <td class="number">37,108</td>
-                    <td class="number">17,894</td>
-                    <td class="number">35,788</td>
-                    <td><span class="impact gain">Gained ~19,214 impressions</span></td>
-                </tr>
-                <tr>
-                    <td><span class="event-name">feed_difywdsdomainonly/index_1.impression</span></td>
-                    <td><span class="badge increased">INCREASED</span></td>
-                    <td class="number"><span class="score positive">+109%</span></td>
-                    <td class="number">231</td>
-                    <td class="number">110</td>
-                    <td class="number">221</td>
-                    <td><span class="impact gain">Gained ~121 impressions</span></td>
-                </tr>
-                <tr>
-                    <td><span class="event-name">feed_logo/index_0.impression</span></td>
-                    <td><span class="badge increased">INCREASED</span></td>
-                    <td class="number"><span class="score positive">+115%</span></td>
-                    <td class="number">23,758</td>
-                    <td class="number">11,075</td>
-                    <td class="number">22,149</td>
-                    <td><span class="impact gain">Gained ~12,683 impressions</span></td>
-                </tr>
-                <tr>
-                    <td><span class="event-name">feed_gdploan/index_1.impression</span></td>
-                    <td><span class="badge increased">INCREASED</span></td>
-                    <td class="number"><span class="score positive">+121%</span></td>
-                    <td class="number">611</td>
-                    <td class="number">276</td>
-                    <td class="number">552</td>
-                    <td><span class="impact gain">Gained ~335 impressions</span></td>
-                </tr>
-                <tr>
-                    <td><span class="event-name">feed_connectinstagram/index_0.impression</span></td>
-                    <td><span class="badge increased">INCREASED</span></td>
-                    <td class="number"><span class="score positive">+122%</span></td>
-                    <td class="number">37,039</td>
-                    <td class="number">16,701</td>
-                    <td class="number">33,402</td>
-                    <td><span class="impact gain">Gained ~20,338 impressions</span></td>
-                </tr>
-                <tr>
-                    <td><span class="event-name">feed_startseo.impression</span></td>
-                    <td><span class="badge increased">INCREASED</span></td>
-                    <td class="number"><span class="score positive">+122%</span></td>
-                    <td class="number">14,511</td>
-                    <td class="number">6,527</td>
-                    <td class="number">13,054</td>
-                    <td><span class="impact gain">Gained ~7,984 impressions</span></td>
-                </tr>
-                <tr>
-                    <td><span class="event-name">feed_startseo/index_2.impression</span></td>
-                    <td><span class="badge increased">INCREASED</span></td>
-                    <td class="number"><span class="score positive">+135%</span></td>
-                    <td class="number">1,441</td>
-                    <td class="number">613</td>
-                    <td class="number">1,226</td>
-                    <td><span class="impact gain">Gained ~828 impressions</span></td>
-                </tr>
-                <tr>
-                    <td><span class="event-name">feed_domainforwarding/index_0.click</span></td>
-                    <td><span class="badge increased">INCREASED</span></td>
-                    <td class="number"><span class="score positive">+156%</span></td>
-                    <td class="number">732</td>
-                    <td class="number">286</td>
-                    <td class="number">571</td>
-                    <td><span class="impact gain">Gained ~446 impressions</span></td>
-                </tr>
-                <tr>
-                    <td><span class="event-name">feed_domainforwarding/index_8.impression</span></td>
-                    <td><span class="badge increased">INCREASED</span></td>
-                    <td class="number"><span class="score positive">+157%</span></td>
-                    <td class="number">1,146</td>
-                    <td class="number">446</td>
-                    <td class="number">892</td>
-                    <td><span class="impact gain">Gained ~700 impressions</span></td>
-                </tr>
-                <tr>
-                    <td><span class="event-name">feed_difywds/index_3.impression</span></td>
-                    <td><span class="badge increased">INCREASED</span></td>
-                    <td class="number"><span class="score positive">+165%</span></td>
-                    <td class="number">3,198</td>
-                    <td class="number">1,206</td>
-                    <td class="number">2,412</td>
-                    <td><span class="impact gain">Gained ~1,992 impressions</span></td>
-                </tr>
-                <tr>
-                    <td><span class="event-name">feed_domainforwarding/index_1.impression</span></td>
-                    <td><span class="badge increased">INCREASED</span></td>
-                    <td class="number"><span class="score positive">+167%</span></td>
-                    <td class="number">22,094</td>
-                    <td class="number">8,287</td>
-                    <td class="number">16,573</td>
-                    <td><span class="impact gain">Gained ~13,807 impressions</span></td>
-                </tr>
-                <tr>
-                    <td><span class="event-name">feed_logo/index_1.impression</span></td>
-                    <td><span class="badge increased">INCREASED</span></td>
-                    <td class="number"><span class="score positive">+169%</span></td>
-                    <td class="number">11,970</td>
-                    <td class="number">4,457</td>
-                    <td class="number">8,913</td>
-                    <td><span class="impact gain">Gained ~7,513 impressions</span></td>
-                </tr>
-                <tr>
-                    <td><span class="event-name">feed_marketing/index_4.impression</span></td>
-                    <td><span class="badge increased">INCREASED</span></td>
-                    <td class="number"><span class="score positive">+196%</span></td>
-                    <td class="number">8,456</td>
-                    <td class="number">2,858</td>
-                    <td class="number">5,716</td>
-                    <td><span class="impact gain">Gained ~5,598 impressions</span></td>
-                </tr>
-                <tr>
-                    <td><span class="event-name">feed_domainforwarding/index_0.impression</span></td>
-                    <td><span class="badge increased">INCREASED</span></td>
-                    <td class="number"><span class="score positive">+224%</span></td>
-                    <td class="number">99,214</td>
-                    <td class="number">30,654</td>
-                    <td class="number">61,307</td>
-                    <td><span class="impact gain">Gained ~68,560 impressions</span></td>
-                </tr>
-                <tr>
-                    <td><span class="event-name">feed_ssl/index_2.impression</span></td>
-                    <td><span class="badge increased">INCREASED</span></td>
-                    <td class="number"><span class="score positive">+224%</span></td>
-                    <td class="number">9,939</td>
-                    <td class="number">3,066</td>
-                    <td class="number">6,133</td>
-                    <td><span class="impact gain">Gained ~6,873 impressions</span></td>
-                </tr>
-                <tr>
-                    <td><span class="event-name">feed_gallery/index_4.impression</span></td>
-                    <td><span class="badge increased">INCREASED</span></td>
-                    <td class="number"><span class="score positive">+234%</span></td>
-                    <td class="number">1,115</td>
-                    <td class="number">334</td>
-                    <td class="number">668</td>
-                    <td><span class="impact gain">Gained ~781 impressions</span></td>
-                </tr>
-                <tr>
-                    <td><span class="event-name">feed_conversations_telephony_paid-wam/index_0.impression</span></td>
-                    <td><span class="badge increased">INCREASED</span></td>
-                    <td class="number"><span class="score positive">+256%</span></td>
-                    <td class="number">7,747</td>
-                    <td class="number">2,176</td>
-                    <td class="number">4,351</td>
-                    <td><span class="impact gain">Gained ~5,571 impressions</span></td>
-                </tr>
-                <tr>
-                    <td><span class="event-name">feed_logotowam/index_2.impression</span></td>
-                    <td><span class="badge increased">INCREASED</span></td>
-                    <td class="number"><span class="score positive">+314%</span></td>
-                    <td class="number">891</td>
-                    <td class="number">215</td>
-                    <td class="number">431</td>
-                    <td><span class="impact gain">Gained ~676 impressions</span></td>
-                </tr>
-                <tr>
-                    <td><span class="event-name">feed_gdploan/index_0.impression</span></td>
-                    <td><span class="badge increased">INCREASED</span></td>
-                    <td class="number"><span class="score positive">+333%</span></td>
-                    <td class="number">655</td>
-                    <td class="number">151</td>
-                    <td class="number">302</td>
-                    <td><span class="impact gain">Gained ~504 impressions</span></td>
-                </tr>
-                <tr>
-                    <td><span class="event-name">feed_logotowam/index_3.impression</span></td>
-                    <td><span class="badge increased">INCREASED</span></td>
-                    <td class="number"><span class="score positive">+342%</span></td>
-                    <td class="number">258</td>
-                    <td class="number">58</td>
-                    <td class="number">117</td>
-                    <td><span class="impact gain">Gained ~200 impressions</span></td>
-                </tr>
-                <tr>
-                    <td><span class="event-name">feed_conversations_telephony_paid-wam/index_2.impression</span></td>
-                    <td><span class="badge increased">INCREASED</span></td>
-                    <td class="number"><span class="score positive">+425%</span></td>
-                    <td class="number">1,062</td>
-                    <td class="number">202</td>
-                    <td class="number">404</td>
-                    <td><span class="impact gain">Gained ~860 impressions</span></td>
-                </tr>
-                <tr>
-                    <td><span class="event-name">feed_logotowam/index_0.impression</span></td>
-                    <td><span class="badge increased">INCREASED</span></td>
-                    <td class="number"><span class="score positive">+569%</span></td>
-                    <td class="number">4,143</td>
-                    <td class="number">619</td>
-                    <td class="number">1,238</td>
-                    <td><span class="impact gain">Gained ~3,524 impressions</span></td>
-                </tr>
-                <tr>
-                    <td><span class="event-name">feed_startseo.click</span></td>
-                    <td><span class="badge increased">INCREASED</span></td>
-                    <td class="number"><span class="score positive">+608%</span></td>
-                    <td class="number">392</td>
-                    <td class="number">55</td>
-                    <td class="number">111</td>
-                    <td><span class="impact gain">Gained ~337 impressions</span></td>
-                </tr>
-                <tr>
-                    <td><span class="event-name">feed_logotowam.impression</span></td>
-                    <td><span class="badge increased">INCREASED</span></td>
-                    <td class="number"><span class="score positive">+634%</span></td>
-                    <td class="number">7,985</td>
-                    <td class="number">1,088</td>
-                    <td class="number">2,177</td>
-                    <td><span class="impact gain">Gained ~6,897 impressions</span></td>
-                </tr>
-                <tr>
-                    <td><span class="event-name">feed_airo_consultant_get_started/index_1.impression</span></td>
-                    <td><span class="badge increased">INCREASED</span></td>
-                    <td class="number"><span class="score positive">+700%</span></td>
-                    <td class="number">2,183</td>
-                    <td class="number">273</td>
-                    <td class="number">546</td>
-                    <td><span class="impact gain">Gained ~1,910 impressions</span></td>
-                </tr>
-                <tr>
-                    <td><span class="event-name">feed_marketing/index_5.impression</span></td>
-                    <td><span class="badge increased">INCREASED</span></td>
-                    <td class="number"><span class="score positive">+747%</span></td>
-                    <td class="number">2,959</td>
-                    <td class="number">350</td>
-                    <td class="number">699</td>
-                    <td><span class="impact gain">Gained ~2,609 impressions</span></td>
-                </tr>
-                <tr>
-                    <td><span class="event-name">feed_commerce_ps_freesmarterminaloffer_racmodal/index_3.impression</span></td>
-                    <td><span class="badge increased">INCREASED</span></td>
-                    <td class="number"><span class="score positive">+766%</span></td>
-                    <td class="number">1,137</td>
-                    <td class="number">131</td>
-                    <td class="number">263</td>
-                    <td><span class="impact gain">Gained ~1,006 impressions</span></td>
-                </tr>
-                <tr>
-                    <td><span class="event-name">feed_logotowam/index_1.impression</span></td>
-                    <td><span class="badge increased">INCREASED</span></td>
-                    <td class="number"><span class="score positive">+1016%</span></td>
-                    <td class="number">3,231</td>
-                    <td class="number">290</td>
-                    <td class="number">579</td>
-                    <td><span class="impact gain">Gained ~2,941 impressions</span></td>
-                </tr>
-                <tr>
-                    <td><span class="event-name">feed_difywds/index_4.impression</span></td>
-                    <td><span class="badge increased">INCREASED</span></td>
-                    <td class="number"><span class="score positive">+1021%</span></td>
-                    <td class="number">1,683</td>
-                    <td class="number">150</td>
-                    <td class="number">300</td>
-                    <td><span class="impact gain">Gained ~1,533 impressions</span></td>
-                </tr>
-                <tr>
-                    <td><span class="event-name">feed_startseo/index_1.impression</span></td>
-                    <td><span class="badge increased">INCREASED</span></td>
-                    <td class="number"><span class="score positive">+1500%</span></td>
-                    <td class="number">4,676</td>
-                    <td class="number">292</td>
-                    <td class="number">584</td>
-                    <td><span class="impact gain">Gained ~4,384 impressions</span></td>
-                </tr>
-                <tr>
-                    <td><span class="event-name">feed_creategmb/index_0.impression</span></td>
-                    <td><span class="badge increased">INCREASED</span></td>
-                    <td class="number"><span class="score positive">+2456%</span></td>
-                    <td class="number">26,851</td>
-                    <td class="number">1,050</td>
-                    <td class="number">2,101</td>
-                    <td><span class="impact gain">Gained ~25,801 impressions</span></td>
-                </tr>
-                <tr>
-                    <td><span class="event-name">feed_startseo/index_0.impression</span></td>
-                    <td><span class="badge increased">INCREASED</span></td>
-                    <td class="number"><span class="score positive">+5329%</span></td>
-                    <td class="number">5,775</td>
-                    <td class="number">106</td>
-                    <td class="number">213</td>
-                    <td><span class="impact gain">Gained ~5,669 impressions</span></td>
-                </tr>
-            </tbody>
-        </table>
+        function closeAdvancedEditor() {
+            document.getElementById('advancedEditorModal').style.display = 'none';
+        }
         
-        <div class="footer">
-            <a href="https://usieventho-prod-usw2.kb.us-west-2.aws.found.io:9243/app/lens#/edit/3b33f66b-740a-4068-9a38-a04f9021a7df" target="_blank">
-                📊 View Kibana Dashboard
-            </a>
-            <a href="https://godaddy.slack.com/archives/C06SEETB2BC/p1750094818119089" target="_blank">
-                💬 Slack Thread
-            </a>
-            <a href="raw_response.json" target="_blank">
-                📄 Raw Data
-            </a>
-        </div>
-    </div>
+        function generateHowItWorksContent() {
+            return `
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                    <div>
+                        <div class="math-section" style="margin-bottom: 15px; padding: 15px;">
+                            <h3 style="margin: 0 0 10px 0; font-size: 16px;">📊 How We Calculate</h3>
+                            <div class="formula" style="margin: 8px 0; padding: 8px; font-size: 12px;">
+                            <strong>Expected = Daily Avg × (Hours ÷ 24)</strong><br>
+                            <strong>Ratio = Current ÷ Expected</strong><br>
+                            <strong>Score:</strong> See volume rules →
+                            </div>
+                            <div class="example" style="margin: 8px 0; padding: 10px; font-size: 12px;">
+                                <strong>📉 Visual Example:</strong><br>
+                                Baseline: ████████████ 1000/day<br>
+                                Current:  ██ 100 (expected 500)<br>
+                                Ratio: 0.2 → Score: -80% = CRITICAL 🚨
+                            </div>
+                        </div>
+
+                        <div class="math-section" style="margin-bottom: 15px; padding: 15px;">
+                            <h3 style="margin: 0 0 10px 0; font-size: 16px;">🚨 Status Thresholds</h3>
+                            <ul style="margin: 5px 0; padding-left: 20px; font-size: 13px;">
+                                <li><strong style="color: #d32f2f;">CRITICAL:</strong> ≤ -80% drop</li>
+                                <li><strong style="color: #f57c00;">WARNING:</strong> -50% to -80% drop</li>
+                                <li><strong style="color: #388e3c;">NORMAL:</strong> -50% to 0%</li>
+                                <li><strong style="color: #1976d2;">INCREASED:</strong> > 0%</li>
+                            </ul>
+                        </div>
+
+                        <div class="math-section" style="padding: 15px;">
+                            <h3 style="margin: 0 0 10px 0; font-size: 16px;">⚠️ Common Gotchas</h3>
+                            <ul style="margin: 5px 0; padding-left: 20px; font-size: 13px;">
+                                <li>Weekend traffic differs from weekdays</li>
+                                <li>Marketing campaigns skew baselines</li>
+                                <li>Exclude maintenance windows</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="math-section" style="margin-bottom: 15px; padding: 15px;">
+                            <h3 style="margin: 0 0 10px 0; font-size: 16px;">🎛️ Configuration Tips</h3>
+                            <div style="font-size: 13px;">
+                                <p style="margin: 5px 0;"><strong>Quick Detection:</strong><br>
+                                • Time: now-6h • Base: 3-5 days</p>
+                                <p style="margin: 5px 0;"><strong>Stable Monitoring:</strong><br>
+                                • Time: now-24h • Base: 7-10 days</p>
+                                <p style="margin: 5px 0;"><strong>Investigation:</strong><br>
+                                • Time: "24h ago to 8h ago"</p>
+                            </div>
+                        </div>
+
+                        <div class="math-section" style="margin-bottom: 15px; padding: 15px;">
+                            <h3 style="margin: 0 0 10px 0; font-size: 16px;">📈 Volume-Based Scoring</h3>
+                            <div style="font-size: 13px;">
+                                <p style="margin: 5px 0;"><strong>High (≥1000/day):</strong><br>
+                                • Ratio < 0.5: Score = (1-ratio) × -100<br>
+                                • Else: Score = (ratio-1) × 100</p>
+                                <p style="margin: 5px 0;"><strong>Medium (100-1000):</strong><br>
+                                • Ratio < 0.3: Score = (1-ratio) × -100<br>
+                                • Else: Score = (ratio-1) × 100</p>
+                                <p style="margin: 5px 0;"><strong>Low (<100):</strong> Filtered out</p>
+                            </div>
+                        </div>
+
+                        <div class="math-section" style="padding: 15px;">
+                            <h3 style="margin: 0 0 10px 0; font-size: 16px;">🚀 Key Features</h3>
+                            <ul style="margin: 5px 0; padding-left: 20px; font-size: 13px;">
+                                <li><strong>Real-time:</strong> Updates live</li>
+                                <li><strong>Smart filtering:</strong> Ignores noise</li>
+                                <li><strong>Business impact:</strong> Shows actual loss/gain</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // Initialize UI helpers
+        document.addEventListener('DOMContentLoaded', function() {
+            // Update connection status
+            window.updateConnectionStatus = function(connected, message) {
+                const statusDot = document.querySelector('.status-dot');
+                const statusText = document.querySelector('.status-text');
+                
+                if (statusDot && statusText) {
+                    statusDot.style.backgroundColor = connected ? '#4CAF50' : '#f44336';
+                    statusText.textContent = message || (connected ? 'Connected' : 'Disconnected');
+                }
+            };
+            
+            // Listen for API status changes
+            if (window.unifiedAPI) {
+                window.addEventListener('api:statusChange', () => {
+                    const mode = window.unifiedAPI.getMode();
+                    updateConnectionStatus(true, mode === 'fastapi' ? 'FastAPI Connected' : 'Connected');
+                });
+            }
+            
+            // Update quick stats display
+            window.updateQuickStats = async function() {
+                try {
+                    const config = await ConfigService.getConfig();
+                    
+                    // Update time range
+                    const timeRangeEl = document.getElementById('quickTimeRange');
+                    if (timeRangeEl) {
+                        timeRangeEl.textContent = config.currentTimeRange || 'now-12h';
+                    }
+                    
+                    // Update baseline
+                    const baselineEl = document.getElementById('quickBaseline');
+                    if (baselineEl && config.baselineStart && config.baselineEnd) {
+                        const start = new Date(config.baselineStart).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                        const end = new Date(config.baselineEnd).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                        baselineEl.textContent = `${start} - ${end}`;
+                    }
+                    
+                    // Update theme
+                    const themeEl = document.getElementById('quickTheme');
+                    if (themeEl) {
+                        themeEl.textContent = config.theme || 'light';
+                    }
+                } catch (error) {
+                    console.debug('Error updating quick stats:', error);
+                }
+            };
+            
+            // Update quick stats on config changes
+            if (window.ConfigService) {
+                ConfigService.subscribe(() => {
+                    updateQuickStats();
+                });
+                // Initial update
+                setTimeout(updateQuickStats, 500);
+            }
+            
+        });
+    </script>
 </body>
 </html>
-SUMMARY: Found 145 events - 12 critical, 12 warning, 25 normal, 96 increased
-

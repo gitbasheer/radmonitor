@@ -1,23 +1,39 @@
 {
   "name": "rad-monitor",
   "version": "1.0.0",
-  "description": "RAD Traffic Monitor Dashboard",
+  "description": "RAD Traffic Health Monitor Dashboard",
   "type": "module",
+  "main": "index.js",
   "scripts": {
     "test": "vitest",
-    "test:ui": "vitest --ui",
-    "test:coverage": "vitest --coverage",
-    "test:watch": "vitest --watch",
-    "test:run": "vitest run"
+    "test:run": "vitest run",
+    "test:watch": "vitest watch",
+    "test:coverage": "vitest run --coverage",
+    "cors-proxy": "python3 bin/cors_proxy.py",
+    "dev": "python3 bin/dev_server_unified.py",
+    "dev:simple": "python3 bin/dev_server_unified.py --force-simple",
+    "dev:fastapi": "python3 bin/dev_server_unified.py --mode fastapi",
+    "dev:setup": "python3 bin/dev_server_unified.py --setup",
+    "serve": "python3 -m http.server 8000",
+    "cleanup": "./scripts/setup/cleanup-ports.sh",
+    "test:python": "cd tests && python -m pytest",
+    "test:bash": "cd tests && bats test_bash_scripts.bats",
+    "generate": "./scripts/generate_dashboard_refactored.sh",
+    "generate:python": "python3 bin/generate_dashboard.py",
+    "test:all": "./scripts/runners/run_all_tests.sh"
   },
+  "keywords": [
+    "traffic",
+    "monitoring",
+    "dashboard",
+    "kibana"
+  ],
+  "author": "",
+  "license": "ISC",
   "devDependencies": {
-    "@vitest/ui": "^1.6.0",
-    "@vitest/coverage-v8": "^1.6.0",
-    "vitest": "^1.6.0",
+    "@vitest/coverage-v8": "^1.2.1",
+    "concurrently": "^8.2.2",
     "jsdom": "^24.0.0",
-    "@testing-library/dom": "^10.1.0",
-    "@testing-library/user-event": "^14.5.2",
-    "vitest-fetch-mock": "^0.2.2"
-  },
-  "dependencies": {}
-} 
+    "vitest": "^1.2.1"
+  }
+}

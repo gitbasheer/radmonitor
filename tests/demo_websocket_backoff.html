@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>WebSocket Exponential Backoff Demo</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        #log { 
+            background: #f0f0f0; 
+            padding: 10px; 
+            height: 400px; 
+            overflow-y: scroll;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        .success { color: green; }
+        .error { color: red; }
+        .info { color: blue; }
+        button { padding: 10px 20px; margin: 5px; }
+    </style>
+</head>
+<body>
+    <h1>WebSocket Exponential Backoff Demo</h1>
+    <p>This demonstrates the exponential backoff with jitter for WebSocket reconnection.</p>
+    
+    <button onclick="startDemo()">Start WebSocket Connection</button>
+    <button onclick="killServer()">Simulate Server Crash</button>
+    <button onclick="clearLog()">Clear Log</button>
+    
+    <h3>Connection Log:</h3>
+    <div id="log"></div>
+    
+    <script type="module">
+        // Import the FastAPI integration module
+        import { FastAPIIntegration } from '/assets/js/fastapi-integration.js';
+        
+        window.startDemo = async function() {
+            log('Starting WebSocket connection demo...', 'info');
+            
+            // Enable FastAPI mode
+            FastAPIIntegration.enable(true); // Soft reload
+            
+            // Initialize
+            await FastAPIIntegration.initialize();
+            
+            log('FastAPI integration initialized', 'success');
+            log('Watch for reconnection attempts when server is stopped...', 'info');
+        };
+        
+        window.killServer = function() {
+            log('⚠️  Stop the FastAPI server now to see exponential backoff!', 'error');
+            log('Run: Kill the terminal running dev_server_fastapi.py', 'error');
+            log('The reconnection attempts will show exponential delays with jitter', 'info');
+        };
+        
+        window.clearLog = function() {
+            document.getElementById('log').innerHTML = '';
+        };
+        
+        function log(message, type = '') {
+            const logDiv = document.getElementById('log');
+            const entry = document.createElement('div');
+            entry.className = type;
+            entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            logDiv.appendChild(entry);
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+        
+        // Override console.log to capture reconnection messages
+        const originalLog = console.log;
+        console.log = function(...args) {
+            const message = args.join(' ');
+            if (message.includes('Retrying WebSocket')) {
+                log(message, 'error');
+            } else if (message.includes('WebSocket connected')) {
+                log(message, 'success');
+            } else if (message.includes('WebSocket')) {
+                log(message, 'info');
+            }
+            originalLog.apply(console, args);
+        };
+    </script>
+</body>
+</html> 

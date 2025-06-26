@@ -5,6 +5,9 @@ export default defineConfig({
     globals: true,
     environment: 'jsdom',
     setupFiles: ['./tests/setup.js'],
+    env: {
+      NODE_ENV: 'test'
+    },
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
@@ -13,11 +16,12 @@ export default defineConfig({
         'tests/**',
         '**/*.config.js',
         'scripts/**',
-        'cors_proxy.py'
+        'bin/cors_proxy.py'
       ]
     },
-    include: ['tests/**/*.test.js'],
+    include: ['tests/**/*.test.{js,ts}'],
     mockReset: true,
-    restoreMocks: true
+    restoreMocks: true,
+    testTimeout: 10000 // Increase timeout to 10 seconds
   }
-}); 
+});
