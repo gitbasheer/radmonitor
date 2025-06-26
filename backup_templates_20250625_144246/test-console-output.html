@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Test Console Output</title>
+</head>
+<body>
+    <h1>Open the console to see the clean output</h1>
+    <script>
+        // Simulate the clean console output structure
+        console.log('%c🚀 RAD Monitor Dashboard', 'color: #4CAF50; font-size: 18px; font-weight: bold;');
+        console.log(`├── ✅ Environment: Cookie loaded automatically`);
+        console.log(`├── 📡 FastAPI Integration: DISABLED`);
+        console.log(`└── 💡 Commands: Dashboard.showPerformanceStats() | ConsoleControl.showHelp()`);
+        
+        // Simulate a data fetch completion
+        setTimeout(() => {
+            console.log(`├── 🔄 Data Fetch: Complete`);
+            console.log(`├── 📊 Results: 145 events processed (0 Critical, 2 Warning, 120 Normal, 23 Increased)`);
+            console.log(`├── ⚡ Performance: 2.3s query`);
+        }, 2000);
+        
+        // Simulate a slow query warning
+        setTimeout(() => {
+            console.log(`├── 🔄 Data Fetch: Complete`);
+            console.log(`├── 📊 Results: 145 events processed (1 Critical, 5 Warning, 110 Normal, 29 Increased)`);
+            console.log(`├── ⚡ Performance: 7.9s query %c(SLOW)`, 'color: #ff9800; font-weight: bold;');
+        }, 5000);
+        
+        // Show what console control commands output looks like
+        setTimeout(() => {
+            console.log('');
+            console.log('%c🔧 Console Control Commands:', 'color: #ffe66d; font-size: 14px; font-weight: bold;');
+            console.log('');
+            console.log('%cLogging Levels:', 'color: #4CAF50; font-weight: bold;');
+            console.log('  %cConsoleControl.quiet()%c - Minimal logging (only important actions)', 'color: #2196F3;', 'color: #666;');
+            console.log('  %cConsoleControl.normal()%c - Balanced logging (default)', 'color: #2196F3;', 'color: #666;');
+            console.log('  %cConsoleControl.enableVerbose()%c - Show all state actions', 'color: #2196F3;', 'color: #666;');
+            console.log('');
+        }, 8000);
+        
+        // Example of quiet mode state logging
+        setTimeout(() => {
+            console.log('');
+            console.log('Example of quiet mode logging:');
+            console.log(`%c→ %cDASHBOARD_REFRESH_START %c@ 14:32:45.123`, 'color: #666;', 'color: #03A9F4;', 'color: #666666; font-size: 0.9em;');
+            console.log(`%c→ %cQUERY_EXECUTE_SUCCESS %c@ 14:32:47.456`, 'color: #666;', 'color: #03A9F4;', 'color: #666666; font-size: 0.9em;');
+            console.log(`%c→ %cDASHBOARD_REFRESH_COMPLETE %c@ 14:32:47.512`, 'color: #666;', 'color: #03A9F4;', 'color: #666666; font-size: 0.9em;');
+        }, 10000);
+    </script>
+</body>
+</html>

@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RAD Monitor - Traffic Health Dashboard</title>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    
+    <!-- External CSS -->
+    <link rel="stylesheet" href="assets/css/dashboard.css">
+    <link rel="stylesheet" href="assets/css/dashboard-consolidated.css">
+    
+    <!-- JavaScript Entry Point -->
+    <script type="module" src="assets/js/main.js"></script>
+</head>
+<body>
+    <!-- Hidden input for server-side cookie -->
+    <input type="hidden" id="elasticCookie" value="">
+    
+    <div class="container">
+        <!-- Streamlined Header -->
+        <header class="main-header">
+            <div class="header-left">
+                <h1>RAD Traffic Health Monitor</h1>
+                <span id="connectionStatus" class="connection-status">
+                    <span class="status-dot"></span>
+                    <span class="status-text">Connecting...</span>
+                </span>
+            </div>
+            <div class="header-right">
+                <button onclick="Dashboard.refresh()" class="icon-btn refresh-btn" title="Refresh data">
+                    <span class="icon">↻</span>
+                </button>
+                <button onclick="UIConsolidation.toggleSettings()" class="icon-btn settings-btn" title="Settings">
+                    <span class="icon">⚙</span>
+                </button>
+            </div>
+        </header>
+        
+        <!-- Unified Status Bar -->
+        <div id="statusBar" class="status-bar">
+            <span id="lastUpdateStatus">Last updated: <span id="lastUpdate">Never</span></span>
+            <span id="refreshStatus"></span>
+        </div>
+        
+        <!-- Consolidated Configuration Panel (collapsible) -->
+        <div id="configPanel" class="config-panel consolidated">
+            <div class="config-header">
+                <h3>Analysis Settings</h3>
+                <button onclick="UIConsolidation.toggleAdvanced()" class="text-btn">Advanced ▼</button>
+            </div>
+            
+            <div class="config-main">
+                <div class="config-row">
+                    <div class="config-group time-range">
+                        <label>Period:</label>
+                        <select id="timeRangeSelect" onchange="UIConsolidation.handleTimeRangeChange(this)">
+                            <option value="now-6h">Last 6 hours</option>
+                            <option value="now-12h" selected>Last 12 hours</option>
+                            <option value="now-24h">Last 24 hours</option>
+                            <option value="now-3d">Last 3 days</option>
+                            <option value="inspection">Inspection (8-24h ago)</option>
+                            <option value="custom">Custom range...</option>
+                        </select>
+                        <input type="text" id="customTimeRange" class="custom-input" style="display:none;" placeholder="-3h-6h">
+                    </div>
+                    
+                    <div class="config-group baseline">
+                        <label>Baseline:</label>
+                        <span id="baselineDisplay">Jun 1-9, 2025</span>
+                        <button onclick="UIConsolidation.toggleBaselineEdit()" class="text-btn">Change</button>
+                        <div id="baselineEdit" style="display:none;">
+                            <input type="date" id="baselineStart" value="2025-06-01">
+                            <input type="date" id="baselineEnd" value="2025-06-09">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="config-row">
+                    <div class="config-group thresholds">
+                        <label>Volume Thresholds:</label>
+                        <span>High <input type="number" id="highVolumeThreshold" value="1000" min="1" class="inline-input"></span>
+                        <span>Medium <input type="number" id="mediumVolumeThreshold" value="100" min="1" class="inline-input"></span>
+                    </div>
+                    
+                    <div class="config-actions">
+                        <button onclick="UIConsolidation.applyConfig()" class="action-btn primary">Apply</button>
+                        <button onclick="ConfigManager.exportConfiguration()" class="action-btn">Export</button>
+                        <button onclick="Dashboard.showApiSetupInstructions()" class="action-btn">Help</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Advanced section (hidden by default) -->
+            <div id="advancedConfig" class="config-advanced" style="display:none;">
+                <div class="advanced-section">
+                    <h4>API Settings</h4>
+                    <button onclick="Dashboard.setCookieForRealtime()" class="action-btn">Configure Authentication</button>
+                    <button onclick="Dashboard.testApiConnection()" class="action-btn">Test Connection</button>
+                </div>
+                <div class="advanced-section">
+                    <h4>Advanced Configuration</h4>
+                    <div id="configEditorFields"></div>
+                    <button onclick="ConfigEditor.loadConfig()" class="action-btn">Load Config</button>
+                    <button onclick="ConfigEditor.saveConfig()" class="action-btn">Save Config</button>
+                    <button onclick="ConfigEditor.resetToDefaults()" class="action-btn">Reset Defaults</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Summary Cards (keep as-is, they work well) -->
+        <div class="summary-cards">
+            <div class="summary-card critical">
+                <div class="card-title">Critical</div>
+                <div id="criticalCount" class="card-value">0</div>
+                <div class="card-subtitle">Need Immediate Attention</div>
+            </div>
+            <div class="summary-card warning">
+                <div class="card-title">Warning</div>
+                <div id="warningCount" class="card-value">0</div>
+                <div class="card-subtitle">Below Expected</div>
+            </div>
+            <div class="summary-card normal">
+                <div class="card-title">Normal</div>
+                <div id="normalCount" class="card-value">0</div>
+                <div class="card-subtitle">Within Range</div>
+            </div>
+            <div class="summary-card increased">
+                <div class="card-title">Increased</div>
+                <div id="increasedCount" class="card-value">0</div>
+                <div class="card-subtitle">Above Baseline</div>
+            </div>
+        </div>
+        
+        <!-- Enhanced Search/Filter Bar -->
+        <div class="search-filter-bar">
+            <div class="search-container">
+                <input type="text" id="searchInput" placeholder="Search events..." class="search-input">
+            </div>
+            <div class="filter-container">
+                <select id="statusFilter" onchange="UIConsolidation.applyFilters()" class="filter-select">
+                    <option value="all">All Statuses</option>
+                    <option value="critical">Critical Only</option>
+                    <option value="warning">Warning Only</option>
+                    <option value="normal">Normal Only</option>
+                    <option value="increased">Increased Only</option>
+                </select>
+                <button onclick="UIConsolidation.exportData()" class="action-btn">Export Data</button>
+                <button onclick="UIConsolidation.toggleColumns()" class="action-btn">Columns</button>
+            </div>
+        </div>
+        
+        <!-- Loading Indicator -->
+        <div id="loadingIndicator" class="loading-indicator" style="display: none;">
+            <div class="spinner"></div>
+            <span>Loading...</span>
+        </div>
+        
+        <!-- Results Info -->
+        <div id="resultsInfo" class="results-info"></div>
+        
+        <!-- Data Table -->
+        <div id="dataTableContainer" class="table-container">
+            <table id="dataTable" class="data-table">
+                <thead>
+                    <tr>
+                        <th data-sort="event_id">Event ID</th>
+                        <th data-sort="status">Status</th>
+                        <th data-sort="score">Score</th>
+                        <th data-sort="current" class="right-align">Current</th>
+                        <th data-sort="baseline12h" class="right-align">Expected</th>
+                        <th data-sort="change" class="right-align">Change</th>
+                        <th data-sort="dailyAvg" class="right-align">Daily Avg</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                    <!-- Data rows will be inserted here -->
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Simplified Footer -->
+        <footer>
+            <div class="footer-content">
+                <a href="https://github.com/yourusername/rad_monitor" target="_blank">GitHub</a>
+                <span class="separator">|</span>
+                <a href="#" onclick="Dashboard.showPerformanceStats(); return false;">Performance Stats</a>
+            </div>
+        </footer>
+    </div>
+    
+    <!-- Initialize UI consolidation -->
+    <script>
+        // Hidden filter buttons for compatibility
+        document.addEventListener('DOMContentLoaded', function() {
+            const filterBtns = `
+                <div style="display:none">
+                    <button class="filter-btn active" data-filter="all">All</button>
+                    <button class="filter-btn" data-filter="critical">Critical</button>
+                    <button class="filter-btn" data-filter="warning">Warning</button>
+                    <button class="filter-btn" data-filter="normal">Normal</button>
+                    <button class="filter-btn" data-filter="increased">Increased</button>
+                </div>
+            `;
+            document.body.insertAdjacentHTML('beforeend', filterBtns);
+            
+            // Hide config panel by default
+            document.getElementById('configPanel').style.display = 'none';
+        });
+    </script>
+</body>
+</html>

@@ -4,6 +4,7 @@
  */
 
 // Import all modules
+import { loadApiEndpoints } from './config-loader.js';
 import TimeRangeUtils from './time-range-utils.js';
 import DataProcessor from './data-processor.js';
 import ConfigManager from './config-manager.js';
@@ -18,6 +19,9 @@ import { FastAPIIntegration } from './fastapi-integration.js';
 import DataLayer from './data-layer.js';
 import Dashboard from './dashboard-main.js';
 import StateLoggingDemo from './state-logging-demo.js';
+import UIConsolidation from './ui-consolidation.js';
+import SearchFilter from './search-filter.js';
+import ThemeManager from './theme-manager.js';
 
 // Make modules available globally for backward compatibility
 window.TimeRangeUtils = TimeRangeUtils;
@@ -34,20 +38,39 @@ window.FastAPIIntegration = FastAPIIntegration;
 window.DataLayer = DataLayer;
 window.Dashboard = Dashboard;
 window.StateLoggingDemo = StateLoggingDemo;
+window.UIConsolidation = UIConsolidation;
+window.SearchFilter = SearchFilter;
+window.ThemeManager = ThemeManager;
+
+// Configure logging to be less verbose by default (MUST be set before any initialization)
+DataLayer.configureLogging({
+    enabled: true,
+    collapsed: true,  // Start with collapsed logs to reduce noise
+    verbosity: 'quiet'  // Use quiet verbosity by default - minimal logging
+});
 
 // Initialize dashboard when DOM is ready
 async function initializeDashboard() {
+    // Show clean startup header
+    console.log('%c🚀 RAD Monitor Dashboard', 'color: #4CAF50; font-size: 18px; font-weight: bold;');
+    
     await Dashboard.init();
-    console.log('RAD Monitor Dashboard initialized');
+    
+    // Show environment status in structured format
+    const localCookie = localStorage.getItem('elasticCookie');
+    const envCookie = window.ELASTIC_COOKIE;
+    const authStatus = localCookie ? (envCookie && localCookie === envCookie ? 'Cookie loaded automatically' : 'Cookie found in localStorage') : 
+                      (envCookie ? 'Environment cookie available' : 'No cookie - click "Set Cookie"');
+    
+    console.log(`├── ✅ Environment: ${authStatus}`);
     
     // Show FastAPI integration status
     if (window.FastAPIIntegration) {
         const status = window.FastAPIIntegration.getStatus();
-        console.log(`%cFastAPI Integration: ${status.enabled ? 'ENABLED' : 'DISABLED'}`, `color: ${status.enabled ? '#4CAF50' : '#666'}`);
-        if (!status.enabled) {
-            console.log('%cTo enable FastAPI mode, run in console: FastAPIIntegration.enable()', 'color: #2196F3');
-        }
+        console.log(`├── 📡 FastAPI Integration: ${status.enabled ? 'ENABLED' : 'DISABLED'}`);
     }
+    
+    console.log(`└── 💡 Commands: Dashboard.showPerformanceStats() | ConsoleControl.showHelp()`);
 }
 
 if (document.readyState === 'loading') {
@@ -57,62 +80,25 @@ if (document.readyState === 'loading') {
     initializeDashboard();
 }
 
-// Configure logging to be less verbose by default (set early)
-DataLayer.configureLogging({
-    enabled: true,
-    collapsed: true  // Start with collapsed logs to reduce noise
-});
-
-    // Auto-test DataLayer functionality after initialization
-    setTimeout(() => {
-        console.log('🧪 Testing DataLayer state management...');
-
-        // Test basic functionality
-        console.log('%c📊 DataLayer Ready!', 'color: #4CAF50; font-weight: bold;');
-        console.log('%c• Dashboard.refresh() - Refresh dashboard data', 'color: #666;');
-        console.log('%c• Dashboard.showPerformanceStats() - Show performance metrics', 'color: #666;');
-        console.log('%c• ConfigManager.getCurrentConfig() - Get current configuration', 'color: #666;');
-        console.log('%c• ConfigEditor.loadConfig() - Load configuration editor', 'color: #666;');
-
-        console.log('✅ All modules loaded and available globally!');
-        
-        // Show the current authentication status
-        const localCookie = localStorage.getItem('elasticCookie');
-        const envCookie = window.ELASTIC_COOKIE;
-        
-        if (localCookie) {
-            if (envCookie && localCookie === envCookie) {
-                console.log('%c🍪 Authentication: Environment cookie loaded automatically!', 'color: #4CAF50; font-weight: bold;');
-            } else {
-                console.log('%c🍪 Authentication: Cookie found in localStorage - ready for data queries', 'color: #4CAF50;');
-            }
-        } else if (envCookie) {
-            console.log('%c🍪 Authentication: Environment cookie available - will load automatically on first query', 'color: #2196F3;');
-        } else {
-            console.log('%c🍪 Authentication: No cookie - click "Set Cookie" to enable data queries', 'color: #ff9800;');
-        }
-    }, 2000);
-
-// Run state logging demo after a delay (can be controlled)
-if (!window.DISABLE_STATE_DEMO) {
-    setTimeout(() => {
-        StateLoggingDemo.demo();
-    }, 3500);
-}
-
-// (Logging configuration moved earlier)
+// State logging demo is disabled by default
+// To run the demo, use ConsoleControl.runDemo() in the console
+// The demo was running automatically and creating too much console noise
 
 // Add console control functions
 window.ConsoleControl = {
     enableVerbose: () => {
-        DataLayer.configureLogging({ enabled: true, collapsed: false });
-        console.log('%c✅ Verbose logging enabled', 'color: #00ff41; font-weight: bold;');
-        console.log('%cTip: Use ConsoleControl.reduceVerbose() to make it quieter', 'color: #4ecdc4;');
+        DataLayer.configureLogging({ enabled: true, collapsed: false, verbosity: 'verbose' });
+        console.log('%c✅ Verbose logging enabled - showing all state actions', 'color: #00ff41; font-weight: bold;');
     },
     
-    reduceVerbose: () => {
-        DataLayer.configureLogging({ enabled: true, collapsed: true });
-        console.log('%c🔇 Logging set to quiet mode (collapsed)', 'color: #ffaa00; font-weight: bold;');
+    quiet: () => {
+        DataLayer.configureLogging({ enabled: true, collapsed: true, verbosity: 'quiet' });
+        console.log('%c🔇 Minimal logging - only important actions', 'color: #ffaa00; font-weight: bold;');
+    },
+    
+    normal: () => {
+        DataLayer.configureLogging({ enabled: true, collapsed: true, verbosity: 'normal' });
+        console.log('%c🔔 Balanced logging - default mode', 'color: #4CAF50; font-weight: bold;');
     },
     
     disableLogging: () => {
@@ -120,24 +106,26 @@ window.ConsoleControl = {
         console.log('%c❌ State logging disabled', 'color: #ff0000; font-weight: bold;');
     },
     
-    disableStateDemo: () => {
-        window.DISABLE_STATE_DEMO = true;
-        console.log('%c🚫 State logging demo disabled', 'color: #ff9800; font-weight: bold;');
-        console.log('%cReload the page to see the effect', 'color: #4ecdc4;');
+    runDemo: () => {
+        StateLoggingDemo.demo();
     },
     
     showHelp: () => {
-        console.log('%cConsole Control Commands:', 'color: #ffe66d; font-weight: bold;');
-        console.log('%c• ConsoleControl.enableVerbose() - Show detailed state logs', 'color: #a8e6cf;');
-        console.log('%c• ConsoleControl.reduceVerbose() - Collapse state logs (default)', 'color: #a8e6cf;');
-        console.log('%c• ConsoleControl.disableLogging() - Turn off state logging', 'color: #a8e6cf;');
-        console.log('%c• ConsoleControl.disableStateDemo() - Disable state demo on next reload', 'color: #a8e6cf;');
-        console.log('%c• ConsoleControl.showHelp() - Show this help', 'color: #a8e6cf;');
+        console.log('%c🔧 Console Control Commands:', 'color: #ffe66d; font-size: 14px; font-weight: bold;');
+        console.log('');
+        console.log('%cLogging Levels:', 'color: #4CAF50; font-weight: bold;');
+        console.log('  %cConsoleControl.quiet()%c - Minimal logging (only important actions)', 'color: #2196F3;', 'color: #666;');
+        console.log('  %cConsoleControl.normal()%c - Balanced logging (default)', 'color: #2196F3;', 'color: #666;');
+        console.log('  %cConsoleControl.enableVerbose()%c - Show all state actions', 'color: #2196F3;', 'color: #666;');
+        console.log('  %cConsoleControl.disableLogging()%c - Turn off state logging', 'color: #2196F3;', 'color: #666;');
+        console.log('');
+        console.log('%cOther Commands:', 'color: #4CAF50; font-weight: bold;');
+        console.log('  %cDashboard.showPerformanceStats()%c - View performance metrics', 'color: #2196F3;', 'color: #666;');
+        console.log('  %cDashboard.refresh()%c - Refresh dashboard data', 'color: #2196F3;', 'color: #666;');
+        console.log('  %cConsoleControl.runDemo()%c - Run state logging demo', 'color: #2196F3;', 'color: #666;');
+        console.log('');
     }
 };
-
-// Show a brief help message on startup
-console.log('%c💡 Tip: Use ConsoleControl.showHelp() to see console controls', 'color: #4ecdc4;');
 
 // Export all modules for ES module usage
 export {
@@ -154,5 +142,8 @@ export {
     FastAPIIntegration,
     DataLayer,
     Dashboard,
-    StateLoggingDemo
+    StateLoggingDemo,
+    UIConsolidation,
+    SearchFilter,
+    ThemeManager
 };

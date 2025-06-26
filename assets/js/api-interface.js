@@ -6,6 +6,7 @@
 import { FastAPIIntegration } from './fastapi-integration.js';
 import { ApiClient } from './api-client.js';
 import { FastAPIClient } from './api-client-fastapi.js';
+import { ConfigService } from './config-service.js';
 
 /**
  * Adapter for Legacy API implementation
@@ -126,14 +127,19 @@ class FastAPIAdapter {
         const currentTimeFilter = config.time_range.startsWith('now') 
             ? { gte: config.time_range }
             : { gte: config.time_range, lte: 'now' };
+            
+        // Get query configuration
+        const queryConfig = ConfigService.getConfig();
+        const eventField = "detail.event.data.traffic.eid.keyword"; // Fixed value
+        const aggSize = queryConfig.queryAggSize || 500;
 
         return {
             "aggs": {
                 "events": {
                     "terms": {
-                        "field": "detail.event.data.traffic.eid.keyword",
+                        "field": eventField,
                         "order": {"_key": "asc"},
-                        "size": 500
+                        "size": aggSize
                     },
                     "aggs": {
                         "baseline": {
@@ -162,20 +168,20 @@ class FastAPIAdapter {
                     "filter": [
                         {
                             "wildcard": {
-                                "detail.event.data.traffic.eid.keyword": {
-                                    "value": "pandc.vnext.recommendations.feed.feed*"
+                                [eventField]: {
+                                    "value": queryConfig.queryEventPattern || "pandc.vnext.recommendations.feed.feed*"
                                 }
                             }
                         },
                         {
                             "match_phrase": {
-                                "detail.global.page.host": "dashboard.godaddy.com"
+                                "detail.global.page.host": "dashboard.godaddy.com" // Fixed value
                             }
                         },
                         {
                             "range": {
                                 "@timestamp": {
-                                    "gte": "2025-05-19T04:00:00.000Z",
+                                    "gte": ConfigService.get('minEventDate') || window.API_ENDPOINTS?.searchDefaults?.minEventDate || "2025-05-19T04:00:00.000Z",
                                     "lte": "now"
                                 }
                             }

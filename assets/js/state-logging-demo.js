@@ -4,14 +4,25 @@
  */
 
 // ESM: Import dependencies
-import DataLayer from './data-layer.js';
-import Dashboard from './dashboard-main.js';
+// DataLayer and Dashboard are available globally when needed
 
 // ESM: Converted from IIFE to ES module export
 export const StateLoggingDemo = (() => {
     'use strict';
 
     function demo() {
+        // Demo is disabled by default - too much console noise
+        if (window.ENABLE_STATE_DEMO !== true) {
+            return;
+        }
+        
+        // Check if demo was already run
+        if (window._stateLoggingDemoRan) {
+            console.log('%c⚠️ State logging demo already ran', 'color: #ffaa00;');
+            return;
+        }
+        window._stateLoggingDemoRan = true;
+
         console.log('%c🎬 State Logging Demo', 'color: #FF6B6B; font-size: 16px; font-weight: bold;');
         console.log('');
 
@@ -111,11 +122,7 @@ Dashboard.refresh();  // Watch the action flow!
 // ESM: Export as default for convenience
 export default StateLoggingDemo;
 
-// Auto-run demo after a delay
+// Make demo available globally but don't auto-run
 if (typeof window !== 'undefined') {
     window.StateLoggingDemo = StateLoggingDemo;
-
-    setTimeout(() => {
-        StateLoggingDemo.demo();
-    }, 3500);
 }

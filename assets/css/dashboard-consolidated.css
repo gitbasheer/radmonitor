@@ -1,0 +1,322 @@
+/* Consolidated Dashboard CSS - Clean and Simple */
+
+/* Header Improvements */
+.main-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 0;
+    border-bottom: 2px solid #e0e0e0;
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.header-left h1 {
+    margin: 0;
+    font-size: 1.5rem;
+}
+
+.connection-status {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+    color: #666;
+}
+
+.status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: #ccc;
+}
+
+.header-right {
+    display: flex;
+    gap: 0.5rem;
+}
+
+/* Icon Buttons */
+.icon-btn {
+    width: 36px;
+    height: 36px;
+    border: 1px solid #ddd;
+    background: white;
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.icon-btn:hover {
+    background: #f5f5f5;
+    border-color: #999;
+}
+
+.icon-btn .icon {
+    font-size: 18px;
+}
+
+/* Status Bar */
+.status-bar {
+    background: #f8f9fa;
+    padding: 0.5rem 1rem;
+    font-size: 0.85rem;
+    color: #666;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* Consolidated Config Panel */
+.config-panel.consolidated {
+    background: white;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    margin: 1rem 0;
+    padding: 0;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.config-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.config-header h3 {
+    margin: 0;
+    font-size: 1.1rem;
+}
+
+.text-btn {
+    background: none;
+    border: none;
+    color: #1976d2;
+    cursor: pointer;
+    font-size: 0.9rem;
+    padding: 0.25rem 0.5rem;
+}
+
+.text-btn:hover {
+    text-decoration: underline;
+}
+
+.config-main {
+    padding: 1rem;
+}
+
+.config-row {
+    display: flex;
+    gap: 2rem;
+    margin-bottom: 1rem;
+}
+
+.config-row:last-child {
+    margin-bottom: 0;
+}
+
+.config-group {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.config-group label {
+    font-weight: 500;
+    margin-right: 0.5rem;
+}
+
+.time-range {
+    flex: 1;
+}
+
+.baseline {
+    flex: 1;
+}
+
+.thresholds {
+    flex: 1;
+}
+
+.inline-input {
+    width: 80px;
+    padding: 0.25rem 0.5rem;
+    border: 1px solid #ddd;
+    border-radius: 3px;
+}
+
+.custom-input {
+    width: 120px;
+    padding: 0.25rem 0.5rem;
+    border: 1px solid #ddd;
+    border-radius: 3px;
+    margin-left: 0.5rem;
+}
+
+/* Config Actions */
+.config-actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-left: auto;
+}
+
+.action-btn {
+    padding: 0.4rem 1rem;
+    border: 1px solid #ddd;
+    background: white;
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: all 0.2s;
+}
+
+.action-btn:hover {
+    background: #f5f5f5;
+    border-color: #999;
+}
+
+.action-btn.primary {
+    background: #1976d2;
+    color: white;
+    border-color: #1976d2;
+}
+
+.action-btn.primary:hover {
+    background: #1565c0;
+}
+
+/* Advanced Config Section */
+.config-advanced {
+    border-top: 1px solid #f0f0f0;
+    padding: 1rem;
+    background: #fafafa;
+}
+
+.advanced-section {
+    margin-bottom: 1rem;
+}
+
+.advanced-section:last-child {
+    margin-bottom: 0;
+}
+
+.advanced-section h4 {
+    margin: 0 0 0.5rem 0;
+    font-size: 0.95rem;
+    color: #666;
+}
+
+/* Search/Filter Bar */
+.search-filter-bar {
+    display: flex;
+    gap: 1rem;
+    margin: 1rem 0;
+    align-items: center;
+}
+
+.search-container {
+    flex: 1;
+}
+
+.search-input {
+    width: 100%;
+    padding: 0.5rem 1rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 0.9rem;
+}
+
+.filter-container {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.filter-select {
+    padding: 0.5rem 1rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background: white;
+    font-size: 0.9rem;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+    .config-row {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .search-filter-bar {
+        flex-direction: column;
+    }
+    
+    .filter-container {
+        width: 100%;
+        justify-content: space-between;
+    }
+}
+
+@media (max-width: 768px) {
+    .header-left h1 {
+        font-size: 1.2rem;
+    }
+    
+    .connection-status .status-text {
+        display: none;
+    }
+    
+    .config-group {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .config-actions {
+        flex-wrap: wrap;
+    }
+}
+
+/* Existing styles override */
+.refresh-controls {
+    display: none; /* Hide old controls */
+}
+
+.config-panel:not(.consolidated) {
+    display: none; /* Hide old config panel */
+}
+
+/* Summary cards adjustment */
+.summary-cards {
+    margin-top: 1rem;
+}
+
+/* Footer simplification */
+footer {
+    margin-top: 2rem;
+    padding: 1rem 0;
+    border-top: 1px solid #e0e0e0;
+    text-align: center;
+    font-size: 0.85rem;
+}
+
+.footer-content {
+    color: #666;
+}
+
+.footer-content a {
+    color: #1976d2;
+    text-decoration: none;
+}
+
+.footer-content a:hover {
+    text-decoration: underline;
+}

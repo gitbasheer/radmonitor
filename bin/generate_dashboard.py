@@ -108,7 +108,6 @@ class DashboardConfig:
         # File paths
         self.data_dir = "data"
         self.raw_response_file = "data/raw_response.json"
-        self.template_file = "assets/templates/index.html.template"
         self.output_file = "index.html"
 
 
@@ -324,7 +323,7 @@ def generate_dashboard(config: DashboardConfig, args: argparse.Namespace,
     sys.argv = [
         'process_data.py',
         '--response', config.raw_response_file,
-        '--template', config.template_file,
+        '--output-template', config.output_file,
         '--output', config.output_file
     ]
 

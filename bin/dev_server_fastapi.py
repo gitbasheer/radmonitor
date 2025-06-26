@@ -442,14 +442,13 @@ async def broadcast_to_websockets(message: WebSocketMessage):
             active_connections.remove(conn)
 
 def process_template(config: DashboardConfig, stats: DashboardStats) -> str:
-    """Process HTML template with current data"""
-    template_path = Path("assets/templates/index.html.template")
+    """Process HTML file with current data"""
+    html_path = Path("index.html")
 
-    if not template_path.exists():
-        # Fallback to index.html if template doesn't exist
-        template_path = Path("index.html")
+    if not html_path.exists():
+        raise FileNotFoundError("index.html not found")
 
-    with open(template_path, 'r') as f:
+    with open(html_path, 'r') as f:
         content = f.read()
 
     # Replace configuration values

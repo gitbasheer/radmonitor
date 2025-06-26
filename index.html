@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RAD Monitor - Traffic Health Dashboard</title>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    
+    <!-- Dashboard CSS with sidebar layout -->
+    <link rel="stylesheet" href="assets/css/dashboard.css">
+    
+    <!-- JavaScript Entry Point -->
+    <script type="module" src="assets/js/main.js?v=10"></script>
+</head>
+<body>
+    <!-- Hidden input for server-side cookie -->
+    <input type="hidden" id="elasticCookie" value="">
+    
+    <!-- Sidebar Control Panel -->
+    <div class="control-panel">
+        <div class="control-header">
+            CONTROL PANEL
+        </div>
+        
+        <div class="control-content">
+            <!-- Connection Status -->
+            <div class="control-section">
+                <label class="control-label">Connection Status</label>
+                <div id="connectionStatus" style="font-size: 12px; padding: 5px; background: #f0f0f0; text-align: center; border-radius: 3px;">
+                    <span class="status-dot" style="display: inline-block; width: 8px; height: 8px; background: #ccc; border-radius: 50%; margin-right: 5px;"></span>
+                    <span class="status-text">Connecting...</span>
+                </div>
+                <div style="margin-top: 10px;">
+                    <button onclick="Dashboard.testApiConnection()" class="control-button secondary">Test Connection</button>
+                </div>
+            </div>
+            
+            <!-- Quick Actions -->
+            <div class="control-section">
+                <label class="control-label">Quick Actions</label>
+                <button onclick="Dashboard.refresh()" class="control-button" style="background: #2196F3; width: 100%; margin-bottom: 8px;">
+                    <span style="font-size: 16px;">🔄</span> REFRESH DATA
+                </button>
+                <button onclick="showAdvancedEditor()" class="control-button" style="background: #4CAF50; width: 100%;">
+                    <span style="font-size: 16px;">⚙️</span> CONFIGURATION
+                </button>
+                <div class="refresh-status" id="refreshStatus" style="margin-top: 8px;">Ready</div>
+            </div>
+            
+            <!-- Additional Options -->
+            <div class="control-section">
+                <label class="control-label">Tools</label>
+                <button onclick="ConfigManager.exportConfiguration()" class="control-button secondary" style="width: 100%; margin-bottom: 5px;">Export Config</button>
+                <button onclick="Dashboard.showApiSetupInstructions()" class="control-button secondary" style="width: 100%;">Help</button>
+            </div>
+            
+            <!-- Quick Stats -->
+            <div class="control-section">
+                <label class="control-label">Current Settings</label>
+                <div style="font-size: 11px; color: #666; line-height: 1.6;">
+                    <div><strong>Time Range:</strong> <span id="quickTimeRange">now-12h</span></div>
+                    <div><strong>Baseline:</strong> <span id="quickBaseline">Loading...</span></div>
+                    <div><strong>Theme:</strong> <span id="quickTheme">light</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Main Content Area -->
+    <div class="main-content">
+        <div class="container">
+            <!-- Header -->
+            <div class="header">
+                <h1>RAD Traffic Health Monitor</h1>
+                <div class="header-controls">
+                    <button id="howItWorksBtn" class="info-button" onclick="showHowItWorksModal()">📖 How It Works</button>
+                    <div class="timestamp">Last updated: <span id="lastUpdate">Never</span></div>
+                </div>
+            </div>
+            
+            <div class="content">
+                <!-- Summary Cards -->
+                <div class="summary">
+                    <div class="card critical">
+                        <div class="label">CRITICAL</div>
+                        <div id="criticalCount" class="value">0</div>
+                        <div class="subtitle">Traffic dropped &gt;80%</div>
+                    </div>
+                    <div class="card warning">
+                        <div class="label">WARNING</div>
+                        <div id="warningCount" class="value">0</div>
+                        <div class="subtitle">Traffic dropped 50-80%</div>
+                    </div>
+                    <div class="card normal">
+                        <div class="label">NORMAL</div>
+                        <div id="normalCount" class="value">0</div>
+                        <div class="subtitle">Traffic as expected</div>
+                    </div>
+                    <div class="card increased">
+                        <div class="label">INCREASED</div>
+                        <div id="increasedCount" class="value">0</div>
+                        <div class="subtitle">Traffic higher than usual</div>
+                    </div>
+                </div>
+                
+                <!-- Search and Filters -->
+                <div class="filters">
+                    <input type="text" id="searchInput" placeholder="Search events..." class="search-input">
+                    <div class="filter-buttons">
+                        <button class="filter-btn active" data-filter="all">ALL</button>
+                        <button class="filter-btn" data-filter="critical">CRITICAL</button>
+                        <button class="filter-btn" data-filter="warning">WARNING</button>
+                        <button class="filter-btn" data-filter="normal">NORMAL</button>
+                        <button class="filter-btn" data-filter="increased">INCREASED</button>
+                    </div>
+                </div>
+                
+                <!-- Loading Indicator -->
+                <div id="loadingIndicator" class="loading" style="display: none;">
+                    <div class="spinner"></div>
+                    <span>Loading data...</span>
+                </div>
+                
+                <!-- Results Info -->
+                <div id="resultsInfo" class="results-info"></div>
+                
+                <!-- Data Table -->
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th data-sort="event_id" style="width: 40%">Traffic Event Identifier</th>
+                            <th data-sort="status" style="width: 10%">Health Status</th>
+                            <th data-sort="score" style="width: 10%">Change %</th>
+                            <th data-sort="current" style="width: 10%; text-align: right">Current Count</th>
+                            <th data-sort="baseline12h" style="width: 10%; text-align: right">Expected Count</th>
+                            <th data-sort="change" style="width: 20%">Business Impact</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody">
+                        <!-- Data rows will be inserted here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Hidden elements for compatibility -->
+    <div style="display: none;">
+        <!-- API Status -->
+        <span id="apiStatus"></span>
+        
+        <!-- Hidden form elements for ConfigEditor compatibility -->
+        <button id="testApiBtn">Test API</button>
+    </div>
+    
+    <!-- How It Works Modal -->
+    <div id="howItWorksModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>📖 How RAD Monitor Works</h2>
+                <span class="close" onclick="closeHowItWorksModal()">&times;</span>
+            </div>
+            <div class="modal-body" id="howItWorksContent">
+                <!-- Content will be loaded dynamically -->
+            </div>
+        </div>
+    </div>
+    
+    <!-- Advanced Editor Modal -->
+    <div id="advancedEditorModal" class="modal" style="display: none;">
+        <div class="modal-content" style="max-width: 900px; max-height: 90vh; overflow-y: auto;">
+            <div class="modal-header">
+                <h2>⚙️ Configuration Settings</h2>
+                <span class="close" onclick="closeAdvancedEditor()">&times;</span>
+            </div>
+            <div class="modal-body" style="padding: 20px;">
+                <div id="configEditorFields">
+                    <!-- Config fields will be loaded here -->
+                </div>
+                <div id="configEditorStatus" style="margin: 15px 0 10px 0; font-size: 13px; color: #666; text-align: center;"></div>
+                <div style="margin-top: 15px; display: flex; gap: 10px; justify-content: center;">
+                    <button onclick="ConfigEditor.saveConfig()" class="control-button" style="background: #4CAF50; padding: 8px 20px;">Apply Changes</button>
+                    <button onclick="ConfigEditor.resetToDefaults()" class="control-button secondary" style="padding: 8px 20px;">Reset to Defaults</button>
+                    <button onclick="closeAdvancedEditor()" class="control-button secondary" style="padding: 8px 20px;">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <style>
+        /* Header controls styling */
+        .container .header {
+            display: flex !important;
+            justify-content: space-between !important;
+            align-items: center !important;
+            margin-bottom: 30px;
+        }
+        
+        .header-controls {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        
+        .info-button {
+            background: #2196F3;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: background 0.2s;
+        }
+        
+        .info-button:hover {
+            background: #1976D2;
+        }
+        
+        /* Modal styling */
+        .modal {
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            backdrop-filter: blur(2px);
+        }
+        
+        .modal-content {
+            background-color: white;
+            margin: 2% auto;
+            padding: 0;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 900px;
+            max-height: 85vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 30px;
+            border-bottom: 1px solid #eee;
+            background: #f8f9fa;
+            border-radius: 12px 12px 0 0;
+        }
+        
+        .modal-header h2 {
+            margin: 0;
+            color: #333;
+            font-size: 24px;
+        }
+        
+        .close {
+            color: #666;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 50%;
+            transition: background 0.2s;
+        }
+        
+        .close:hover {
+            background: #e0e0e0;
+        }
+        
+        .modal-body {
+            padding: 20px 25px;
+            line-height: 1.5;
+            color: #333;
+        }
+        
+        .math-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #2196F3;
+        }
+        
+        .math-section h3 {
+            margin: 0 0 15px 0;
+            color: #1976D2;
+            font-size: 18px;
+        }
+        
+        .math-section p {
+            margin: 10px 0;
+        }
+        
+        .formula {
+            background: #e3f2fd;
+            padding: 10px 15px;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            margin: 10px 0;
+            border: 1px solid #bbdefb;
+        }
+        
+        .example {
+            background: #fff3e0;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 10px 0;
+            border: 1px solid #ffcc02;
+        }
+        
+        .example strong {
+            color: #f57c00;
+        }
+    </style>
+    
+    <script>
+        // How It Works Modal Functions
+        function showHowItWorksModal() {
+            const modal = document.getElementById('howItWorksModal');
+            const content = document.getElementById('howItWorksContent');
+            
+            // Load the content
+            content.innerHTML = generateHowItWorksContent();
+            
+            // Show modal
+            modal.style.display = 'block';
+            
+            // Close on outside click
+            modal.onclick = function(event) {
+                if (event.target === modal) {
+                    closeHowItWorksModal();
+                }
+            };
+        }
+        
+        function closeHowItWorksModal() {
+            document.getElementById('howItWorksModal').style.display = 'none';
+        }
+        
+        // Advanced Editor Modal Functions
+        async function showAdvancedEditor() {
+            const modal = document.getElementById('advancedEditorModal');
+            
+            // Load the configuration
+            await ConfigEditor.loadConfig();
+            
+            // Show modal
+            modal.style.display = 'block';
+            
+            // Close on outside click
+            modal.onclick = function(event) {
+                if (event.target === modal) {
+                    closeAdvancedEditor();
+                }
+            };
+        }
+        
+        function closeAdvancedEditor() {
+            document.getElementById('advancedEditorModal').style.display = 'none';
+        }
+        
+        function generateHowItWorksContent() {
+            return `
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                    <div>
+                        <div class="math-section" style="margin-bottom: 15px; padding: 15px;">
+                            <h3 style="margin: 0 0 10px 0; font-size: 16px;">📊 How We Calculate</h3>
+                            <div class="formula" style="margin: 8px 0; padding: 8px; font-size: 12px;">
+                            <strong>Expected = Daily Avg × (Hours ÷ 24)</strong><br>
+                            <strong>Ratio = Current ÷ Expected</strong><br>
+                            <strong>Score:</strong> See volume rules →
+                            </div>
+                            <div class="example" style="margin: 8px 0; padding: 10px; font-size: 12px;">
+                                <strong>📉 Visual Example:</strong><br>
+                                Baseline: ████████████ 1000/day<br>
+                                Current:  ██ 100 (expected 500)<br>
+                                Ratio: 0.2 → Score: -80% = CRITICAL 🚨
+                            </div>
+                        </div>
+
+                        <div class="math-section" style="margin-bottom: 15px; padding: 15px;">
+                            <h3 style="margin: 0 0 10px 0; font-size: 16px;">🚨 Status Thresholds</h3>
+                            <ul style="margin: 5px 0; padding-left: 20px; font-size: 13px;">
+                                <li><strong style="color: #d32f2f;">CRITICAL:</strong> ≤ -80% drop</li>
+                                <li><strong style="color: #f57c00;">WARNING:</strong> -50% to -80% drop</li>
+                                <li><strong style="color: #388e3c;">NORMAL:</strong> -50% to 0%</li>
+                                <li><strong style="color: #1976d2;">INCREASED:</strong> > 0%</li>
+                            </ul>
+                        </div>
+
+                        <div class="math-section" style="padding: 15px;">
+                            <h3 style="margin: 0 0 10px 0; font-size: 16px;">⚠️ Common Gotchas</h3>
+                            <ul style="margin: 5px 0; padding-left: 20px; font-size: 13px;">
+                                <li>Weekend traffic differs from weekdays</li>
+                                <li>Marketing campaigns skew baselines</li>
+                                <li>Exclude maintenance windows</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="math-section" style="margin-bottom: 15px; padding: 15px;">
+                            <h3 style="margin: 0 0 10px 0; font-size: 16px;">🎛️ Configuration Tips</h3>
+                            <div style="font-size: 13px;">
+                                <p style="margin: 5px 0;"><strong>Quick Detection:</strong><br>
+                                • Time: now-6h • Base: 3-5 days</p>
+                                <p style="margin: 5px 0;"><strong>Stable Monitoring:</strong><br>
+                                • Time: now-24h • Base: 7-10 days</p>
+                                <p style="margin: 5px 0;"><strong>Investigation:</strong><br>
+                                • Time: "24h ago to 8h ago"</p>
+                            </div>
+                        </div>
+
+                        <div class="math-section" style="margin-bottom: 15px; padding: 15px;">
+                            <h3 style="margin: 0 0 10px 0; font-size: 16px;">📈 Volume-Based Scoring</h3>
+                            <div style="font-size: 13px;">
+                                <p style="margin: 5px 0;"><strong>High (≥1000/day):</strong><br>
+                                • Ratio < 0.5: Score = (1-ratio) × -100<br>
+                                • Else: Score = (ratio-1) × 100</p>
+                                <p style="margin: 5px 0;"><strong>Medium (100-1000):</strong><br>
+                                • Ratio < 0.3: Score = (1-ratio) × -100<br>
+                                • Else: Score = (ratio-1) × 100</p>
+                                <p style="margin: 5px 0;"><strong>Low (<100):</strong> Filtered out</p>
+                            </div>
+                        </div>
+
+                        <div class="math-section" style="padding: 15px;">
+                            <h3 style="margin: 0 0 10px 0; font-size: 16px;">🚀 Key Features</h3>
+                            <ul style="margin: 5px 0; padding-left: 20px; font-size: 13px;">
+                                <li><strong>Real-time:</strong> Updates live</li>
+                                <li><strong>Smart filtering:</strong> Ignores noise</li>
+                                <li><strong>Business impact:</strong> Shows actual loss/gain</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // Initialize UI helpers
+        document.addEventListener('DOMContentLoaded', function() {
+            // Update connection status
+            window.updateConnectionStatus = function(connected, message) {
+                const statusDot = document.querySelector('.status-dot');
+                const statusText = document.querySelector('.status-text');
+                
+                if (statusDot && statusText) {
+                    statusDot.style.backgroundColor = connected ? '#4CAF50' : '#f44336';
+                    statusText.textContent = message || (connected ? 'Connected' : 'Disconnected');
+                }
+            };
+            
+            // Listen for API status changes
+            if (window.unifiedAPI) {
+                window.addEventListener('api:statusChange', () => {
+                    const mode = window.unifiedAPI.getMode();
+                    updateConnectionStatus(true, mode === 'fastapi' ? 'FastAPI Connected' : 'Connected');
+                });
+            }
+            
+            // Update quick stats display
+            window.updateQuickStats = async function() {
+                try {
+                    const config = await ConfigService.getConfig();
+                    
+                    // Update time range
+                    const timeRangeEl = document.getElementById('quickTimeRange');
+                    if (timeRangeEl) {
+                        timeRangeEl.textContent = config.currentTimeRange || 'now-12h';
+                    }
+                    
+                    // Update baseline
+                    const baselineEl = document.getElementById('quickBaseline');
+                    if (baselineEl && config.baselineStart && config.baselineEnd) {
+                        const start = new Date(config.baselineStart).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                        const end = new Date(config.baselineEnd).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                        baselineEl.textContent = `${start} - ${end}`;
+                    }
+                    
+                    // Update theme
+                    const themeEl = document.getElementById('quickTheme');
+                    if (themeEl) {
+                        themeEl.textContent = config.theme || 'light';
+                    }
+                } catch (error) {
+                    console.debug('Error updating quick stats:', error);
+                }
+            };
+            
+            // Update quick stats on config changes
+            if (window.ConfigService) {
+                ConfigService.subscribe(() => {
+                    updateQuickStats();
+                });
+                // Initial update
+                setTimeout(updateQuickStats, 500);
+            }
+            
+        });
+    </script>
+</body>
+</html>

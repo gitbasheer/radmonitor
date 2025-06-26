@@ -8,6 +8,7 @@ import TimeRangeUtils from './time-range-utils.js';
 import DataProcessor from './data-processor.js';
 import UIUpdater from './ui-updater.js';
 import ApiClient from './api-client.js';
+import { ConfigService } from './config-service.js';
 import { unifiedAPI } from './api-interface.js';
 
 // ESM: Converted from IIFE to ES module export
@@ -46,6 +47,7 @@ export const DataLayer = (() => {
     const stateLogging = {
         enabled: true,
         collapsed: true,  // Start with collapsed logs to reduce console noise
+        verbosity: 'normal', // 'quiet', 'normal', 'verbose'
         colors: {
             action: '#03A9F4',
             prevState: '#9E9E9E',
@@ -54,6 +56,36 @@ export const DataLayer = (() => {
             error: '#F44336',
             time: '#666666'
         }
+    };
+
+    // Define which actions to show at each verbosity level
+    const actionVerbosity = {
+        quiet: [
+            'DASHBOARD_INIT_START',
+            'DASHBOARD_INIT_COMPLETE',
+            'DASHBOARD_REFRESH_START',
+            'DASHBOARD_REFRESH_COMPLETE',
+            'DASHBOARD_REFRESH_ERROR',
+            'QUERY_EXECUTE_SUCCESS',
+            'QUERY_EXECUTE_ERROR',
+            'PERFORMANCE_WARNING'
+        ],
+        normal: [
+            'DASHBOARD_INIT_START',
+            'DASHBOARD_INIT_COMPLETE',
+            'DASHBOARD_REFRESH_START',
+            'DASHBOARD_REFRESH_COMPLETE',
+            'DASHBOARD_REFRESH_ERROR',
+            'FETCH_AND_PARSE_START',
+            'FETCH_AND_PARSE_COMPLETE',
+            'FETCH_AND_PARSE_ERROR',
+            'QUERY_EXECUTE_START',
+            'QUERY_EXECUTE_SUCCESS',
+            'QUERY_EXECUTE_ERROR',
+            'PERFORMANCE_WARNING',
+            'CLEAR_CACHE'
+        ],
+        verbose: null // Show all actions
     };
 
     // =======================
@@ -149,14 +181,21 @@ export const DataLayer = (() => {
         // Traffic analysis query
         trafficAnalysis(config) {
             const query = QueryBuilder.base();
+            
+            // Get query configuration
+            const queryConfig = ConfigService.getConfig();
+            const eventField = 'detail.event.data.traffic.eid.keyword'; // Fixed value
+            const eventPattern = queryConfig.queryEventPattern || 'pandc.vnext.recommendations.feed.feed*';
+            const hostFilter = 'dashboard.godaddy.com'; // Fixed value
+            const minEventDate = queryConfig.minEventDate || '2025-05-19T04:00:00.000Z';
 
             // Add filters
-            QueryBuilder.timeRange(query, '@timestamp', '2025-05-19T04:00:00.000Z', 'now');
-            QueryBuilder.wildcard(query, 'detail.event.data.traffic.eid.keyword', 'pandc.vnext.recommendations.feed.feed*');
-            QueryBuilder.term(query, 'detail.global.page.host', 'dashboard.godaddy.com');
+            QueryBuilder.timeRange(query, '@timestamp', minEventDate, 'now');
+            QueryBuilder.wildcard(query, eventField, eventPattern);
+            QueryBuilder.term(query, 'detail.global.page.host', hostFilter);
 
             // Add main aggregation
-            QueryBuilder.termsAgg(query, 'events', 'detail.event.data.traffic.eid.keyword');
+            QueryBuilder.termsAgg(query, 'events', eventField);
 
             // Add sub-aggregations for baseline and current
             QueryBuilder.addSubAgg(query, 'events', 'baseline', {
@@ -472,11 +511,14 @@ export const DataLayer = (() => {
             // Cache miss
             performanceMetrics.cacheMisses++;
 
-            // Track active query
+            // Track active query with meaningful details
+            const queryDetails = this.extractQueryDetails(query);
             logAction('QUERY_EXECUTE_START', {
                 queryId,
-                cacheKey,
-                queryType: query.aggs ? Object.keys(query.aggs)[0] : 'unknown'
+                queryType: queryDetails.type,
+                timeRange: queryDetails.timeRange,
+                filters: queryDetails.filters,
+                aggregations: queryDetails.aggregations
             });
 
             queryState.activeQueries.set(queryId, {
@@ -523,12 +565,15 @@ export const DataLayer = (() => {
                     });
                 }
 
-                // Log successful response
+                // Log successful response with meaningful data
+                const processedResults = this.extractResultSummary(response, queryDetails);
                 logAction('QUERY_EXECUTE_SUCCESS', {
                     queryId,
                     duration,
-                    hits: response.hits?.total?.value || 0,
-                    aggregations: response.aggregations ? Object.keys(response.aggregations) : []
+                    hits: processedResults.hits,
+                    buckets: processedResults.buckets,
+                    aggregations: processedResults.aggregations,
+                    dataSize: processedResults.dataSize
                 });
 
                 // Cache response
@@ -606,6 +651,70 @@ export const DataLayer = (() => {
         // Generate cache key
         getCacheKey(queryId, query) {
             return `${queryId}_${JSON.stringify(query)}`;
+        },
+
+        // Extract meaningful query details for logging
+        extractQueryDetails(query) {
+            const details = {
+                type: 'unknown',
+                timeRange: 'not specified',
+                filters: [],
+                aggregations: []
+            };
+
+            // Extract aggregations
+            if (query.aggs) {
+                details.aggregations = Object.keys(query.aggs);
+                details.type = details.aggregations[0] || 'aggregation';
+            }
+
+            // Extract filters
+            if (query.query?.bool?.filter) {
+                query.query.bool.filter.forEach(filter => {
+                    if (filter.range?.['@timestamp']) {
+                        const range = filter.range['@timestamp'];
+                        details.timeRange = `${range.gte || 'earliest'} to ${range.lte || range.lt || 'now'}`;
+                    } else if (filter.wildcard) {
+                        const field = Object.keys(filter.wildcard)[0];
+                        const pattern = filter.wildcard[field].value || filter.wildcard[field];
+                        details.filters.push(`${field}: ${pattern}`);
+                    } else if (filter.term) {
+                        const field = Object.keys(filter.term)[0];
+                        details.filters.push(`${field}: ${filter.term[field]}`);
+                    }
+                });
+            }
+
+            return details;
+        },
+
+        // Extract meaningful result summary for logging
+        extractResultSummary(response, queryDetails) {
+            const summary = {
+                hits: response.hits?.total?.value || 0,
+                buckets: 0,
+                aggregations: [],
+                dataSize: 'unknown'
+            };
+
+            // Count aggregation buckets
+            if (response.aggregations) {
+                summary.aggregations = Object.keys(response.aggregations);
+                
+                // Count total buckets across all aggregations
+                Object.values(response.aggregations).forEach(agg => {
+                    if (agg.buckets && Array.isArray(agg.buckets)) {
+                        summary.buckets += agg.buckets.length;
+                    }
+                });
+            }
+
+            // Estimate data size
+            const responseStr = JSON.stringify(response);
+            const sizeKB = Math.round(responseStr.length / 1024);
+            summary.dataSize = sizeKB < 1024 ? `${sizeKB}KB` : `${Math.round(sizeKB / 1024 * 10) / 10}MB`;
+
+            return summary;
         }
     };
 
@@ -752,35 +861,68 @@ export const DataLayer = (() => {
 
             // 3. Parse response
             logAction('RESPONSE_PARSE_START', { queryId });
-            const parsed = {
-                aggregations: ResponseParser.parseAggregations(response),
-                hits: ResponseParser.parseHits(response),
-                error: ResponseParser.parseError(response)
-            };
-            logAction('RESPONSE_PARSE_COMPLETE', {
-                queryId,
-                hasAggregations: !!parsed.aggregations,
-                hitCount: parsed.hits.length,
-                hasError: !!parsed.error
-            });
+            let parsed = null;
+            try {
+                parsed = {
+                    aggregations: ResponseParser.parseAggregations(response),
+                    hits: ResponseParser.parseHits(response),
+                    error: ResponseParser.parseError(response)
+                };
+                
+                // Check for Elasticsearch errors in response
+                if (parsed.error) {
+                    logAction('ELASTICSEARCH_ERROR_DETECTED', {
+                        queryId,
+                        errorType: parsed.error.type,
+                        errorReason: parsed.error.reason
+                    });
+                    throw new Error(`Elasticsearch error: ${parsed.error.reason}`);
+                }
+                
+                logAction('RESPONSE_PARSE_COMPLETE', {
+                    queryId,
+                    hasAggregations: !!parsed.aggregations,
+                    hitCount: parsed.hits.length,
+                    aggregationKeys: parsed.aggregations ? Object.keys(parsed.aggregations) : []
+                });
+            } catch (parseError) {
+                logAction('RESPONSE_PARSE_ERROR', {
+                    queryId,
+                    error: parseError.message,
+                    responseType: typeof response,
+                    hasResponse: !!response
+                });
+                throw new Error(`Response parsing failed: ${parseError.message}`);
+            }
 
             // 4. Transform data
             logAction('DATA_TRANSFORM_START', { queryId, transformType: queryConfig.type });
             let transformed = null;
-            switch (queryConfig.type) {
-                case 'trafficAnalysis':
-                    transformed = DataTransformer.transformTrafficData(parsed.aggregations, queryConfig.params);
-                    break;
-                case 'timeSeries':
-                    transformed = DataTransformer.toTimeSeries(parsed.aggregations, queryConfig.params);
-                    break;
-                default:
-                    transformed = DataTransformer.extractMetrics(parsed.aggregations);
+            try {
+                switch (queryConfig.type) {
+                    case 'trafficAnalysis':
+                        transformed = DataTransformer.transformTrafficData(parsed.aggregations, queryConfig.params);
+                        break;
+                    case 'timeSeries':
+                        transformed = DataTransformer.toTimeSeries(parsed.aggregations, queryConfig.params);
+                        break;
+                    default:
+                        transformed = DataTransformer.extractMetrics(parsed.aggregations);
+                }
+                logAction('DATA_TRANSFORM_COMPLETE', {
+                    queryId,
+                    recordCount: Array.isArray(transformed) ? transformed.length : 0,
+                    hasData: !!transformed
+                });
+            } catch (transformError) {
+                logAction('DATA_TRANSFORM_ERROR', {
+                    queryId,
+                    transformType: queryConfig.type,
+                    error: transformError.message,
+                    aggregationsAvailable: !!parsed.aggregations
+                });
+                throw new Error(`Data transformation failed: ${transformError.message}`);
             }
-            logAction('DATA_TRANSFORM_COMPLETE', {
-                queryId,
-                recordCount: Array.isArray(transformed) ? transformed.length : 0
-            });
 
             // 5. Cache parsed and transformed data
             const cacheKey = QueryExecutor.getCacheKey(queryId, query);
@@ -845,6 +987,14 @@ export const DataLayer = (() => {
     function logAction(actionType, payload, changes = {}) {
         if (!stateLogging.enabled) return;
 
+        // Check if action should be logged based on verbosity level
+        if (stateLogging.verbosity !== 'verbose') {
+            const allowedActions = actionVerbosity[stateLogging.verbosity];
+            if (allowedActions && !allowedActions.includes(actionType)) {
+                return; // Skip this action
+            }
+        }
+
         const timestamp = new Date().toLocaleTimeString('en-US', {
             hour12: false,
             hour: '2-digit',
@@ -853,15 +1003,28 @@ export const DataLayer = (() => {
             fractionalSecondDigits: 3
         });
 
+        // For quiet mode, show minimal output
+        if (stateLogging.verbosity === 'quiet' && stateLogging.collapsed) {
+            console.log(
+                `%c→ %c${actionType} %c@ ${timestamp}`,
+                'color: #666;',
+                `color: ${stateLogging.colors.action};`,
+                `color: ${stateLogging.colors.time}; font-size: 0.9em;`
+            );
+            return;
+        }
+
         const prevState = getState();
 
-        // Log action header
-        console.log(
-            `%c action %c${actionType} %c@ ${timestamp}`,
-            'color: #666; font-weight: normal;',
-            `color: ${stateLogging.colors.action}; font-weight: bold;`,
-            `color: ${stateLogging.colors.time}; font-weight: normal;`
-        );
+        // Log action header only if not DASHBOARD_INIT_START
+        if (actionType !== 'DASHBOARD_INIT_START') {
+            console.log(
+                `%c action %c${actionType} %c@ ${timestamp}`,
+                'color: #666; font-weight: normal;',
+                `color: ${stateLogging.colors.action}; font-weight: bold;`,
+                `color: ${stateLogging.colors.time}; font-weight: normal;`
+            );
+        }
 
         if (stateLogging.collapsed) {
             console.groupCollapsed('%c prev state', `color: ${stateLogging.colors.prevState};`);
@@ -897,6 +1060,8 @@ export const DataLayer = (() => {
      */
     function configureLogging(options = {}) {
         Object.assign(stateLogging, options);
+        
+        // Verbosity changes are applied silently to reduce console noise
     }
 
     /**

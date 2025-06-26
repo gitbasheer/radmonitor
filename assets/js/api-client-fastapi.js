@@ -20,8 +20,8 @@ export const FastAPIClient = (() => {
      */
     const WebSocketManager = {
         connect() {
-            if (websocket && websocket.readyState === WebSocket.OPEN) {
-                console.log('WebSocket already connected');
+            if (websocket && (websocket.readyState === WebSocket.OPEN || websocket.readyState === WebSocket.CONNECTING)) {
+                // Don't log for already connected/connecting to reduce console noise
                 return Promise.resolve();
             }
 
@@ -102,16 +102,49 @@ export const FastAPIClient = (() => {
                     this.notifyHandlers('data', message.data);
                     break;
                 case 'error':
-                    console.error('Server error:', message.data);
-                    this.notifyHandlers('error', message.data);
+                    // Classify different types of server messages
+                    const level = message.data?.level || 'error';
+                    const errorMessage = message.data?.message || 'Unknown error';
+                    
+                    if (level === 'warning' || errorMessage.includes('Query execution slow')) {
+                        // Performance warnings - not actual errors
+                        const duration = errorMessage.match(/(\d+)ms/)?.[1];
+                        console.warn(`⚠️ Slow query: ${duration ? `${(duration/1000).toFixed(1)}s` : errorMessage}`);
+                        
+                        // Update UI with helpful warning
+                        const refreshStatus = document.getElementById('refreshStatus');
+                        if (refreshStatus) {
+                            refreshStatus.textContent = `Query took ${duration ? `${(duration/1000).toFixed(1)}s` : 'long'} - data loaded`;
+                            refreshStatus.style.color = '#ff9800';
+                            setTimeout(() => {
+                                refreshStatus.textContent = 'Ready';
+                                refreshStatus.style.color = '';
+                            }, 5000);
+                        }
+                        this.notifyHandlers('performance_warning', message.data);
+                    } else {
+                        // Actual errors
+                        console.error('Server error:', message.data);
+                        
+                        // Update UI with specific error message
+                        const refreshStatus = document.getElementById('refreshStatus');
+                        if (refreshStatus) {
+                            if (errorMessage.includes('authentication') || errorMessage.includes('cookie')) {
+                                refreshStatus.innerHTML = 'Authentication expired | <a href="#" onclick="Dashboard.setCookieForRealtime(); return false;" style="color: #d32f2f;">Update Cookie</a>';
+                            } else if (errorMessage.includes('network') || errorMessage.includes('connection')) {
+                                refreshStatus.innerHTML = 'Connection lost | <a href="#" onclick="location.reload(); return false;" style="color: #d32f2f;">Reload Page</a>';
+                            } else {
+                                refreshStatus.innerHTML = `Error: ${errorMessage} | <a href="#" onclick="Dashboard.showApiSetupInstructions(); return false;" style="color: #d32f2f;">Help</a>`;
+                            }
+                            refreshStatus.style.color = '#d32f2f';
+                        }
+                        this.notifyHandlers('error', message.data);
+                    }
                     break;
                 case 'performance_metrics':
-                    console.log('Performance metrics:', message.data);
+                    // Silently handle performance metrics
                     this.notifyHandlers('performance_metrics', message.data);
-                    // Also trigger any existing performance handlers
-                    if (window.Dashboard && window.Dashboard.showPerformanceStats) {
-                        window.Dashboard.showPerformanceStats(message.data);
-                    }
+                    // Performance stats disabled - use Dashboard.showPerformanceStats() manually
                     break;
                 case 'pong':
                     // Heartbeat response
@@ -241,6 +274,27 @@ export const FastAPIClient = (() => {
                     throw new Error('Elastic cookie not found. Please authenticate first.');
                 }
 
+                // Extract meaningful query details for logging
+                const timeRange = extractTimeRange(query);
+                const filters = extractFilters(query);
+                const aggregations = query.aggs ? Object.keys(query.aggs) : [];
+                
+                console.log(
+                    `%c🔍 Kibana Query → %c${timeRange.description} %c| %cFilters: ${filters.count} %c| %cAggs: ${aggregations.join(', ')}`,
+                    'color: #2196F3; font-weight: bold;',
+                    'color: #4CAF50;',
+                    'color: #666;',
+                    'color: #FF9800;',
+                    'color: #666;',
+                    'color: #9C27B0;'
+                );
+                
+                if (filters.details.length > 0) {
+                    console.log(`%c  └─ Query details: ${filters.details.join(' | ')}`, 'color: #666; font-size: 0.9em;');
+                }
+
+                const startTime = Date.now();
+                
                 const response = await fetch(`${API_BASE_URL}/api/fetch-kibana-data`, {
                     method: 'POST',
                     headers: {
@@ -253,18 +307,91 @@ export const FastAPIClient = (() => {
                     })
                 });
 
+                const duration = Date.now() - startTime;
+
                 if (!response.ok) {
                     const errorData = await response.json();
+                    console.log(`%c❌ Kibana Query Failed → %c${duration}ms %c| ${errorData.detail || `HTTP ${response.status}`}`, 
+                        'color: #f44336; font-weight: bold;', 'color: #666;', 'color: #f44336;');
                     throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
                 }
 
-                return await response.json();
+                const result = await response.json();
+                const hitCount = result.hits?.total?.value || 0;
+                const aggCount = result.aggregations ? Object.keys(result.aggregations).length : 0;
+                
+                console.log(
+                    `%c✅ Kibana Response → %c${duration}ms %c| %cHits: ${hitCount.toLocaleString()} %c| %cAggs: ${aggCount}`,
+                    'color: #4CAF50; font-weight: bold;',
+                    'color: #666;',
+                    'color: #666;',
+                    'color: #2196F3;',
+                    'color: #666;',
+                    'color: #9C27B0;'
+                );
+
+                return result;
             } catch (error) {
                 console.error('Error fetching Kibana data:', error);
                 throw error;
             }
-        },
+        }
+    };
 
+    /**
+     * Helper functions for query analysis
+     */
+    function extractTimeRange(query) {
+        const filters = query.query?.bool?.filter || [];
+        for (const filter of filters) {
+            if (filter.range && filter.range['@timestamp']) {
+                const range = filter.range['@timestamp'];
+                return {
+                    description: `${range.gte || 'earliest'} to ${range.lte || range.lt || 'now'}`,
+                    start: range.gte,
+                    end: range.lte || range.lt
+                };
+            }
+        }
+        return { description: 'No time range specified', start: null, end: null };
+    }
+
+    function extractFilters(query) {
+        const filters = query.query?.bool?.filter || [];
+        const details = [];
+        let count = 0;
+        
+        filters.forEach(filter => {
+            if (filter.range) {
+                const field = Object.keys(filter.range)[0];
+                if (field !== '@timestamp') {
+                    details.push(`${field} range filter`);
+                    count++;
+                }
+            } else if (filter.term) {
+                const field = Object.keys(filter.term)[0];
+                const value = filter.term[field];
+                details.push(`${field}="${value}"`);
+                count++;
+            } else if (filter.wildcard) {
+                const field = Object.keys(filter.wildcard)[0];
+                const pattern = filter.wildcard[field].value || filter.wildcard[field];
+                details.push(`${field} like "${pattern}"`);
+                count++;
+            } else if (filter.terms) {
+                const field = Object.keys(filter.terms)[0];
+                details.push(`${field} in [${filter.terms[field].length} values]`);
+                count++;
+            }
+        });
+        
+        return { count, details };
+    }
+
+    /**
+     * Additional API methods
+     */
+    const AdditionalAPI = {
         getElasticCookie() {
             // Try to get cookie from various sources
             // 1. Check localStorage (if stored)
@@ -405,7 +532,7 @@ export const FastAPIClient = (() => {
         refreshDashboard: API.refreshDashboard,
         checkHealth: API.checkHealth,
         fetchKibanaData: API.fetchKibanaData,
-        getElasticCookie: API.getElasticCookie,
+        getElasticCookie: AdditionalAPI.getElasticCookie,
 
         // Helpers
         validateConfig: ConfigHelpers.validateConfig,

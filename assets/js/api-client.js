@@ -10,8 +10,23 @@ import TimeRangeUtils from './time-range-utils.js';
 export const ApiClient = (() => {
     'use strict';
 
-    const KIBANA_URL = 'https://usieventho-prod-usw2.kb.us-west-2.aws.found.io:9243';
-    const CORS_PROXY_URL = 'http://localhost:8889/kibana-proxy';
+    // Load API endpoints from config - with fallbacks for backward compatibility
+    const getApiConfig = () => {
+        if (window.API_ENDPOINTS) {
+            return window.API_ENDPOINTS;
+        }
+        // Fallback to hardcoded values if config not loaded
+        return {
+            kibana: { url: 'https://usieventho-prod-usw2.kb.us-west-2.aws.found.io:9243' },
+            corsProxy: { url: 'http://localhost:8889', path: '/kibana-proxy' }
+        };
+    };
+
+    const getKibanaUrl = () => getApiConfig().kibana.url;
+    const getCorsProxyUrl = () => {
+        const config = getApiConfig();
+        return config.corsProxy.url + config.corsProxy.path;
+    };
 
     /**
      * Check if CORS proxy is available
@@ -188,7 +203,7 @@ export const ApiClient = (() => {
 
             if (auth.method === 'proxy') {
                 // Use CORS proxy
-                response = await fetch(CORS_PROXY_URL, {
+                response = await fetch(getCorsProxyUrl(), {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -198,7 +213,7 @@ export const ApiClient = (() => {
                 });
             } else {
                 // Direct access
-                response = await fetch(`${KIBANA_URL}/elasticsearch/usi*/_search`, {
+                response = await fetch(`${getKibanaUrl()}/elasticsearch/usi*/_search`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -340,7 +355,7 @@ export const ApiClient = (() => {
 
             if (auth.method === 'proxy') {
                 // Test through CORS proxy
-                response = await fetch(CORS_PROXY_URL, {
+                response = await fetch(getCorsProxyUrl(), {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -351,7 +366,7 @@ export const ApiClient = (() => {
                 });
             } else {
                 // Test direct access
-                response = await fetch(`${KIBANA_URL}/elasticsearch/usi*/_search`, {
+                response = await fetch(`${getKibanaUrl()}/elasticsearch/usi*/_search`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',

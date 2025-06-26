@@ -54,7 +54,12 @@ export const ConfigService = (() => {
 
             return await response.json();
         } catch (error) {
-            console.error(`Config API error (${endpoint}):`, error);
+            // Handle errors more gracefully - use debug level for CORS/connection errors
+            if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
+                console.debug(`Config API connection error (${endpoint})`);
+            } else {
+                console.debug(`Config API error (${endpoint}):`, error.message);
+            }
             throw error;
         }
     }
@@ -63,17 +68,33 @@ export const ConfigService = (() => {
      * Initialize configuration from backend or localStorage
      */
     async function initialize() {
-        try {
-            // Try to load from backend first
-            const backendConfig = await loadFromBackend();
-            if (backendConfig) {
-                config = backendConfig;
-                saveToLocalStorage();
-                notifyListeners('initialized', config);
-                return config;
+        // Check if we should skip backend initialization
+        const skipBackend = localStorage.getItem('radMonitor_skipBackendConfig') === 'true';
+        
+        // Auto-skip backend if we're on localhost without explicit backend URL
+        const isLocalDev = window.location.hostname === 'localhost' && 
+                          !localStorage.getItem('radMonitor_backendUrl');
+        
+        if (!skipBackend && !isLocalDev) {
+            try {
+                // Try to load from backend first
+                const backendConfig = await loadFromBackend();
+                if (backendConfig) {
+                    config = backendConfig;
+                    saveToLocalStorage();
+                    notifyListeners('initialized', config);
+                    return config;
+                }
+            } catch (error) {
+                // Silently handle CORS errors and connection failures
+                if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
+                    // This is likely a CORS error or connection failure - handle silently
+                    console.debug('Backend config service not available, using local configuration');
+                } else {
+                    // Log other types of errors with reduced verbosity
+                    console.debug('Config backend error:', error.message);
+                }
             }
-        } catch (error) {
-            console.warn('Failed to load config from backend, using localStorage:', error);
         }
 
         // Fallback to localStorage
@@ -118,7 +139,7 @@ export const ConfigService = (() => {
                 appName: response.app_name
             };
         } catch (error) {
-            console.error('Error loading config from backend:', error);
+            // Error already logged in apiRequest at debug level
             return null;
         }
     }
@@ -136,7 +157,7 @@ export const ConfigService = (() => {
             notifyListeners('saved', configData);
             return true;
         } catch (error) {
-            console.error('Error saving config to backend:', error);
+            // Error already logged in apiRequest at debug level
             return false;
         }
     }
@@ -163,7 +184,10 @@ export const ConfigService = (() => {
             elasticsearchUrl: 'https://usieventho-prod-usw2.es.us-west-2.aws.found.io:9243',
             corsProxyPort: 8889,
             debug: false,
-            appName: 'RAD Monitor'
+            appName: 'RAD Monitor',
+            minEventDate: '2025-05-19T04:00:00.000Z',
+            queryEventPattern: 'pandc.vnext.recommendations.feed.feed*',
+            queryAggSize: 500
         };
     }
 
@@ -408,7 +432,8 @@ export const ConfigService = (() => {
                     notifyListeners('synced', config);
                 }
             } catch (error) {
-                console.error('Auto-sync failed:', error);
+                // Silently handle auto-sync failures - errors are already logged at debug level
+                console.debug('Auto-sync skipped due to backend unavailability');
             }
         }, intervalMs);
     }
@@ -466,6 +491,70 @@ export const ConfigService = (() => {
         return componentConfigs[component] || {};
     }
 
+    /**
+     * UI Helper: Set preset time range
+     * Migrated from ConfigManager for consolidation
+     */
+    function setPresetTimeRange(preset) {
+        const presetMap = {
+            '6h': 'now-6h',
+            '12h': 'now-12h',
+            '24h': 'now-24h',
+            '3d': 'now-3d',
+            'inspection': 'inspection_time'
+        };
+        
+        const timeRange = presetMap[preset];
+        if (timeRange) {
+            set('currentTimeRange', timeRange);
+            // Update DOM if element exists
+            const input = document.getElementById('currentTimeRange');
+            if (input) {
+                input.value = timeRange;
+            }
+        }
+    }
+    
+    /**
+     * UI Helper: Get configuration from DOM elements
+     * For backward compatibility with ConfigManager
+     */
+    function getCurrentConfigFromDOM() {
+        const getValue = (id, defaultValue) => {
+            const element = document.getElementById(id);
+            return element ? element.value : defaultValue;
+        };
+        
+        return {
+            baselineStart: getValue('baselineStart', '2025-06-01'),
+            baselineEnd: getValue('baselineEnd', '2025-06-09'),
+            currentTimeRange: getValue('currentTimeRange', 'now-12h'),
+            highVolumeThreshold: parseInt(getValue('highVolumeThreshold', '1000')),
+            mediumVolumeThreshold: parseInt(getValue('mediumVolumeThreshold', '100'))
+        };
+    }
+    
+    /**
+     * UI Helper: Load configuration into DOM elements
+     * For backward compatibility with ConfigManager
+     */
+    function loadConfigurationIntoDOM(config = null) {
+        const configToLoad = config || getConfig();
+        
+        const setValue = (id, value) => {
+            const element = document.getElementById(id);
+            if (element) {
+                element.value = value;
+            }
+        };
+        
+        setValue('baselineStart', configToLoad.baselineStart);
+        setValue('baselineEnd', configToLoad.baselineEnd);
+        setValue('currentTimeRange', configToLoad.currentTimeRange);
+        setValue('highVolumeThreshold', configToLoad.highVolumeThreshold);
+        setValue('mediumVolumeThreshold', configToLoad.mediumVolumeThreshold);
+    }
+
     // Public API
     return {
         initialize,
@@ -483,6 +572,10 @@ export const ConfigService = (() => {
         getComponentConfig,
         loadFromBackend,
         saveToBackend,
+        // UI Helpers (migrated from ConfigManager)
+        setPresetTimeRange,
+        getCurrentConfigFromDOM,
+        loadConfigurationIntoDOM,
         // Expose internals for debugging
         _debug: {
             config: () => config,

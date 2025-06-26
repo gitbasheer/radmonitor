@@ -81,7 +81,7 @@ except Exception as e:
           # Test HTML generation only
           python3 -m src.data.process_data \
             --response data/raw_response.json \
-            --template assets/templates/index.html.template \
+            --output-template index.html \
             --output test_output.html
           
           if [ -f test_output.html ]; then

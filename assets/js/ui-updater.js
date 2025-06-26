@@ -11,15 +11,16 @@ export const UIUpdater = (() => {
      * Update summary cards with statistics
      */
     function updateSummaryCards(stats) {
-        const critical = document.querySelector('.card.critical .card-number');
-        const warning = document.querySelector('.card.warning .card-number');
-        const normal = document.querySelector('.card.normal .card-number');
-        const increased = document.querySelector('.card.increased .card-number');
+        // Update using the correct class name 'value' instead of 'card-number'
+        const critical = document.getElementById('criticalCount');
+        const warning = document.getElementById('warningCount');
+        const normal = document.getElementById('normalCount');
+        const increased = document.getElementById('increasedCount');
 
-        if (critical) critical.textContent = stats.critical;
-        if (warning) warning.textContent = stats.warning;
-        if (normal) normal.textContent = stats.normal;
-        if (increased) increased.textContent = stats.increased;
+        if (critical) critical.textContent = stats.critical || 0;
+        if (warning) warning.textContent = stats.warning || 0;
+        if (normal) normal.textContent = stats.normal || 0;
+        if (increased) increased.textContent = stats.increased || 0;
     }
 
     /**
@@ -68,6 +69,11 @@ export const UIUpdater = (() => {
                 <td><span class="impact ${impact_class}">${impact}</span></td>
             `;
             tbody.appendChild(row);
+        }
+
+        // Refresh search/filter state after table update
+        if (typeof SearchFilter !== 'undefined' && SearchFilter.refresh) {
+            SearchFilter.refresh();
         }
     }
 
@@ -118,6 +124,12 @@ export const UIUpdater = (() => {
             return;
         }
 
+        // If FastAPI is working, don't test legacy auth
+        const fastAPIWorking = window.FastAPIIntegration && window.FastAPIIntegration.getStatus().enabled;
+        if (fastAPIWorking) {
+            console.log('⏭️ SKIPPING auth test - FastAPI integration is working');
+        }
+
         // Update environment status
         if (envStatusEl) {
             envStatusEl.textContent = isLocalhost ? 'Local Dev' : 'GitHub Pages';
@@ -146,19 +158,24 @@ export const UIUpdater = (() => {
                 } else if (!hasCookie) {
                     statusEl.innerHTML = `CORS proxy ready - need cookie | <a href="#" onclick="Dashboard.setCookieForRealtime(); return false;" style="color: #333;">Set Cookie</a> | <a href="#" onclick="Dashboard.showApiSetupInstructions(); return false;" style="color: #333;">Setup</a>`;
                 } else {
-                    // We have both proxy and cookie - but need to validate the cookie actually works
-                    statusEl.innerHTML = `Testing authentication... | <a href="#" onclick="Dashboard.setCookieForRealtime(); return false;" style="color: #333;">Update Cookie</a>`;
-                    
-                    // Test the cookie by attempting a simple query
-                    try {
-                        const testResult = await ApiClient.testAuthentication();
-                        if (testResult.success) {
-                            statusEl.innerHTML = `Ready for real-time! | <a href="#" onclick="Dashboard.testApiConnection(); return false;" style="color: #333;">Test API</a> | <a href="#" onclick="Dashboard.showApiSetupInstructions(); return false;" style="color: #333;">Setup</a>`;
-                        } else {
-                            statusEl.innerHTML = `Cookie invalid - need valid cookie | <a href="#" onclick="Dashboard.setCookieForRealtime(); return false;" style="color: #d32f2f;">Fix Cookie</a> | <a href="#" onclick="Dashboard.showApiSetupInstructions(); return false;" style="color: #333;">Help</a>`;
+                    // We have both proxy and cookie
+                    if (fastAPIWorking) {
+                        // FastAPI is working, so auth is good
+                        statusEl.innerHTML = `Ready for real-time! | <a href="#" onclick="Dashboard.testApiConnection(); return false;" style="color: #333;">Test API</a> | <a href="#" onclick="Dashboard.showApiSetupInstructions(); return false;" style="color: #333;">Setup</a>`;
+                    } else {
+                        // Test legacy auth
+                        statusEl.innerHTML = `Testing authentication... | <a href="#" onclick="Dashboard.setCookieForRealtime(); return false;" style="color: #333;">Update Cookie</a>`;
+                        
+                        try {
+                            const testResult = await ApiClient.testAuthentication();
+                            if (testResult.success) {
+                                statusEl.innerHTML = `Ready for real-time! | <a href="#" onclick="Dashboard.testApiConnection(); return false;" style="color: #333;">Test API</a> | <a href="#" onclick="Dashboard.showApiSetupInstructions(); return false;" style="color: #333;">Setup</a>`;
+                            } else {
+                                statusEl.innerHTML = `Cookie invalid - need valid cookie | <a href="#" onclick="Dashboard.setCookieForRealtime(); return false;" style="color: #d32f2f;">Fix Cookie</a> | <a href="#" onclick="Dashboard.showApiSetupInstructions(); return false;" style="color: #333;">Help</a>`;
+                            }
+                        } catch (error) {
+                            statusEl.innerHTML = `Cookie test failed | <a href="#" onclick="Dashboard.setCookieForRealtime(); return false;" style="color: #d32f2f;">Fix Cookie</a> | <a href="#" onclick="Dashboard.showApiSetupInstructions(); return false;" style="color: #333;">Help</a>`;
                         }
-                    } catch (error) {
-                        statusEl.innerHTML = `Cookie test failed | <a href="#" onclick="Dashboard.setCookieForRealtime(); return false;" style="color: #d32f2f;">Fix Cookie</a> | <a href="#" onclick="Dashboard.showApiSetupInstructions(); return false;" style="color: #333;">Help</a>`;
                     }
                 }
                 // Clear auth flag when successfully updating status
@@ -175,19 +192,24 @@ export const UIUpdater = (() => {
                 if (!hasCookie) {
                     statusEl.innerHTML = `Auto-refresh: 45 minutes | <a href="#" onclick="Dashboard.setCookieForRealtime(); return false;" style="color: #333;">Enable Real-time</a>`;
                 } else {
-                    // We have a cookie - but need to validate it actually works (same logic as localhost)
-                    statusEl.innerHTML = `Testing authentication... | <a href="#" onclick="Dashboard.setCookieForRealtime(); return false;" style="color: #333;">Update Cookie</a>`;
-                    
-                    // Test the cookie by attempting a simple query
-                    try {
-                        const testResult = await ApiClient.testAuthentication();
-                        if (testResult.success) {
-                            statusEl.innerHTML = `Real-time enabled | <a href="#" onclick="Dashboard.testApiConnection(); return false;" style="color: #333;">Test API</a> | <a href="#" onclick="Dashboard.setCookieForRealtime(); return false;" style="color: #333;">Update Cookie</a>`;
-                        } else {
-                            statusEl.innerHTML = `Cookie invalid - need valid cookie | <a href="#" onclick="Dashboard.setCookieForRealtime(); return false;" style="color: #d32f2f;">Fix Cookie</a>`;
+                    // We have a cookie
+                    if (fastAPIWorking) {
+                        // FastAPI is working, so auth is good
+                        statusEl.innerHTML = `Real-time enabled | <a href="#" onclick="Dashboard.testApiConnection(); return false;" style="color: #333;">Test API</a> | <a href="#" onclick="Dashboard.setCookieForRealtime(); return false;" style="color: #333;">Update Cookie</a>`;
+                    } else {
+                        // Test legacy auth
+                        statusEl.innerHTML = `Testing authentication... | <a href="#" onclick="Dashboard.setCookieForRealtime(); return false;" style="color: #333;">Update Cookie</a>`;
+                        
+                        try {
+                            const testResult = await ApiClient.testAuthentication();
+                            if (testResult.success) {
+                                statusEl.innerHTML = `Real-time enabled | <a href="#" onclick="Dashboard.testApiConnection(); return false;" style="color: #333;">Test API</a> | <a href="#" onclick="Dashboard.setCookieForRealtime(); return false;" style="color: #333;">Update Cookie</a>`;
+                            } else {
+                                statusEl.innerHTML = `Cookie invalid - need valid cookie | <a href="#" onclick="Dashboard.setCookieForRealtime(); return false;" style="color: #d32f2f;">Fix Cookie</a>`;
+                            }
+                        } catch (error) {
+                            statusEl.innerHTML = `Cookie test failed | <a href="#" onclick="Dashboard.setCookieForRealtime(); return false;" style="color: #d32f2f;">Fix Cookie</a>`;
                         }
-                    } catch (error) {
-                        statusEl.innerHTML = `Cookie test failed | <a href="#" onclick="Dashboard.setCookieForRealtime(); return false;" style="color: #d32f2f;">Fix Cookie</a>`;
                     }
                 }
                 // Clear auth flag when successfully updating status
@@ -202,6 +224,7 @@ export const UIUpdater = (() => {
     function showLoading(message = 'Loading...') {
         const refreshBtn = document.getElementById('refreshBtn');
         const status = document.getElementById('refreshStatus');
+        const loadingIndicator = document.getElementById('loadingIndicator');
 
         if (refreshBtn) {
             refreshBtn.disabled = true;
@@ -211,6 +234,15 @@ export const UIUpdater = (() => {
         if (status) {
             status.textContent = message;
         }
+        
+        // Show the visual loading indicator
+        if (loadingIndicator) {
+            loadingIndicator.style.display = 'flex';
+            const loadingText = loadingIndicator.querySelector('span');
+            if (loadingText) {
+                loadingText.textContent = message;
+            }
+        }
     }
 
     /**
@@ -219,6 +251,7 @@ export const UIUpdater = (() => {
     function hideLoading(message = 'Ready') {
         const refreshBtn = document.getElementById('refreshBtn');
         const status = document.getElementById('refreshStatus');
+        const loadingIndicator = document.getElementById('loadingIndicator');
 
         if (refreshBtn) {
             refreshBtn.disabled = false;
@@ -227,6 +260,11 @@ export const UIUpdater = (() => {
 
         if (status) {
             status.textContent = message;
+        }
+        
+        // Hide the visual loading indicator
+        if (loadingIndicator) {
+            loadingIndicator.style.display = 'none';
         }
     }
 

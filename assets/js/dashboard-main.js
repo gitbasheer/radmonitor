@@ -35,7 +35,7 @@ export const Dashboard = (() => {
 
         // Initialize unified API
         await unifiedAPI.initialize();
-        console.log(`📡 API Mode: ${unifiedAPI.getMode()}`);
+        // API mode will be shown in structured format later
 
         // Set up FastAPI WebSocket event listeners if in FastAPI mode
         if (unifiedAPI.getMode() === 'fastapi') {
@@ -54,10 +54,8 @@ export const Dashboard = (() => {
         // Start monitoring and auto-refresh
         startSystemMonitoring();
 
-        // Initialize performance widget
-        if (typeof UIUpdater !== 'undefined' && UIUpdater.updatePerformanceWidget) {
-            UIUpdater.updatePerformanceWidget();
-        }
+        // Performance widget is disabled by default to reduce visual clutter
+        // To view performance stats, use Dashboard.showPerformanceStats() in console
 
         // Log initialization complete
         if (typeof DataLayer !== 'undefined' && DataLayer.logAction) {
@@ -68,16 +66,12 @@ export const Dashboard = (() => {
             });
         }
 
-        // Show initial performance stats in console
-        console.log('%c🚀 Dashboard initialized with performance monitoring', 'color: #4CAF50; font-weight: bold;');
-        console.log('%cRun Dashboard.showPerformanceStats() for detailed metrics', 'color: #2196F3;');
+        // Initialization complete - minimal logging
 
         // CRITICAL: Perform initial data fetch after a brief delay to ensure everything is ready
         setTimeout(() => {
-            console.log('🚀 INITIALIZING: Starting initial data fetch...');
-            refresh().catch(error => {
-                console.log('⚠️ Initial data fetch failed (expected if no cookie):', error.message);
-                console.log('💡 TIP: Set your cookie to enable real-time data');
+            refresh().catch(() => {
+                // Silent fail for initial load - status will be shown in UI
             });
         }, 1000);
     }
@@ -88,7 +82,7 @@ export const Dashboard = (() => {
     function setupFastAPIListeners() {
         // Listen for config updates
         window.addEventListener('fastapi:config', (event) => {
-            console.log('📋 FastAPI config update:', event.detail);
+            // Silent config update
             // Update local config if needed
             if (event.detail) {
                 const config = {
@@ -106,7 +100,7 @@ export const Dashboard = (() => {
 
         // Listen for stats updates
         window.addEventListener('fastapi:stats', (event) => {
-            console.log('📊 FastAPI stats update:', event.detail);
+            // Silent stats update
             if (event.detail) {
                 UIUpdater.updateSummaryCards({
                     critical: event.detail.critical_count,
@@ -121,13 +115,13 @@ export const Dashboard = (() => {
 
         // Listen for data updates
         window.addEventListener('fastapi:data', (event) => {
-            console.log('📈 FastAPI data update:', event.detail);
+            // Silent data update
             if (event.detail && Array.isArray(event.detail)) {
                 UIUpdater.updateDataTable(event.detail);
             }
         });
 
-        console.log('✅ FastAPI WebSocket listeners configured');
+        // WebSocket listeners configured
     }
 
     /**
@@ -172,7 +166,7 @@ export const Dashboard = (() => {
             } else if (searchType === 'health') {
                 handleHealthDataUpdate(data);
             } else {
-                console.log(`📊 Search completed: ${searchType}`);
+                // Other search types handled silently
             }
         });
 
@@ -181,19 +175,28 @@ export const Dashboard = (() => {
             const { searchType, error } = event;
             console.error(`❌ ${searchType} search failed:`, error);
 
-            // Show user-friendly error message
-            UIUpdater.hideLoading(`${searchType} failed: ${error}`);
+            // Classify error and show meaningful message
+            const errorMessage = classifyError(error);
+            UIUpdater.hideLoading(errorMessage.short);
+
+            // Update refresh status with specific action
+            const refreshStatus = document.getElementById('refreshStatus');
+            if (refreshStatus) {
+                refreshStatus.innerHTML = errorMessage.detailed;
+                refreshStatus.style.color = '#d32f2f';
+            }
 
             // For critical failures, provide fallback
-            if (searchType === 'traffic' || searchType === 'main_traffic') {
-                showFallbackRefresh();
+            if (searchType === 'traffic' || searchType.includes('main_traffic')) {
+                setTimeout(() => showFallbackRefresh(), 2000);
             }
         });
 
         // Listen for state changes
         DataLayer.addEventListener('stateChange', (event) => {
             const { path, value } = event;
-            console.log(`🔄 State changed: ${path}`, value);
+            // State changes are logged through DataLayer's logAction mechanism
+            // Direct console.log removed to reduce verbosity
         });
     }
 
@@ -201,8 +204,8 @@ export const Dashboard = (() => {
      * Initialize UI components and validation
      */
     function initializeUIComponents() {
-        // Show console welcome message
-        ConsoleVisualizer.showWelcomeMessage();
+        // Console welcome message disabled to reduce console noise
+        // ConsoleVisualizer.showWelcomeMessage();
 
         // Add input validation for time range field
         const timeRangeInput = document.getElementById('currentTimeRange');
@@ -292,12 +295,12 @@ export const Dashboard = (() => {
             UIUpdater.updateTimestamp();
             UIUpdater.hideLoading('✅ Updated with real-time data!');
 
-            // Update performance widget with latest metrics
-            UIUpdater.updatePerformanceWidget();
+            // Performance widget update disabled - use Dashboard.showPerformanceStats() instead
 
-            // Show console visualization if enabled
+            // Console visualization is disabled by default to reduce console noise
+            // To enable visualization, set enableConsoleVisualization: true in config
             const config = ConfigManager.getCurrentConfig();
-            if (config.enableConsoleVisualization !== false && transformedData.length > 0) {
+            if (config.enableConsoleVisualization === true && transformedData.length > 0) {
                 try {
                     // Reconstruct the data format expected by ConsoleVisualizer
                     const mockESResponse = {
@@ -314,14 +317,14 @@ export const Dashboard = (() => {
                     };
                     ConsoleVisualizer.visualizeData(mockESResponse, config.currentTimeRange, config);
                 } catch (vizError) {
-                    console.warn('Console visualization failed:', vizError);
+                    // Console visualization error - silent fail
                 }
             }
 
-            console.log('✅ Dashboard updated successfully via DataLayer');
+            // Dashboard update logged through DataLayer mechanism
 
         } catch (error) {
-            console.error('Failed to update dashboard UI:', error);
+            // Dashboard UI update failed - error handling through UI
             UIUpdater.hideLoading('❌ Update failed - data processing error');
             
             // Show fallback refresh option
@@ -332,11 +335,10 @@ export const Dashboard = (() => {
     /**
      * Handle health data updates
      */
-    function handleHealthDataUpdate(healthData) {
-        console.log('🏥 Health data updated:', healthData);
+    function handleHealthDataUpdate() {
+        // Health check completed
         UIUpdater.updateApiStatus();
-        // Update performance widget after health check
-        UIUpdater.updatePerformanceWidget();
+        // Performance widget update disabled - use Dashboard.showPerformanceStats() instead
     }
 
     /**
@@ -345,78 +347,76 @@ export const Dashboard = (() => {
     async function refresh() {
         const refreshId = `refresh_${Date.now()}`;
 
-        console.log('🔄 REFRESH STARTED:', refreshId);
-        console.log('📋 STEP 1: Checking authentication...');
-
         // Check for cookie in priority order: localStorage -> environment -> prompt user
         let hasCookie = localStorage.getItem('elasticCookie');
         
-        // 🚀 NEW: Try environment cookie if no localStorage cookie
+        // Try environment cookie if no localStorage cookie
         if (!hasCookie && window.ELASTIC_COOKIE) {
-            console.log('🔄 STEP 1A: No localStorage cookie, trying environment cookie...');
-            console.log('🚀 ENVIRONMENT COOKIE FOUND: Auto-setting from server environment');
             localStorage.setItem('elasticCookie', window.ELASTIC_COOKIE);
             hasCookie = window.ELASTIC_COOKIE;
         }
         
         if (!hasCookie) {
-            console.log('❌ STEP 1 FAILED: No cookie found (localStorage or environment)');
-            console.log('🍪 SOLUTION: You need to set your authentication cookie manually');
-            console.log('📋 ACTION: Click "Set Cookie" to provide authentication');
             UIUpdater.hideLoading('🍪 Cookie required for data access');
             showAuthenticationRequired();
             return;
         }
 
-        if (window.ELASTIC_COOKIE && hasCookie === window.ELASTIC_COOKIE) {
-            console.log('✅ STEP 1 PASSED: Using environment cookie from server');
-        } else {
-            console.log('✅ STEP 1 PASSED: Using cookie from localStorage');
-        }
-        console.log('📋 STEP 2: Starting data fetch...');
-
-        // Log dashboard action
-        if (typeof DataLayer !== 'undefined' && DataLayer.logAction) {
-            DataLayer.logAction('DASHBOARD_REFRESH_START', {
-                refreshId,
-                timestamp: new Date().toISOString()
-            });
-        }
-
-        UIUpdater.showLoading('Fetching latest data...');
-
         try {
             // Get current configuration
             const config = ConfigManager.getCurrentConfig();
 
-            console.log('📋 STEP 3: Executing Elasticsearch query...');
+            // Log dashboard action with meaningful configuration details
+            if (typeof DataLayer !== 'undefined' && DataLayer.logAction) {
+                DataLayer.logAction('DASHBOARD_REFRESH_START', {
+                    refreshId,
+                    timeRange: config.currentTimeRange,
+                    baseline: `${config.baselineStart} to ${config.baselineEnd}`,
+                    thresholds: {
+                        high: config.highVolumeThreshold,
+                        medium: config.mediumVolumeThreshold
+                    },
+                    timestamp: new Date().toISOString()
+                });
+            }
+
+            UIUpdater.showLoading('Fetching latest data...');
+
             // Use DataLayer to fetch and parse data in one clean operation
+            const startTime = Date.now();
             const result = await DataLayer.fetchAndParse(`main_traffic_${refreshId}`, {
                 type: 'trafficAnalysis',
                 params: config
             });
+            const queryTime = Date.now() - startTime;
+            
+            // Progress tracking handled through DataLayer logging
+            // Event count and stats are calculated in handleTrafficDataUpdate
+            
+            // Log performance warning only if significantly slow
+            if (queryTime > 10000) {
+                console.warn(`⚠️ Slow query detected: ${(queryTime/1000).toFixed(1)}s`);
+            }
 
-            console.log('✅ STEP 3 PASSED: Query executed successfully');
-            console.log('📊 DATA RECEIVED:', result.transformed?.length || 0, 'events');
-
-            // Log completion
+            // Log completion with meaningful statistics
             if (typeof DataLayer !== 'undefined' && DataLayer.logAction) {
+                const stats = calculateRefreshStats(result.transformed || []);
                 DataLayer.logAction('DASHBOARD_REFRESH_COMPLETE', {
                     refreshId,
-                    queryId: result.queryId,
-                    dataPoints: result.transformed?.length || 0,
-                    method: result.raw?._source ? 'parsed' : 'direct'
+                    queryTime: `${(queryTime/1000).toFixed(1)}s`,
+                    events: stats.total,
+                    critical: stats.critical,
+                    warning: stats.warning,
+                    normal: stats.normal,
+                    increased: stats.increased,
+                    dataSize: result.raw ? `${Math.round(JSON.stringify(result.raw).length / 1024)}KB` : 'N/A'
                 });
             }
 
-            console.log('✅ REFRESH COMPLETE: UI will update automatically via event listeners');
             // UI update happens automatically via state listeners
             // (handleTrafficDataUpdate is called by DataLayer event system)
 
         } catch (error) {
-            console.log('❌ STEP 3 FAILED: Query execution error');
-            console.log('🔍 ERROR DETAILS:', error.message);
-
             // Log error
             if (typeof DataLayer !== 'undefined' && DataLayer.logAction) {
                 DataLayer.logAction('DASHBOARD_REFRESH_ERROR', {
@@ -428,13 +428,9 @@ export const Dashboard = (() => {
 
             // Check if it's an auth error
             if (error.message.includes('authentication') || error.message.includes('cookie')) {
-                console.log('🍪 AUTHENTICATION ISSUE: Cookie might be expired or invalid');
-                console.log('📋 SOLUTION: Try setting a new cookie or check if it\'s valid');
                 UIUpdater.hideLoading('🍪 Cookie required for data access');
                 showAuthenticationRequired();
             } else {
-                console.log('❌ REFRESH FAILED: Non-authentication error');
-                console.log('📋 POSSIBLE CAUSES: Network issue, server error, or invalid query');
                 UIUpdater.hideLoading('❌ Refresh failed - see console');
                 showFallbackRefresh();
             }
@@ -580,8 +576,6 @@ export const Dashboard = (() => {
                     }
                 }
             } catch (error) {
-                console.log('❌ COOKIE TEST FAILED:', error.message);
-                
                 // Remove the potentially problematic cookie
                 localStorage.removeItem('elasticCookie');
                 
@@ -611,10 +605,10 @@ export const Dashboard = (() => {
     function startAutoRefresh(interval = 300000) {
         stopAutoRefresh(); // Clear any existing timer
 
-        console.log(`⏰ Starting auto-refresh every ${interval/1000} seconds`);
+        // Auto-refresh enabled
 
         autoRefreshTimer = setInterval(async () => {
-            console.log('🔄 Auto-refresh triggered');
+            // Auto-refresh triggered
 
             // Check if we're not already loading
             const state = DataLayer.getQueryState();
@@ -627,7 +621,7 @@ export const Dashboard = (() => {
 
                 // Adapt refresh based on performance
                 if (metrics.averageQueryDuration > 10000) {
-                    console.log('⚠️ Skipping auto-refresh - queries taking too long (>10s average)');
+                    // Skipping auto-refresh - queries taking too long
                     DataLayer.logAction('AUTO_REFRESH_SKIPPED', {
                         reason: 'poor_performance',
                         avgDuration: metrics.averageQueryDuration
@@ -636,7 +630,7 @@ export const Dashboard = (() => {
                 }
 
                 if (metrics.failedQueries > 5 && metrics.cacheHitRate < 50) {
-                    console.log('⚠️ Skipping auto-refresh - too many failures and low cache rate');
+                    // Skipping auto-refresh - too many failures
                     DataLayer.logAction('AUTO_REFRESH_SKIPPED', {
                         reason: 'high_failure_rate',
                         failedQueries: metrics.failedQueries,
@@ -654,7 +648,7 @@ export const Dashboard = (() => {
 
                 await refresh();
             } else {
-                console.log('⏸️ Skipping auto-refresh - query already in progress');
+                // Skipping auto-refresh - query already in progress
                 DataLayer.logAction('AUTO_REFRESH_SKIPPED', {
                     reason: 'query_in_progress'
                 });
@@ -671,7 +665,7 @@ export const Dashboard = (() => {
         if (autoRefreshTimer) {
             clearInterval(autoRefreshTimer);
             autoRefreshTimer = null;
-            console.log('⏹️ Auto-refresh stopped');
+            // Auto-refresh stopped
         }
     }
 
@@ -727,6 +721,76 @@ Current Status:
     }
 
     /**
+     * Classify errors and provide meaningful UI messages
+     */
+    function classifyError(error) {
+        const errorStr = error.toString().toLowerCase();
+        
+        if (errorStr.includes('authentication') || errorStr.includes('cookie') || errorStr.includes('unauthorized')) {
+            return {
+                short: 'Authentication required',
+                detailed: 'Cookie expired or invalid | <a href="#" onclick="Dashboard.setCookieForRealtime(); return false;" style="color: #d32f2f;">Update Cookie</a> | <a href="#" onclick="Dashboard.showApiSetupInstructions(); return false;" style="color: #666;">Help</a>'
+            };
+        }
+        
+        if (errorStr.includes('cors') || errorStr.includes('proxy')) {
+            return {
+                short: 'CORS proxy needed',
+                detailed: 'CORS proxy required for localhost | <a href="#" onclick="Dashboard.showApiSetupInstructions(); return false;" style="color: #d32f2f;">Setup Instructions</a>'
+            };
+        }
+        
+        if (errorStr.includes('network') || errorStr.includes('fetch') || errorStr.includes('connection')) {
+            return {
+                short: 'Network connection failed',
+                detailed: 'Network error - check connection | <a href="#" onclick="location.reload(); return false;" style="color: #d32f2f;">Reload Page</a> | <a href="#" onclick="Dashboard.testApiConnection(); return false;" style="color: #666;">Test API</a>'
+            };
+        }
+        
+        if (errorStr.includes('timeout') || errorStr.includes('slow')) {
+            return {
+                short: 'Request timed out',
+                detailed: 'Server response too slow | <a href="#" onclick="Dashboard.refresh(); return false;" style="color: #d32f2f;">Try Again</a> | <a href="#" onclick="Dashboard.showApiSetupInstructions(); return false;" style="color: #666;">Help</a>'
+            };
+        }
+        
+        if (errorStr.includes('query') || errorStr.includes('elasticsearch')) {
+            return {
+                short: 'Query execution failed',
+                detailed: 'Data query failed | <a href="#" onclick="Dashboard.refresh(); return false;" style="color: #d32f2f;">Retry</a> | <a href="#" onclick="ConfigManager.loadConfig(); return false;" style="color: #666;">Check Config</a>'
+            };
+        }
+        
+        // Generic error
+        return {
+            short: 'Request failed',
+            detailed: `Error: ${error} | <a href="#" onclick="Dashboard.refresh(); return false;" style="color: #d32f2f;">Try Again</a> | <a href="#" onclick="Dashboard.showApiSetupInstructions(); return false;" style="color: #666;">Help</a>`
+        };
+    }
+
+    /**
+     * Calculate statistics from transformed data for logging
+     */
+    function calculateRefreshStats(transformedData) {
+        const stats = { total: 0, critical: 0, warning: 0, normal: 0, increased: 0 };
+        
+        if (!Array.isArray(transformedData)) {
+            return stats;
+        }
+        
+        transformedData.forEach(item => {
+            stats.total++;
+            const status = (item.status || 'NORMAL').toLowerCase();
+            if (status === 'critical') stats.critical++;
+            else if (status === 'warning') stats.warning++;
+            else if (status === 'increased') stats.increased++;
+            else stats.normal++;
+        });
+        
+        return stats;
+    }
+
+    /**
      * Get dashboard state for debugging
      */
     function getState() {
@@ -752,7 +816,7 @@ Current Status:
             statusUpdateTimer = null;
         }
         DataLayer.clearCache();
-        console.log('🛑 Dashboard shutdown complete');
+        // Dashboard shutdown complete
     }
 
     /**
@@ -877,7 +941,8 @@ Current Status:
         getState,
         shutdown,
         showPerformanceStats,
-        getHealthStatus
+        getHealthStatus,
+        calculateRefreshStats
     };
 })();
 

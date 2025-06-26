@@ -97,7 +97,7 @@ REQUIRED_FILES=(
     "config/queries/traffic_query.json"
     "src/data/fetch_kibana_data.sh"
     "src/data/process_data.py"
-    "assets/templates/index.html.template"
+    "index.html"
     "scripts/generate_dashboard_refactored.sh"
 )
 

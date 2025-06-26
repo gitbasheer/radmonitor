@@ -20,13 +20,13 @@ def setup_dev_environment():
     """Setup development environment with template"""
     print("📦 Setting up development environment...")
 
-    # Copy template to a dev version
-    template_path = Path("assets/templates/index.html.template")
+    # Copy index.html to a dev version
+    source_path = Path("index.html")
     dev_html_path = Path("dev_index.html")
 
-    if template_path.exists():
-        # Read template and replace placeholders with dev values
-        with open(template_path, 'r') as f:
+    if source_path.exists():
+        # Read source file and prepare for development
+        with open(source_path, 'r') as f:
             template_content = f.read()
 
         # Replace placeholders with development values
@@ -48,9 +48,9 @@ def setup_dev_environment():
         with open(dev_html_path, 'w') as f:
             f.write(dev_content)
 
-        print("✅ Development template created")
+        print("✅ Development version created")
     else:
-        print("❌ Template not found")
+        print("❌ index.html not found")
 
 class DevHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
     def do_GET(self):

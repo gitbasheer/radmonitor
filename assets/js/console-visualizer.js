@@ -11,32 +11,7 @@ export const ConsoleVisualizer = (() => {
      * Show welcome message in console
      */
     function showWelcomeMessage() {
-        console.clear();
-        console.log('%cRAD Monitor Console Dashboard', 'color: #00ff41; font-size: 16px; font-weight: bold;');
-        console.log('%c' + '='.repeat(50), 'color: #00ff41;');
-        console.log('%cConsole visualization enabled!', 'color: #ff6b35; font-size: 14px; font-weight: bold;');
-        console.log('%cYou\'ll see ASCII bar charts here every time data refreshes', 'color: #4ecdc4;');
-        console.log('');
-        console.log('%cFeatures:', 'color: #ffe66d; font-weight: bold;');
-        console.log('%c- Live ASCII bar charts for data fetches', 'color: #a8e6cf;');
-        console.log('%c- Time window info (now-6h, -3h-6h, etc.)', 'color: #a8e6cf;');
-        console.log('%c- Current vs expected traffic comparison', 'color: #a8e6cf;');
-        console.log('%c- Status indicators', 'color: #a8e6cf;');
-        console.log('%c- Performance metrics (query time, cache rate)', 'color: #a8e6cf;');
-        console.log('%c- CORS proxy health monitoring', 'color: #a8e6cf;');
-        console.log('');
-        console.log('%cPerformance Commands:', 'color: #ff6b35; font-weight: bold;');
-        console.log('%c- Dashboard.showPerformanceStats() - View detailed metrics', 'color: #4ecdc4;');
-        console.log('%c- DataLayer.getPerformanceMetrics() - Get raw metrics', 'color: #4ecdc4;');
-        console.log('%c- DataLayer.resetPerformanceMetrics() - Clear metrics', 'color: #4ecdc4;');
-        console.log('');
-        console.log('%cTry custom time ranges:', 'color: #ff6b35; font-weight: bold;');
-        console.log('%c- -3h-6h (3 hours ago to 6 hours ago)', 'color: #4ecdc4;');
-        console.log('%c- -1h-4h (1 hour ago to 4 hours ago)', 'color: #4ecdc4;');
-        console.log('%c- -2h-1d (2 hours ago to 1 day ago)', 'color: #4ecdc4;');
-        console.log('');
-        console.log('%cLive data coming up...', 'color: #00ff41; font-size: 14px; font-weight: bold;');
-        console.log('%c' + '='.repeat(50), 'color: #00ff41;');
+        // Minimal welcome - most info shown in structured format later
     }
 
     /**

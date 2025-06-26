@@ -236,7 +236,7 @@ class TestHTMLGenerator:
 
     def setup_method(self):
         """Set up test fixtures"""
-        self.generator = HTMLGenerator('templates/index.html.template')
+        self.generator = HTMLGenerator('index.html')
 
     def test_init(self):
         """Test HTMLGenerator initialization"""
@@ -387,7 +387,7 @@ class TestProcessDataIntegration:
                 sys.executable,
                 'src/data/process_data.py',
                 '--response', response_file,
-                '--template', template_file,
+                '--output-template', template_file,
                 '--output', output_file
             ], capture_output=True, text=True, env={
                 **os.environ,

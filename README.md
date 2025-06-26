@@ -12,55 +12,111 @@ This dashboard monitors impression and click traffic for RAD cards, comparing cu
 - **Detailed metrics** including score, percentage change, and impact
 - **GitHub Pages hosting** with automatic updates every 45 minutes
 
-## 🎉 Recent Achievements (Project 77% Complete)
+## 🎉 Recent Achievements (Project 85% Complete)
 
 ### Latest Updates:
 
-1. **Deployment Pipeline Fixed** ✅
+1. **Advanced Configuration Editor** ✅ (NEW)
+   - Live Elasticsearch query preview with real-time updates
+   - Editable query parameters (Event ID Pattern, Aggregation Size)
+   - One-click query copy with visual feedback
+   - Simplified UI with fixed values for Host Filter and Event ID Field
+   - Integrated with ConfigService for persistent settings
+
+2. **Loading State Management** ✅ (NEW)
+   - Fixed persistent "Refreshing dashboard..." message issue
+   - Proper coordination between loading indicators and status messages
+   - Visual loading spinner synced with data fetching
+   - Auto-clear status messages after operations complete
+   - Streamlined loading flow across all UI components
+
+3. **Dark Theme Support** ✅ (NEW)
+   - Full dark mode implementation for comfortable viewing
+   - Theme toggle in Configuration Settings
+   - Persistent theme preference across sessions
+   - All UI elements properly themed
+   - Respects system dark mode preferences
+
+4. **Configuration Architecture Improved** ✅
+   - Consolidated ConfigManager and ConfigService into single system
+   - ConfigService is now the single source of truth
+   - ConfigManager remains as thin UI wrapper for backward compatibility
+   - Added centralized API endpoints configuration in `/config/api-endpoints.json`
+   - All hardcoded URLs now easily configurable
+
+5. **Summary Cards Fixed** ✅
+   - Fixed connection between data and UI card counts
+   - Updated element selectors to use correct IDs
+   - Improved descriptions for non-technical users:
+     - CRITICAL: "Traffic dropped >80%"
+     - WARNING: "Traffic dropped 50-80%"
+     - NORMAL: "Traffic as expected"
+     - INCREASED: "Traffic higher than usual"
+
+6. **Console Logging Optimized** ✅
+   - Implemented verbosity levels (quiet/normal/verbose)
+   - Fixed state logging demo auto-running issue
+   - Consolidated performance metrics display
+   - Added ConsoleControl commands for easy debugging
+   - Clean, structured startup messages
+
+7. **UI Improvements** ✅
+   - Implemented fixed sidebar layout (280px wide)
+   - Consolidated redundant UI elements
+   - Enhanced connection status indicator
+   - Improved configuration panel organization
+   - Added missing CSS for loading indicators and filters
+
+8. **CORS Error Resolution** ✅
+   - Auto-skip backend on localhost development
+   - Changed error logging to debug level
+   - Prevents console pollution with expected errors
+
+9. **Deployment Pipeline Fixed** ✅
    - Direct Elasticsearch API support for GitHub Actions
    - No proxy servers needed for production deployment
    - Fixed ES_COOKIE vs ELASTIC_COOKIE configuration issue
    - Python processing bug resolved
 
-2. **Configuration Centralized** ✅
-   - Single source of truth in `config/settings.json`
-   - Pydantic validation for type safety
-   - Config editor UI in dashboard
-   - Full API for configuration management
-
-3. **FastAPI Integration Complete** ✅
-   - WebSocket real-time updates
-   - Production-ready with rate limiting and circuit breakers
-   - Automatic mode detection
-   - Zero breaking changes
-
-4. **JavaScript Test Suite Improved** ✅
-   - Test failures reduced from 31 to 22 (29% improvement)
-   - New test helper functions for reliability
-   - Better test infrastructure and mocking
-
-5. **Documentation Enhanced** ✅
-   - JavaScript module architecture documented
-   - Comprehensive test failure analysis
-   - Deployment guides updated
-
 See `progress.md` for detailed completion status of all features.
 
-## 🆕 New: Unified Development Server
+## 🆕 Latest Updates: Enhanced User Experience
 
-**One command to rule them all!** The RAD Monitor now features an intelligent development server that automatically chooses the best mode for your environment:
+### **📖 Interactive Documentation** (NEW!)
+The dashboard now includes a **"How It Works"** button in the header that explains all monitoring math in plain English:
+- **📊 Baseline comparison calculations** with real examples
+- **🚨 Status classification rules** (Critical/Warning/Normal/Increased)
+- **⏰ Time range effects** on sensitivity and accuracy
+- **🎛️ Configuration tips** for different use cases
+- **🔍 Special features** like Inspection Mode and volume filtering
+
+Click the "📖 How It Works" button to see comprehensive explanations of every calculation and monitoring decision the system makes!
+
+### **🔍 Enhanced Search & Filter System** (NEW!)
+- **Real-time search** on event IDs with instant filtering
+- **Status-based filters** (All/Critical/Warning/Normal/Increased) 
+- **Combined filtering** - search and status filters work together
+- **Persistent state** - filters remain active when data refreshes
+- **Results counter** showing "X of Y events matching 'search' (status only)"
+
+### **🚀 Meaningful Console Logs** (NEW!)
+Replaced generic logging with detailed, actionable information:
+- **Kibana Query details** showing exact time ranges, filters, and aggregations
+- **Response summaries** with hit counts, data sizes, and processing times
+- **Performance warnings** properly classified (not errors)
+- **Configuration tracking** showing what settings are used for each refresh
+
+### **⚡ Unified Development Server**
+**One command to rule them all!** The RAD Monitor features an intelligent development server that automatically chooses the best mode:
 
 ```bash
 npm run dev    # Just works - auto-detects FastAPI or falls back to simple mode
 ```
 
-No more confusion about which development command to use. The unified server provides:
 - **🧠 Smart detection** of your environment capabilities
 - **🚀 Automatic setup** of FastAPI features when available
 - **⚡ Fast fallback** to simple mode when needed
 - **🛡️ Zero failures** - always gives you a working development server
-
-[→ See Unified Development Server section for details](#unified-development-server)
 
 ## Key Features
 
@@ -69,7 +125,6 @@ No more confusion about which development command to use. The unified server pro
 - **CORS proxy support** for local development
 - **Automatic refresh** with configurable intervals
 - **Cookie-based authentication** for secure access
-- **🎯 Console Dashboard** - ASCII bar charts in browser console for every data fetch!
 - **🎯 Console Dashboard** - ASCII bar charts in browser console for every data fetch!
 
 ### Performance Monitoring & Health Tracking
@@ -87,15 +142,25 @@ No more confusion about which development command to use. The unified server pro
 - **Customizable thresholds** for alerts
 - **Historical baseline comparison** (8-day average)
 
-### Dashboard Controls
-The dashboard features a **permanently visible control panel** on the left side providing instant access to:
-- **Critical/Warning thresholds**: Customize alert sensitivity
-- **Minimum volume filter**: Hide low-traffic cards
-- **Time range**: Select from 1 hour to 48 hours of data
-- **Auto-refresh**: Toggle and configure refresh interval
-- **Apply/Reset**: Instantly update dashboard with new settings
+### Dashboard Layout & Controls
+The dashboard features a **modern sidebar layout** with better organization:
 
-> **Design Note**: The control panel is always visible by design - users prefer having immediate access to all controls without needing to toggle a panel.
+**Fixed Sidebar Control Panel** (280px wide):
+- **Connection Status**: Real-time API connection status with visual indicator
+- **Time Range Configuration**: Preset buttons (6H, 12H, 24H, 3D) and custom ranges
+- **Baseline Period**: Configurable date range for comparison data
+- **Volume Thresholds**: High/Medium volume event thresholds
+- **Quick Actions**: Apply changes, refresh data, export config
+- **Advanced Options**: Config editor, API setup, and help
+
+**Main Content Area**:
+- **Header**: Title with "📖 How It Works" button and timestamp
+- **Summary Cards**: CRITICAL/WARNING/NORMAL/INCREASED counts with clear descriptions
+- **Search & Filters**: Real-time search input and status filter buttons
+- **Data Table**: Enhanced headers ("Traffic Event Identifier", "Health Status", "Change %", etc.)
+- **Results Info**: Shows filtered counts and active search terms
+
+> **Design Note**: The sidebar layout consolidates all controls while keeping the main content clean and focused on data visualization.
 
 ### State Management & Redux-Style Logging
 The dashboard uses a centralized DataLayer state management system with comprehensive Redux-style action logging:
@@ -108,16 +173,34 @@ action     {type: 'DASHBOARD_REFRESH_START', refreshId: 'refresh_1234', timestam
 next state {activeQueries: {size: 1}, responseCache: {…}, parsedCache: {…}}
 ```
 
-#### Control State Logging:
-```javascript
-// Enable/disable logging
-DataLayer.configureLogging({ enabled: true, collapsed: false });
+#### Console Logging Verbosity Control
+The dashboard provides fine-grained control over console output with three verbosity levels:
 
-// Custom action logging
-DataLayer.logAction('MY_ACTION', { data: 'custom' });
+```javascript
+// Quiet mode (default) - Minimal logging for important actions only
+ConsoleControl.quiet();
+
+// Normal mode - Balanced logging with key state changes
+ConsoleControl.normal();
+
+// Verbose mode - Full Redux-style logging for debugging
+ConsoleControl.enableVerbose();
+
+// Disable all state logging
+ConsoleControl.disableLogging();
+
+// Show available commands
+ConsoleControl.showHelp();
 ```
 
-This provides complete visibility into data flow and makes debugging much easier.
+**Key Features:**
+- **Quiet Mode**: Only shows dashboard init, data fetch complete, and errors
+- **Normal Mode**: Includes authentication, search, and configuration changes
+- **Verbose Mode**: Full state logging with all actions and state changes
+- **Auto-collapsed**: Logs are collapsed by default to reduce visual noise
+- **Clean startup**: Structured initialization messages with status indicators
+
+This provides complete visibility into data flow while keeping the console clean during normal operation.
 
 ### Automated Deployment
 - **GitHub Actions** updates dashboard every 45 minutes
@@ -385,18 +468,76 @@ Use the Control Panel (gear icon) for real-time configuration:
 - **Time Range**: Data window from 1h to 48h (12h default) or custom time ranges
 - **Auto Refresh**: Toggle and set interval (60s default)
 
+### Advanced Configuration Editor 🆕
+
+The dashboard now includes a comprehensive Advanced Configuration Editor accessible via the ⚙️ Configuration Settings button:
+
+#### Key Features:
+1. **Live Query Preview**: See the exact Elasticsearch query that will be executed based on your configuration
+2. **Real-time Updates**: Query preview updates instantly as you modify settings
+3. **Query Customization**:
+   - **Event ID Pattern**: Customize the wildcard pattern for event filtering (default: `pandc.vnext.recommendations.feed.feed*`)
+   - **Aggregation Size**: Control the maximum number of events to retrieve (default: 500)
+4. **Copy Query**: One-click copy of the generated query for testing in Kibana
+5. **Visual Feedback**: Copy button shows confirmation when query is copied
+
+The Host Filter and Event ID Field are fixed values that cannot be modified:
+- Host Filter: Always `dashboard.godaddy.com`
+- Event ID Field: Always `detail.event.data.traffic.eid.keyword`
+
+### Dark Theme Support 🌙
+
+The dashboard now includes a dark theme option for comfortable viewing in low-light environments:
+
+1. **Toggle Theme**: Click the theme selector in the Configuration Settings
+2. **Persistent Preference**: Theme choice is saved and remembered across sessions
+3. **System Integration**: Respects browser/OS dark mode preferences
+4. **Optimized Colors**: All UI elements, charts, and visualizations adapt to the selected theme
+
 ### Centralized Configuration Management 🆕
 
-The dashboard now features centralized configuration with:
+The dashboard now features centralized configuration with multiple layers:
 
-**Configuration File**: `config/settings.json`
-- Single source of truth for all settings
+**API Endpoints Configuration**: `config/api-endpoints.json`
+```json
+{
+  "kibana": {
+    "url": "https://usieventho-prod-usw2.kb.us-west-2.aws.found.io:9243"
+  },
+  "corsProxy": {
+    "url": "http://localhost:8889",
+    "path": "/kibana-proxy"
+  },
+  "fastapi": {
+    "url": "http://localhost:8000"
+  },
+  "searchDefaults": {
+    "minEventDate": "2025-05-19T04:00:00.000Z",
+    "defaultTimeRange": "now-12h",
+    "queryEventPattern": "pandc.vnext.recommendations.feed.feed*",
+    "queryAggSize": 500
+  }
+}
+```
+
+**Query Configuration**: The dashboard now supports customizable query parameters that affect how data is fetched:
+- **Event ID Pattern**: Wildcard pattern for filtering events (e.g., `pandc.vnext.*`)
+- **Aggregation Size**: Maximum number of events to retrieve (100-10000)
+
+These values are integrated throughout the system:
+- Saved persistently in ConfigService
+- Used by api-interface.js and data-layer.js when building queries
+- Visible and editable in the Advanced Configuration Editor
+- Applied in real-time when refreshing the dashboard
+
+**Settings Configuration**: `config/settings.json`
+- Single source of truth for all runtime settings
 - Type-safe with Pydantic validation
 - JSON format for easy version control
 
-**Config Service API**:
+**Unified Config Service API**:
 ```javascript
-// Get current configuration
+// ConfigService is now the primary configuration system
 const config = ConfigService.getConfig();
 
 // Update configuration
@@ -405,16 +546,21 @@ await ConfigService.updateConfig({
     highVolumeThreshold: 2000
 });
 
+// UI helpers (migrated from ConfigManager)
+ConfigService.setPresetTimeRange('12h');
+ConfigService.loadConfigurationIntoDOM();
+
 // Subscribe to changes
 ConfigService.subscribe(({event, newConfig}) => {
     console.log('Config updated:', newConfig);
 });
 ```
 
-**Config Editor UI**:
-- Access via "Advanced Configuration Editor" in the control panel
-- Load, edit, save, and reset configuration
-- Organized sections for processing, dashboard, and Elasticsearch settings
+**Architecture**:
+- **ConfigService**: Primary configuration logic and storage
+- **ConfigManager**: Thin UI wrapper for backward compatibility
+- **config-loader.js**: Loads API endpoints at startup
+- Clear separation of concerns with single source of truth
 
 **Initialize Configuration**:
 ```bash
@@ -575,6 +721,14 @@ schedule:
 
 ## How It Works
 
+### Interactive Documentation
+Click the **"📖 How It Works"** button in the dashboard header for a comprehensive, plain-English explanation of all monitoring mathematics including:
+- Baseline comparison calculations with real examples
+- Status classification rules and thresholds
+- Time range effects on monitoring sensitivity  
+- Configuration recommendations for different use cases
+- Special features like Inspection Mode and volume filtering
+
 ### Score Calculation
 
 The dashboard uses a sophisticated scoring system:
@@ -643,6 +797,8 @@ rad_monitor/
 │   ├── generate_dashboard_refactored.sh  # Wrapper for Python version
 │   └── lib/                     # Utility functions
 ├── config/                      # Configuration files
+│   ├── api-endpoints.json       # Centralized API URLs and search defaults
+│   ├── settings.json           # Runtime configuration settings
 │   ├── dashboard.config.sh      # Environment variables
 │   └── queries/                 # Elasticsearch queries
 ├── src/                         # Source code
@@ -651,12 +807,27 @@ rad_monitor/
 │       └── processors/          # Processing modules
 ├── assets/                      # Frontend assets
 │   ├── css/                     # Stylesheets
+│   │   ├── dashboard.css        # Main dashboard styles with sidebar layout
+│   │   └── dashboard-consolidated.css # Consolidated UI styles (unused)
 │   ├── js/                      # JavaScript modules
-│   │   ├── api-client.js        # API client with DataLayer integration
+│   │   ├── config-loader.js     # Loads API endpoints at startup
+│   │   ├── config-service.js    # Primary configuration service
+│   │   ├── config-manager.js    # UI wrapper for backward compatibility
+│   │   ├── config-editor.js     # Advanced configuration editor with query preview
+│   │   ├── api-client.js        # API client with centralized endpoints
+│   │   ├── api-interface.js     # Unified API interface for FastAPI/Legacy
+│   │   ├── api-client-fastapi.js # FastAPI-specific client implementation
 │   │   ├── data-layer.js        # State management system
+│   │   ├── data-processor.js    # Data processing and calculations
+│   │   ├── dashboard-main.js    # Main dashboard initialization
+│   │   ├── console-visualizer.js # ASCII visualization in console
+│   │   ├── theme-manager.js     # Dark/light theme handling
 │   │   ├── state-logging-demo.js # Redux-style logging demo
-│   │   └── ...                  # Other modules
-│   └── templates/               # HTML templates
+│   │   ├── ui-consolidation.js  # UI state management module
+│   │   ├── ui-updater.js        # UI update coordination and loading states
+│   │   ├── search-filter.js     # Search and filter functionality
+│   │   └── main.js              # Application entry point
+│   └── templates/               # HTML templates (deprecated)
 ├── tests/                       # Comprehensive test suite
 │   ├── *.test.js               # JavaScript tests (Vitest)
 │   ├── test_*.py               # Python tests (pytest)
@@ -679,6 +850,11 @@ rad_monitor/
 │   ├── Feature Documentation
 │   └── Development Guides
 ├── requirements-enhanced.txt       # Dependencies for enhanced proxy
+├── index.html                     # Main dashboard HTML
+├── start-correct-server.sh        # Auto-detect and start appropriate server
+├── cleanup-old-templates.sh       # Cleanup deprecated template files
+├── migrate_to_refactored.sh       # Migration helper script
+├── progress.md                    # Project progress tracking
 └── README.md                      # This file
 ```
 
