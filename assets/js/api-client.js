@@ -18,7 +18,7 @@ export const ApiClient = (() => {
         // Fallback to hardcoded values if config not loaded
         return {
             kibana: { url: 'https://usieventho-prod-usw2.kb.us-west-2.aws.found.io:9243' },
-            corsProxy: { url: 'http://localhost:8000', path: '/api/fetch-kibana-data' }
+            corsProxy: { url: 'http://localhost:8000', path: '/api/v1/kibana/proxy' }
         };
     };
 

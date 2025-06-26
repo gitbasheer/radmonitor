@@ -13,7 +13,7 @@ const API_ENDPOINTS_CONFIG = {
     },
     corsProxy: { 
                     url: 'http://localhost:8000',
-            path: '/api/fetch-kibana-data',
+            path: '/api/v1/kibana/proxy',
         description: 'Local CORS proxy for development'
     },
     fastapi: { 

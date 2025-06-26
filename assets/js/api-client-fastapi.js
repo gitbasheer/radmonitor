@@ -295,7 +295,7 @@ export const FastAPIClient = (() => {
 
                 const startTime = Date.now();
                 
-                const response = await fetch(`${API_BASE_URL}/api/fetch-kibana-data`, {
+                const response = await fetch(`${API_BASE_URL}/api/v1/kibana/proxy`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',

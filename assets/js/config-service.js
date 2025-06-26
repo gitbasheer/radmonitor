@@ -35,8 +35,8 @@ export const ConfigService = (() => {
 
     // Backend endpoints - updated for unified server
     const ENDPOINTS = {
-        get: '/api/v1/config/settings',
-        update: '/api/v1/config/settings',  // Using the same endpoint for GET/POST
+        get: '/api/v1/config/api/config/settings',
+        update: '/api/v1/config/api/config/settings',  // Using the same endpoint for GET/POST
         validate: '/api/v1/config/validate',
         export: '/api/v1/config/export',
         environment: '/api/v1/config/environment'
