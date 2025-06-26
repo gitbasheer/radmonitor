@@ -3,9 +3,17 @@
  * This provides immediate functionality while proxy issues are resolved
  */
 
-// Override immediately when script loads
+// Override immediately when script loads - ONLY FOR PRODUCTION
 (function() {
-    console.log('🔧 Initializing CORS Direct Override...');
+    // Only apply override in production (GitHub Pages)
+    const isProduction = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
+    
+    if (!isProduction) {
+        console.log('🏠 Running on localhost - skipping CORS override (using local server)');
+        return;
+    }
+    
+    console.log('🔧 Initializing CORS Direct Override for production...');
     
     // Function to apply the override
     function applyCorsOverride() {
