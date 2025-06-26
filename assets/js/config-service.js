@@ -29,7 +29,7 @@ export const ConfigService = (() => {
             return window.FASTAPI_URL || 'http://localhost:8000';
         }
         // Fallback to CORS proxy
-        return 'http://localhost:8889';
+        return 'http://localhost:8000';
     }
 
     /**
@@ -139,7 +139,9 @@ export const ConfigService = (() => {
                 elasticsearchUrl: response.elasticsearch.url,
                 corsProxyPort: response.cors_proxy.port,
                 debug: response.debug,
-                appName: response.app_name
+                appName: response.app_name,
+                // Include rad_types from backend
+                rad_types: response.rad_types || getDefaultConfig().rad_types
             };
         } catch (error) {
             // Error already logged in apiRequest at debug level
@@ -185,12 +187,35 @@ export const ConfigService = (() => {
             elasticCookie: null,
             kibanaUrl: 'https://usieventho-prod-usw2.kb.us-west-2.aws.found.io:9243',
             elasticsearchUrl: 'https://usieventho-prod-usw2.es.us-west-2.aws.found.io:9243',
-            corsProxyPort: 8889,
+            corsProxyPort: 8000,
             debug: false,
             appName: 'RAD Monitor',
             minEventDate: '2025-05-19T04:00:00.000Z',
             queryEventPattern: 'pandc.vnext.recommendations.feed.feed*',
-            queryAggSize: 500
+            queryAggSize: 500,
+            rad_types: {
+                venture_feed: {
+                    pattern: 'pandc.vnext.recommendations.feed.feed*',
+                    display_name: 'Venture Feed',
+                    enabled: true,
+                    color: '#4CAF50',
+                    description: 'Venture recommendations feed'
+                },
+                cart_recommendations: {
+                    pattern: 'pandc.vnext.recommendations.cart*',
+                    display_name: 'Cart Recommendations',
+                    enabled: false,
+                    color: '#2196F3',
+                    description: 'Shopping cart recommendations'
+                },
+                product_recommendations: {
+                    pattern: 'pandc.vnext.recommendations.product*',
+                    display_name: 'Product Recommendations',
+                    enabled: false,
+                    color: '#FF9800',
+                    description: 'Product page recommendations'
+                }
+            }
         };
     }
 

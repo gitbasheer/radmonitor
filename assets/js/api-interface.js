@@ -1,224 +1,26 @@
 /**
  * Unified API Interface
  * Provides a consistent API regardless of backend implementation
+ * Now uses the new UnifiedAPIClient for all communication
  */
 
-import { FastAPIIntegration } from './fastapi-integration.js';
-import { ApiClient } from './api-client.js';
-import { FastAPIClient } from './api-client-fastapi.js';
+import apiClient from './api-client-unified.js';
 import { ConfigService } from './config-service.js';
 
 /**
- * Adapter for Legacy API implementation
- */
-class LegacyAdapter {
-    async fetchData(config) {
-        try {
-            // Use existing ApiClient
-            return await ApiClient.fetchData(config);
-        } catch (error) {
-            console.error('Legacy API fetch failed:', error);
-            throw new Error(`Failed to fetch data: ${error.message}`);
-        }
-    }
-
-    async updateConfiguration(config) {
-        try {
-            // Validate config before storing
-            if (!config || typeof config !== 'object') {
-                throw new Error('Invalid configuration object');
-            }
-            // Legacy doesn't have a config endpoint, store locally
-            localStorage.setItem('dashboard_config', JSON.stringify(config));
-            return { success: true, config };
-        } catch (error) {
-            console.error('Legacy config update failed:', error);
-            throw error;
-        }
-    }
-
-    async getAuthenticationDetails() {
-        try {
-            return await ApiClient.getAuthenticationDetails();
-        } catch (error) {
-            console.error('Legacy auth check failed:', error);
-            return { valid: false, method: 'legacy', error: error.message };
-        }
-    }
-
-    async checkHealth() {
-        try {
-            // Check CORS proxy health
-            return await ApiClient.checkHealth();
-        } catch (error) {
-            return { healthy: false, error: error.message };
-        }
-    }
-
-    async executeQuery(query) {
-        // Use legacy ApiClient for raw queries
-        return await ApiClient.executeQuery(query);
-    }
-}
-
-/**
- * Adapter for FastAPI implementation
- */
-class FastAPIAdapter {
-    constructor(client) {
-        this.client = client;
-    }
-
-    async fetchData(config) {
-        try {
-            // Validate config
-            if (!config || !config.baselineStart || !config.baselineEnd) {
-                throw new Error('Missing required configuration parameters');
-            }
-
-            // Build the query directly
-            const query = this.buildQuery({
-                baseline_start: config.baselineStart,
-                baseline_end: config.baselineEnd,
-                time_range: config.currentTimeRange || 'now-12h'
-            });
-
-            // Get elastic cookie
-            const elasticCookie = this.client.getElasticCookie();
-            if (!elasticCookie) {
-                throw new Error('No elastic cookie found. Please authenticate first.');
-            }
-
-            // Fetch data using the Kibana endpoint
-            const response = await this.client.fetchKibanaData(query, false, elasticCookie);
-
-            // Transform response to expected format
-            return {
-                success: true,
-                data: response,
-                method: 'fastapi'
-            };
-        } catch (error) {
-            console.error('FastAPI fetch failed:', error);
-            throw new Error(`Failed to fetch data: ${error.message}`);
-        }
-    }
-
-    async updateConfiguration(config) {
-        return await this.client.updateConfig(config);
-    }
-
-    async getAuthenticationDetails() {
-        // FastAPI handles auth differently
-        const cookie = this.client.getElasticCookie();
-        return {
-            valid: !!cookie,
-            method: 'fastapi',
-            cookie: cookie
-        };
-    }
-
-    async checkHealth() {
-        return await this.client.checkHealth();
-    }
-
-    buildQuery(config) {
-        // Use the same query structure as legacy ApiClient for compatibility
-        const currentTimeFilter = config.time_range.startsWith('now') 
-            ? { gte: config.time_range }
-            : { gte: config.time_range, lte: 'now' };
-            
-        // Get query configuration
-        const queryConfig = ConfigService.getConfig();
-        const eventField = "detail.event.data.traffic.eid.keyword"; // Fixed value
-        const aggSize = queryConfig.queryAggSize || 500;
-
-        return {
-            "aggs": {
-                "events": {
-                    "terms": {
-                        "field": eventField,
-                        "order": {"_key": "asc"},
-                        "size": aggSize
-                    },
-                    "aggs": {
-                        "baseline": {
-                            "filter": {
-                                "range": {
-                                    "@timestamp": {
-                                        "gte": config.baseline_start,
-                                        "lt": config.baseline_end
-                                    }
-                                }
-                            }
-                        },
-                        "current": {
-                            "filter": {
-                                "range": {
-                                    "@timestamp": currentTimeFilter
-                                }
-                            }
-                        }
-                    }
-                }
-            },
-            "size": 0,
-            "query": {
-                "bool": {
-                    "filter": [
-                        {
-                            "wildcard": {
-                                [eventField]: {
-                                    "value": queryConfig.queryEventPattern || "pandc.vnext.recommendations.feed.feed*"
-                                }
-                            }
-                        },
-                        {
-                            "match_phrase": {
-                                "detail.global.page.host": "dashboard.godaddy.com" // Fixed value
-                            }
-                        },
-                        {
-                            "range": {
-                                "@timestamp": {
-                                    "gte": ConfigService.get('minEventDate') || window.API_ENDPOINTS?.searchDefaults?.minEventDate || "2025-05-19T04:00:00.000Z",
-                                    "lte": "now"
-                                }
-                            }
-                        }
-                    ]
-                }
-            }
-        };
-    }
-
-    async executeQuery(query) {
-        // For raw queries, use the Kibana endpoint
-        const elasticCookie = this.client.getElasticCookie();
-        if (!elasticCookie) {
-            throw new Error('No elastic cookie available');
-        }
-
-        const result = await this.client.fetchKibanaData(query, false, elasticCookie);
-        return { success: true, data: result, method: 'fastapi' };
-    }
-}
-
-/**
- * Unified API class that selects the appropriate implementation
+ * Unified API class that uses the new unified client
  */
 export class UnifiedAPI {
     constructor() {
-        this.implementation = null;
+        this.client = apiClient;
         this.initialized = false;
-        this._initPromise = null; // Prevent multiple initialization
+        this._initPromise = null;
     }
 
     /**
-     * Initialize the API with the appropriate implementation
+     * Initialize the API
      */
     async initialize() {
-        // Return existing promise if initialization is in progress
         if (this._initPromise) return this._initPromise;
         if (this.initialized) return Promise.resolve();
 
@@ -228,25 +30,14 @@ export class UnifiedAPI {
 
     async _doInitialize() {
         try {
-            // Check if FastAPI is available and enabled
-            const fastAPIEnabled = await FastAPIIntegration.initialize();
-
-            if (fastAPIEnabled) {
-                // Use FastAPI implementation
-                this.implementation = new FastAPIAdapter(FastAPIIntegration.client);
-                console.log('🚀 Using FastAPI implementation');
-            } else {
-                // Use legacy implementation
-                this.implementation = new LegacyAdapter();
-                console.log('📦 Using legacy implementation');
-            }
-
+            const success = await this.client.initialize();
             this.initialized = true;
+            console.log(`🚀 API Interface initialized (${this.client.isLocalDev ? 'local' : 'production'} mode)`);
+            return success;
         } catch (error) {
-            console.error('Failed to initialize UnifiedAPI:', error);
-            // Fall back to legacy on initialization error
-            this.implementation = new LegacyAdapter();
-            this.initialized = true;
+            console.error('Failed to initialize API:', error);
+            this.initialized = true; // Mark as initialized even on error
+            return false;
         }
     }
 
@@ -255,7 +46,7 @@ export class UnifiedAPI {
      */
     async fetchTrafficData(config) {
         if (!this.initialized) await this.initialize();
-        return this.implementation.fetchData(config);
+        return this.client.fetchTrafficData(config);
     }
 
     /**
@@ -263,7 +54,7 @@ export class UnifiedAPI {
      */
     async updateConfiguration(config) {
         if (!this.initialized) await this.initialize();
-        return this.implementation.updateConfiguration(config);
+        return this.client.updateDashboardConfig(config);
     }
 
     /**
@@ -271,7 +62,7 @@ export class UnifiedAPI {
      */
     async getAuthenticationDetails() {
         if (!this.initialized) await this.initialize();
-        return this.implementation.getAuthenticationDetails();
+        return this.client.getAuthenticationDetails();
     }
 
     /**
@@ -279,7 +70,7 @@ export class UnifiedAPI {
      */
     async checkHealth() {
         if (!this.initialized) await this.initialize();
-        return this.implementation.checkHealth();
+        return this.client.checkHealth();
     }
 
     /**
@@ -287,54 +78,225 @@ export class UnifiedAPI {
      */
     async executeQuery(query) {
         if (!this.initialized) await this.initialize();
-        return this.implementation.executeQuery(query);
+        return this.client.executeQuery(query);
+    }
+
+    /**
+     * Traffic analysis with typed request/response
+     */
+    async trafficAnalysis(request, options = {}) {
+        if (!this.initialized) await this.initialize();
+        
+        try {
+            // Build config from typed request
+            const config = {
+                baselineStart: request.baseline_start,
+                baselineEnd: request.baseline_end,
+                currentTimeRange: request.current_time_range || request.comparison_start && request.comparison_end 
+                    ? `${request.comparison_start}/${request.comparison_end}` 
+                    : 'now-12h'
+            };
+
+            // Handle flexible time comparison
+            if (request.comparison_start && request.comparison_end) {
+                const baselineDuration = new Date(request.baseline_end) - new Date(request.baseline_start);
+                const comparisonDuration = new Date(request.comparison_end) - new Date(request.comparison_start);
+                const normalizationFactor = baselineDuration / comparisonDuration;
+
+                const result = await this.client.fetchTrafficData(config);
+                
+                if (result.success && result.data) {
+                    // Add metadata for flexible time comparison
+                    result.data.metadata = {
+                        baseline_duration_ms: baselineDuration,
+                        comparison_duration_ms: comparisonDuration,
+                        normalization_factor: normalizationFactor,
+                        comparison_method: request.time_comparison_strategy || 'linear_scale'
+                    };
+                }
+                
+                return result;
+            }
+
+            return await this.client.fetchTrafficData(config);
+        } catch (error) {
+            console.error('Traffic analysis failed:', error);
+            return { success: false, error: { message: error.message } };
+        }
+    }
+
+    /**
+     * Time series analysis
+     */
+    async timeSeries(request, options = {}) {
+        if (!this.initialized) await this.initialize();
+        
+        const query = this._buildTimeSeriesQuery(request);
+        return await this.executeQuery(query);
+    }
+
+    /**
+     * Error analysis
+     */
+    async errorAnalysis(request, options = {}) {
+        if (!this.initialized) await this.initialize();
+        
+        const query = this._buildErrorAnalysisQuery(request);
+        return await this.executeQuery(query);
+    }
+
+    /**
+     * Health check
+     */
+    async healthCheck(options = {}) {
+        if (!this.initialized) await this.initialize();
+        return await this.checkHealth();
+    }
+
+    /**
+     * Get traffic data for the current time range
+     */
+    async getCurrentTrafficData(timeRange = '12h', options = {}) {
+        const now = new Date();
+        const baselineEnd = new Date(now);
+        baselineEnd.setDate(baselineEnd.getDate() - 8);
+        baselineEnd.setHours(now.getHours(), now.getMinutes(), 0, 0);
+
+        const baselineStart = new Date(baselineEnd);
+        baselineStart.setDate(baselineStart.getDate() - 8);
+
+        const request = {
+            baseline_start: baselineStart.toISOString(),
+            baseline_end: baselineEnd.toISOString(),
+            current_time_range: timeRange
+        };
+
+        return this.trafficAnalysis(request, options);
+    }
+
+    /**
+     * Get traffic data for inspection time
+     */
+    async getInspectionTimeData(options = {}) {
+        return this.getCurrentTrafficData('inspection_time', options);
+    }
+
+    /**
+     * Build time series query (helper method)
+     */
+    _buildTimeSeriesQuery(request) {
+        return {
+            size: 0,
+            query: {
+                range: {
+                    "@timestamp": {
+                        gte: request.time_range.start,
+                        lte: request.time_range.end
+                    }
+                }
+            },
+            aggs: {
+                time_series: {
+                    date_histogram: {
+                        field: "@timestamp",
+                        interval: request.interval || "1h"
+                    }
+                }
+            }
+        };
+    }
+
+    /**
+     * Build error analysis query (helper method)
+     */
+    _buildErrorAnalysisQuery(request) {
+        return {
+            size: 0,
+            query: {
+                bool: {
+                    filter: [
+                        {
+                            range: {
+                                "@timestamp": {
+                                    gte: request.time_range.start,
+                                    lte: request.time_range.end
+                                }
+                            }
+                        },
+                        {
+                            exists: {
+                                field: "error"
+                            }
+                        }
+                    ]
+                }
+            },
+            aggs: {
+                errors: {
+                    terms: {
+                        field: "error.type",
+                        size: 100
+                    }
+                }
+            }
+        };
     }
 
     /**
      * Get current mode
      */
     getMode() {
-        return FastAPIIntegration.enabled ? 'fastapi' : 'legacy';
-    }
-
-    /**
-     * Force a specific mode (for testing)
-     */
-    async forceMode(mode) {
-        if (mode === 'fastapi') {
-            FastAPIIntegration.enable(true); // Use soft reload
-            await this.reinitialize();
-        } else {
-            FastAPIIntegration.disable(true); // Use soft reload
-            await this.reinitialize();
-        }
-    }
-
-    /**
-     * Reinitialize after mode change
-     */
-    async reinitialize() {
-        this.initialized = false;
-        this._initPromise = null;
-        this.implementation = null;
-        await this.initialize();
+        return this.client.isLocalDev ? 'unified-local' : 'unified-production';
     }
 
     /**
      * Clean up resources
      */
     cleanup() {
-        if (FastAPIIntegration.enabled) {
-            FastAPIIntegration.cleanup();
-        }
+        this.client.cleanup();
         this.initialized = false;
         this._initPromise = null;
-        this.implementation = null;
+    }
+
+    /**
+     * Prompt for authentication
+     */
+    async promptForCookie(purpose) {
+        return this.client.promptForCookie(purpose);
+    }
+
+    /**
+     * Subscribe to WebSocket events
+     */
+    on(event, handler) {
+        this.client.on(event, handler);
+    }
+
+    /**
+     * Unsubscribe from WebSocket events
+     */
+    off(event, handler) {
+        this.client.off(event, handler);
+    }
+
+    /**
+     * Get client metrics
+     */
+    getMetrics() {
+        return this.client.getClientMetrics();
+    }
+
+    /**
+     * Clear cache
+     */
+    clearCache() {
+        this.client.clearCache();
     }
 }
 
 // Create singleton instance
-export const unifiedAPI = new UnifiedAPI();
+const unifiedAPI = new UnifiedAPI();
 
-// Export for debugging
-window.UnifiedAPI = unifiedAPI;
+// Export the instance as default and named export
+export default unifiedAPI;
+export { unifiedAPI };

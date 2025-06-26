@@ -23,6 +23,29 @@
     "warning_threshold": -50,
     "min_daily_volume": 100
   },
+  "rad_types": {
+    "venture_feed": {
+      "pattern": "pandc.vnext.recommendations.feed.feed*",
+      "display_name": "Venture Feed",
+      "enabled": true,
+      "color": "#4CAF50",
+      "description": "Venture recommendations feed"
+    },
+    "cart_recommendations": {
+      "pattern": "pandc.vnext.recommendations.cart*",
+      "display_name": "Cart Recommendations",
+      "enabled": false,
+      "color": "#2196F3",
+      "description": "Shopping cart recommendations"
+    },
+    "product_recommendations": {
+      "pattern": "pandc.vnext.recommendations.product*",
+      "display_name": "Product Recommendations",
+      "enabled": false,
+      "color": "#FF9800",
+      "description": "Product page recommendations"
+    }
+  },
   "dashboard": {
     "refresh_interval": 300,
     "max_events_display": 200,
@@ -32,7 +55,7 @@
     "console_top_results": 20
   },
   "cors_proxy": {
-    "port": 8889,
+    "port": 8000,
     "allowed_origins": "*",
     "proxy_timeout": 30
   }

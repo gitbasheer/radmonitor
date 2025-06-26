@@ -152,7 +152,7 @@ const ConfigEditor = {
         // Convert ISO date to datetime-local format
         const minEventDateValue = config.minEventDate ? new Date(config.minEventDate).toISOString().slice(0, 16) : '2025-05-19T04:00';
         html += this.createCompactField('Min Event Date', 'search.minEventDate', minEventDateValue, 'datetime-local');
-        html += this.createCompactField('CORS Proxy Port', 'cors.proxyPort', config.corsProxyPort || 8889, 'number');
+        html += this.createCompactField('CORS Proxy Port', 'cors.proxyPort', config.corsProxyPort || 8000, 'number');
         html += '</div>';
         html += '<div>';
         html += this.createCompactField('App Name', 'app.name', config.appName || 'RAD Monitor', 'text');

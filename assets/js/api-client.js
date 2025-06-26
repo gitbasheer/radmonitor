@@ -18,7 +18,7 @@ export const ApiClient = (() => {
         // Fallback to hardcoded values if config not loaded
         return {
             kibana: { url: 'https://usieventho-prod-usw2.kb.us-west-2.aws.found.io:9243' },
-            corsProxy: { url: 'http://localhost:8889', path: '/kibana-proxy' }
+            corsProxy: { url: 'http://localhost:8000', path: '/api/fetch-kibana-data' }
         };
     };
 
@@ -34,7 +34,7 @@ export const ApiClient = (() => {
     async function checkCorsProxy() {
         const startTime = Date.now();
         try {
-            const response = await fetch('http://localhost:8889/health', {
+            const response = await fetch('http://localhost:8000/health', {
                 method: 'GET',
                 signal: AbortSignal.timeout(1000)
             });
@@ -202,14 +202,17 @@ export const ApiClient = (() => {
             const fetchStartTime = Date.now();
 
             if (auth.method === 'proxy') {
-                // Use CORS proxy
+                // Use CORS proxy (FastAPI endpoint)
                 response = await fetch(getCorsProxyUrl(), {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                         'X-Elastic-Cookie': auth.cookie
                     },
-                    body: JSON.stringify(query)
+                    body: JSON.stringify({
+                        query: query,
+                        force_refresh: false
+                    })
                 });
             } else {
                 // Direct access
@@ -312,7 +315,7 @@ export const ApiClient = (() => {
      */
     async function checkHealth() {
         try {
-            const response = await fetch('http://localhost:8889/health');
+            const response = await fetch('http://localhost:8000/health');
             if (response.ok) {
                 const data = await response.json();
                 return { success: true, data };
@@ -354,14 +357,17 @@ export const ApiClient = (() => {
             let response;
 
             if (auth.method === 'proxy') {
-                // Test through CORS proxy
+                // Test through CORS proxy (FastAPI endpoint)
                 response = await fetch(getCorsProxyUrl(), {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                         'X-Elastic-Cookie': auth.cookie
                     },
-                    body: JSON.stringify(testQuery),
+                    body: JSON.stringify({
+                        query: testQuery,
+                        force_refresh: false
+                    }),
                     signal: AbortSignal.timeout(5000) // 5 second timeout
                 });
             } else {
@@ -419,6 +425,7 @@ export const ApiClient = (() => {
 
     /**
      * Build Elasticsearch query (EXISTING - keep for compatibility)
+     * NOTE: This is legacy code. New code should use api-interface.js which supports multiple RAD patterns
      */
     function buildQuery(config) {
         const currentTimeFilter = TimeRangeUtils.parseTimeRangeToFilter(config.currentTimeRange);

@@ -18,7 +18,7 @@ describe('Authentication', () => {
       const result = await checkCorsProxy();
       
       expect(result).toBe(true);
-      expect(fetch).toHaveBeenCalledWith('http://localhost:8889/health', {
+              expect(fetch).toHaveBeenCalledWith('http://localhost:8000/health', {
         method: 'GET',
         mode: 'cors'
       });
@@ -99,7 +99,7 @@ describe('Authentication', () => {
       expect(result.valid).toBe(true);
       expect(result.method).toBe('proxy');
       expect(result.cookie).toBe('test_cookie');
-      expect(fetch).toHaveBeenCalledWith('http://localhost:8889/health', expect.any(Object));
+      expect(fetch).toHaveBeenCalledWith('http://localhost:8000/health', expect.any(Object));
     });
 
     it('should use direct method when not on localhost', async () => {
@@ -127,7 +127,7 @@ describe('Authentication', () => {
       
       expect(result.valid).toBe(false);
       expect(result.method).toBe(null);
-      expect(fetch).toHaveBeenCalledWith('http://localhost:8889/health', expect.any(Object));
+      expect(fetch).toHaveBeenCalledWith('http://localhost:8000/health', expect.any(Object));
     });
 
     it('should handle GitHub Pages deployment', async () => {
@@ -177,7 +177,7 @@ describe('Authentication', () => {
       
       // Verify CORS proxy was checked
       expect(fetch).toHaveBeenCalledWith(
-        'http://localhost:8889/health',
+        'http://localhost:8000/health',
         expect.objectContaining({ method: 'GET', mode: 'cors' })
       );
     });

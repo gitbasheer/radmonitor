@@ -234,6 +234,43 @@ class Settings(BaseSettings):
     dashboard: DashboardSettings = Field(default_factory=DashboardSettings)
     cors_proxy: CorsProxySettings = Field(default_factory=CorsProxySettings)
     
+    # RAD types configuration property
+    @property
+    def rad_types(self) -> Dict[str, Any]:
+        """Get RAD types configuration from settings file"""
+        if CONFIG_FILE.exists():
+            try:
+                with open(CONFIG_FILE, 'r') as f:
+                    data = json.load(f)
+                    return data.get('rad_types', {})
+            except Exception as e:
+                logger.warning(f"Error loading rad_types from settings file: {e}")
+        
+        # Default RAD types configuration
+        return {
+            "venture_feed": {
+                "pattern": "pandc.vnext.recommendations.feed.feed*",
+                "display_name": "Venture Feed",
+                "enabled": True,
+                "color": "#4CAF50",
+                "description": "Venture recommendations feed"
+            },
+            "cart_recommendations": {
+                "pattern": "pandc.vnext.recommendations.cart*",
+                "display_name": "Cart Recommendations",
+                "enabled": False,
+                "color": "#2196F3",
+                "description": "Shopping cart recommendations"
+            },
+            "product_recommendations": {
+                "pattern": "pandc.vnext.recommendations.product*",
+                "display_name": "Product Recommendations",
+                "enabled": False,
+                "color": "#FF9800",
+                "description": "Product page recommendations"
+            }
+        }
+    
     # Calculated properties
     @property
     def baseline_days(self) -> int:

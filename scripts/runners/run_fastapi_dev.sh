@@ -35,6 +35,6 @@ pip install -q fastapi uvicorn[standard] websockets httpx pytest-asyncio
 echo "🧹 Cleaning up ports..."
 ./scripts/setup/cleanup-ports.sh 2>/dev/null || true
 
-# Run the FastAPI dev server
-echo "🚀 Starting FastAPI development server..."
-python3 bin/dev_server_fastapi.py
+# Run the unified server
+echo "🚀 Starting RAD Monitor Unified Server..."
+python3 bin/server.py

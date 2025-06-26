@@ -3,10 +3,34 @@
  * Demonstrates how to use the enhanced time comparison features
  */
 
-import { EnhancedApiClient } from './api-client-enhanced.js';
+import { unifiedAPI } from './api-interface.js';
+import { ConfigService } from './config-service.js';
 
 export const FlexibleTimeComparison = (() => {
     'use strict';
+
+    /**
+     * Get enabled RAD patterns from configuration
+     */
+    function getEnabledPatterns() {
+        const config = ConfigService.getConfig();
+        const patterns = [];
+        
+        if (config.rad_types) {
+            for (const [key, radConfig] of Object.entries(config.rad_types)) {
+                if (radConfig.enabled && radConfig.pattern) {
+                    patterns.push(radConfig.pattern);
+                }
+            }
+        }
+        
+        // Fallback to default if no patterns configured
+        if (patterns.length === 0) {
+            patterns.push("pandc.vnext.recommendations.feed.feed*");
+        }
+        
+        return patterns;
+    }
 
     /**
      * Compare traffic for a specific period against a baseline
@@ -18,6 +42,9 @@ export const FlexibleTimeComparison = (() => {
      */
     async function compareCustomPeriods(comparisonStart, comparisonEnd, baselineStart, baselineEnd, strategy = 'linear_scale') {
         try {
+            // Get patterns from config instead of hardcoding
+            const patterns = getEnabledPatterns();
+            
             const request = {
                 baseline_start: baselineStart.toISOString(),
                 baseline_end: baselineEnd.toISOString(),
@@ -29,8 +56,8 @@ export const FlexibleTimeComparison = (() => {
                 // Specify how to normalize the time differences
                 time_comparison_strategy: strategy || 'linear_scale',
 
-                // Optional: you can still specify event patterns and host
-                event_pattern: "pandc.vnext.recommendations.feed.feed*",
+                // Use dynamic patterns (api-interface will handle multiple patterns)
+                event_pattern: patterns.length === 1 ? patterns[0] : patterns,
                 host: "dashboard.godaddy.com"
             };
 
@@ -40,7 +67,7 @@ export const FlexibleTimeComparison = (() => {
                 strategy
             });
 
-            const result = await EnhancedApiClient.trafficAnalysis(request);
+            const result = await unifiedAPI.trafficAnalysis(request);
 
             if (result.success) {
                 if (!result.data) {

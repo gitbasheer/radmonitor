@@ -103,10 +103,39 @@ class ProcessingConfig(BaseModel):
         return self
 
 
+class RADTypeConfig(BaseModel):
+    """Model for RAD type configuration"""
+    pattern: str = Field(..., description="Elasticsearch wildcard pattern for this RAD type")
+    display_name: str = Field(..., description="Display name for UI")
+    enabled: bool = Field(default=True, description="Whether this RAD type is enabled")
+    color: str = Field(default="#4CAF50", description="Color for UI display (hex format)")
+    description: Optional[str] = Field(None, description="Description of this RAD type")
+
+    @field_validator('pattern')
+    @classmethod
+    def validate_pattern(cls, v: str) -> str:
+        """Validate pattern format"""
+        if not v:
+            raise ValueError("Pattern cannot be empty")
+        # Should contain wildcards or be a valid event pattern
+        if not ('*' in v or '.' in v):
+            raise ValueError(f"Pattern should contain wildcards or namespace separators: {v}")
+        return v
+
+    @field_validator('color')
+    @classmethod
+    def validate_color(cls, v: str) -> str:
+        """Validate color is in hex format"""
+        if not re.match(r'^#[0-9A-Fa-f]{6}$', v):
+            raise ValueError(f"Color must be in hex format (#RRGGBB): {v}")
+        return v
+
+
 class TrafficEvent(BaseModel):
     """Model for individual traffic event with counts and scores"""
     event_id: str = Field(..., description="Event identifier")
     display_name: str = Field(..., description="Display name for UI")
+    rad_type: Optional[str] = Field(None, description="RAD type identifier (e.g., 'venture_feed')")
     current: int = Field(..., ge=0, description="Current period count")
     baseline_12h: int = Field(..., ge=0, description="Baseline 12h count (legacy field)")
     baseline_period: int = Field(..., ge=0, description="Baseline period count")
@@ -123,12 +152,9 @@ class TrafficEvent(BaseModel):
         """Validate event ID has expected format"""
         if not v:
             raise ValueError("Event ID cannot be empty")
-        # Validate common patterns
-        if not (v.startswith('feed_') or
-                v.startswith('pandc.') or
-                'recommendations' in v or
-                '.' in v):
-            raise ValueError(f"Unexpected event ID format: {v}")
+        # More flexible validation to support multiple RAD types
+        if not ('.' in v or '_' in v):
+            raise ValueError(f"Event ID should contain namespace separators or underscores: {v}")
         return v
 
     @model_validator(mode='after')

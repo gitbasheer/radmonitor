@@ -11,6 +11,51 @@ export const DataProcessor = (() => {
     'use strict';
 
     /**
+     * Determine RAD type from event ID
+     * @param {string} eventId - The event ID to check
+     * @param {Object} radTypes - RAD types configuration from settings
+     * @returns {string} The RAD type key or 'unknown'
+     */
+    function determineRadType(eventId, radTypes) {
+        if (!radTypes || typeof radTypes !== 'object') {
+            return 'unknown';
+        }
+
+        for (const [radKey, radConfig] of Object.entries(radTypes)) {
+            if (radConfig.enabled && radConfig.pattern) {
+                // Convert wildcard pattern to regex
+                const regexPattern = '^' + radConfig.pattern
+                    .replace(/[.+?^${}()|[\]\\]/g, '\\$&') // Escape special regex chars
+                    .replace(/\*/g, '.*') + '$'; // Replace * with .*
+                const regex = new RegExp(regexPattern);
+                
+                if (regex.test(eventId)) {
+                    return radKey;
+                }
+            }
+        }
+        return 'unknown';
+    }
+
+    /**
+     * Get display name for event based on RAD type
+     * @param {string} eventId - The full event ID
+     * @param {string} radType - The determined RAD type
+     * @param {Object} radTypes - RAD types configuration
+     * @returns {string} The display name
+     */
+    function getDisplayName(eventId, radType, radTypes) {
+        if (radType !== 'unknown' && radTypes[radType]?.pattern) {
+            // Remove the RAD type prefix based on the pattern
+            const pattern = radTypes[radType].pattern;
+            const prefix = pattern.substring(0, pattern.indexOf('*'));
+            return eventId.replace(prefix, '');
+        }
+        // Fallback to removing the most common prefix
+        return eventId.replace('pandc.vnext.recommendations.feed.', '');
+    }
+
+    /**
      * Process raw Elasticsearch data into structured results
      */
     function processData(buckets, config) {
@@ -71,15 +116,22 @@ export const DataProcessor = (() => {
             // Determine status
             let status = determineStatus(score);
 
+            // Determine RAD type
+            const radType = determineRadType(event_id, config.rad_types);
+
+            // Get display name
+            const displayName = getDisplayName(event_id, radType, config.rad_types);
+
             results.push({
                 event_id,
-                displayName: event_id.replace('pandc.vnext.recommendations.feed.', ''),
+                displayName,
                 current: current_count,
                 baseline12h: Math.round(baseline_period),
                 baseline_period: Math.round(baseline_period),
                 score,
                 status,
-                dailyAvg: Math.round(daily_avg)
+                dailyAvg: Math.round(daily_avg),
+                rad_type: radType
             });
         }
 
@@ -189,7 +241,9 @@ export const DataProcessor = (() => {
         processData,
         calculateScore,
         determineStatus,
-        getSummaryStats
+        getSummaryStats,
+        determineRadType,
+        getDisplayName
     };
 })();
 

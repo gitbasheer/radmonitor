@@ -76,100 +76,123 @@
     <!-- Load the Enhanced API Client -->
     <!-- ESM: Load JavaScript modules using ES modules -->
 <script type="module">
-    import EnhancedApiClient from '../assets/js/api-client-enhanced.js';
+    // Import the necessary modules
+    import TimeRangeUtils from '../assets/js/time-range-utils.js';
+    import DataProcessor from '../assets/js/data-processor.js';
+    import { unifiedAPI } from '../assets/js/api-interface.js';
+    import FlexibleTimeComparison from '../assets/js/flexible-time-comparison.js';
 
-    // Make it globally available for the inline scripts below
-    window.EnhancedApiClient = EnhancedApiClient;
-</script>
+    // Initialize the API
+    await unifiedAPI.initialize();
 
-    <script>
-        // Configure the API client
-        EnhancedApiClient.configure({
-            baseUrl: 'http://localhost:8889'
-        });
+    // Check for elastic cookie in localStorage
+    const savedCookie = localStorage.getItem('elasticCookie');
+    if (savedCookie) {
+        document.getElementById('status').innerHTML = '<p>✅ Using saved cookie</p>';
+    } else {
+        document.getElementById('status').innerHTML = '<p>⚠️ No cookie set - <a href="#" id="setCookieLink">Set Cookie</a></p>';
+    }
 
-        // Check for elastic cookie in localStorage
-        const savedCookie = localStorage.getItem('elastic_cookie');
-        if (savedCookie) {
-            EnhancedApiClient.setElasticCookie(savedCookie);
-            document.getElementById('status').innerHTML = '<p>✅ Using saved cookie</p>';
-        } else {
-            document.getElementById('status').innerHTML = '<p>⚠️ No cookie set - <a href="#" onclick="setCookie()">Set Cookie</a></p>';
-        }
+    async function fetchData(timeRange) {
+        const output = document.getElementById('output');
+        const status = document.getElementById('status');
 
-        async function fetchData(timeRange) {
-            const output = document.getElementById('output');
-            const status = document.getElementById('status');
+        output.textContent = `Fetching data for time range: ${timeRange}...`;
 
-            output.textContent = `Fetching data for time range: ${timeRange}...`;
+        try {
+            let result;
 
-            try {
-                let result;
+            if (timeRange === 'inspection_time') {
+                // Use the dedicated inspection time method
+                result = await unifiedAPI.getInspectionTimeData();
+            } else {
+                // Use the general method with time range
+                result = await unifiedAPI.getCurrentTrafficData(timeRange);
+            }
 
-                if (timeRange === 'inspection_time') {
-                    // Use the dedicated inspection time method
-                    result = await EnhancedApiClient.getInspectionTimeData();
+            if (result.success) {
+                const data = result.data;
+                let html = `<h3>Traffic Analysis Results</h3>\n`;
+                html += `<p>Time Range: ${timeRange}`;
+                if (data.metadata && data.metadata.time_range_type === 'inspection') {
+                    html += ` (Inspection Window: 24h-8h ago)</p>`;
+                } else if (data.metadata && data.metadata.current_hours) {
+                    html += ` (${data.metadata.current_hours}h window)</p>`;
                 } else {
-                    // Use the general method with time range
-                    result = await EnhancedApiClient.getCurrentTrafficData(timeRange);
+                    html += `</p>`;
                 }
-
-                if (result.success) {
-                    const data = result.data;
-                    let html = `<h3>Traffic Analysis Results</h3>\n`;
-                    html += `<p>Time Range: ${timeRange}`;
-                    if (data.metadata.time_range_type === 'inspection') {
-                        html += ` (Inspection Window: 24h-8h ago)</p>`;
-                    } else {
-                        html += ` (${data.metadata.current_hours}h window)</p>`;
-                    }
+                
+                if (data.metadata) {
                     html += `<p>Total Events: ${data.metadata.total_events}</p>`;
                     html += `<p>Query Time: ${data.metadata.query_time}ms</p>`;
+                }
 
-                    html += `<h4>Events:</h4>`;
-                    html += `<table style="width: 100%; border-collapse: collapse;">`;
-                    html += `<tr><th>Event</th><th>Status</th><th>Score</th><th>Current</th><th>Expected</th></tr>`;
+                html += `<h4>Events:</h4>`;
+                html += `<table style="width: 100%; border-collapse: collapse;">`;
+                html += `<tr><th>Event</th><th>Status</th><th>Score</th><th>Current</th><th>Expected</th></tr>`;
 
+                if (data.events) {
                     data.events.forEach(event => {
                         html += `<tr>`;
-                        html += `<td>${event.display_name}</td>`;
+                        html += `<td>${event.display_name || event.event_id}</td>`;
                         html += `<td><span class="status ${event.status.toLowerCase()}">${event.status}</span></td>`;
                         html += `<td>${event.score}%</td>`;
                         html += `<td>${event.current_count}</td>`;
-                        html += `<td>${Math.round(event.baseline_period)}</td>`;
+                        html += `<td>${Math.round(event.baseline_period || event.baseline_count)}</td>`;
                         html += `</tr>`;
                     });
-
-                    html += `</table>`;
-
-                    output.innerHTML = html;
-                    status.innerHTML = '<p>✅ Data fetched successfully</p>';
-                } else {
-                    output.textContent = `Error: ${result.error.message}\n\nDetails: ${JSON.stringify(result.error, null, 2)}`;
-                    status.innerHTML = '<p>❌ Failed to fetch data</p>';
                 }
-            } catch (error) {
-                output.textContent = `Error: ${error.message}`;
-                status.innerHTML = '<p>❌ An error occurred</p>';
-            }
-        }
 
-        function setCookie() {
-            const cookie = prompt('Enter your Elastic cookie (sid=...)');
-            if (cookie) {
-                EnhancedApiClient.setElasticCookie(cookie);
-                document.getElementById('status').innerHTML = '<p>✅ Cookie set</p>';
-            }
-        }
+                html += `</table>`;
 
-        // Add some table styling
-        const style = document.createElement('style');
-        style.textContent = `
-            table { margin-top: 10px; }
-            th, td { padding: 8px; text-align: left; border-bottom: 1px solid #ddd; }
-            th { background-color: #f8f9fa; font-weight: bold; }
-        `;
-        document.head.appendChild(style);
-    </script>
+                output.innerHTML = html;
+                status.innerHTML = '<p>✅ Data fetched successfully</p>';
+            } else {
+                output.textContent = `Error: ${result.error ? result.error.message : 'Unknown error'}\n\nDetails: ${JSON.stringify(result.error, null, 2)}`;
+                status.innerHTML = '<p>❌ Failed to fetch data</p>';
+            }
+        } catch (error) {
+            output.textContent = `Error: ${error.message}`;
+            status.innerHTML = '<p>❌ An error occurred</p>';
+        }
+    }
+
+    function setCookie() {
+        const cookie = prompt('Enter your Elastic cookie (sid=...)');
+        if (cookie) {
+            localStorage.setItem('elasticCookie', JSON.stringify({
+                cookie: cookie.trim(),
+                expires: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+                saved: new Date().toISOString()
+            }));
+            document.getElementById('status').innerHTML = '<p>✅ Cookie set</p>';
+        }
+    }
+
+    // Make functions available globally for onclick handlers
+    window.fetchData = fetchData;
+    window.setCookie = setCookie;
+
+    // Setup click handler for set cookie link
+    document.addEventListener('DOMContentLoaded', () => {
+        const setCookieLink = document.getElementById('setCookieLink');
+        if (setCookieLink) {
+            setCookieLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                setCookie();
+            });
+        }
+    });
+
+    // Add some table styling
+    const style = document.createElement('style');
+    style.textContent = `
+        table { margin-top: 10px; }
+        th, td { padding: 8px; text-align: left; border-bottom: 1px solid #ddd; }
+        th { background-color: #f8f9fa; font-weight: bold; }
+    `;
+    document.head.appendChild(style);
+</script>
+
 </body>
 </html>

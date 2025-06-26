@@ -8,6 +8,7 @@ export const SearchFilter = (() => {
 
     let currentFilter = 'all';
     let currentSearchTerm = '';
+    let activeRadTypes = new Set(['all']);
 
     /**
      * Initialize search and filter functionality
@@ -21,7 +22,7 @@ export const SearchFilter = (() => {
         }
 
         // Set up filter button listeners
-        const filterButtons = document.querySelectorAll('.filter-btn');
+        const filterButtons = document.querySelectorAll('.filter-btn:not(.rad-filter-btn)');
         filterButtons.forEach(button => {
             button.addEventListener('click', handleFilterClick);
         });
@@ -43,13 +44,41 @@ export const SearchFilter = (() => {
      */
     function handleFilterClick(event) {
         // Update active button
-        document.querySelectorAll('.filter-btn').forEach(btn => {
+        document.querySelectorAll('.filter-btn:not(.rad-filter-btn)').forEach(btn => {
             btn.classList.remove('active');
         });
         event.target.classList.add('active');
 
         // Update current filter
         currentFilter = event.target.getAttribute('data-filter');
+        applyFilters();
+    }
+
+    /**
+     * Update active RAD types based on button states
+     */
+    function updateActiveRadTypes() {
+        activeRadTypes.clear();
+        
+        const radButtons = document.querySelectorAll('.rad-filter-btn.active');
+        radButtons.forEach(btn => {
+            const radType = btn.dataset.radType;
+            if (radType) {
+                activeRadTypes.add(radType);
+            }
+        });
+
+        // If "all" is active or no specific types selected, include all
+        if (activeRadTypes.has('all') || activeRadTypes.size === 0) {
+            activeRadTypes.add('all');
+        }
+    }
+
+    /**
+     * Apply RAD type filter (called from UI buttons)
+     */
+    function applyRadTypeFilter() {
+        updateActiveRadTypes();
         applyFilters();
     }
 
@@ -70,6 +99,30 @@ export const SearchFilter = (() => {
                 if (statusCell) {
                     const rowStatus = statusCell.textContent.toLowerCase();
                     shouldShow = rowStatus === currentFilter;
+                } else {
+                    shouldShow = false;
+                }
+            }
+
+            // Apply RAD type filter
+            if (shouldShow && !activeRadTypes.has('all')) {
+                const radTypeCell = row.querySelector('.rad-type-badge');
+                if (radTypeCell) {
+                    // Find the matching RAD type key from the display name
+                    const displayName = radTypeCell.textContent;
+                    const config = ConfigService.getConfig();
+                    let radTypeKey = 'unknown';
+                    
+                    if (config.rad_types) {
+                        for (const [key, radConfig] of Object.entries(config.rad_types)) {
+                            if (radConfig.display_name === displayName) {
+                                radTypeKey = key;
+                                break;
+                            }
+                        }
+                    }
+                    
+                    shouldShow = activeRadTypes.has(radTypeKey);
                 } else {
                     shouldShow = false;
                 }
@@ -112,6 +165,14 @@ export const SearchFilter = (() => {
             if (currentFilter !== 'all') {
                 message += ` (${currentFilter} only)`;
             }
+
+            if (!activeRadTypes.has('all') && activeRadTypes.size > 0) {
+                const config = ConfigService.getConfig();
+                const radTypeNames = Array.from(activeRadTypes)
+                    .map(key => config.rad_types?.[key]?.display_name || key)
+                    .join(', ');
+                message += ` [${radTypeNames}]`;
+            }
             
             resultsInfo.textContent = message;
         }
@@ -123,6 +184,8 @@ export const SearchFilter = (() => {
     function reset() {
         currentFilter = 'all';
         currentSearchTerm = '';
+        activeRadTypes.clear();
+        activeRadTypes.add('all');
         
         // Reset UI
         const searchInput = document.getElementById('searchInput');
@@ -130,12 +193,17 @@ export const SearchFilter = (() => {
             searchInput.value = '';
         }
         
-        // Reset active button
-        document.querySelectorAll('.filter-btn').forEach(btn => {
+        // Reset status filter buttons
+        document.querySelectorAll('.filter-btn:not(.rad-filter-btn)').forEach(btn => {
             btn.classList.remove('active');
             if (btn.getAttribute('data-filter') === 'all') {
                 btn.classList.add('active');
             }
+        });
+
+        // Reset RAD type filter buttons
+        document.querySelectorAll('.rad-filter-btn').forEach(btn => {
+            btn.classList.add('active');
         });
         
         applyFilters();
@@ -145,6 +213,7 @@ export const SearchFilter = (() => {
      * Refresh filters (call after table update)
      */
     function refresh() {
+        updateActiveRadTypes();
         applyFilters();
     }
 
@@ -153,7 +222,8 @@ export const SearchFilter = (() => {
         initialize,
         reset,
         refresh,
-        applyFilters
+        applyFilters,
+        applyRadTypeFilter
     };
 })();
 

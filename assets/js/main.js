@@ -13,8 +13,8 @@ import { ConfigService } from './config-service.js';
 import ConsoleVisualizer from './console-visualizer.js';
 import UIUpdater from './ui-updater.js';
 import ApiClient from './api-client.js';
-import EnhancedApiClient from './api-client-enhanced.js';
 import FastAPIClient from './api-client-fastapi.js';
+import apiClient from './api-client-unified.js';  // New unified client
 import { FastAPIIntegration } from './fastapi-integration.js';
 import DataLayer from './data-layer.js';
 import Dashboard from './dashboard-main.js';
@@ -32,8 +32,8 @@ window.ConfigService = ConfigService;
 window.ConsoleVisualizer = ConsoleVisualizer;
 window.UIUpdater = UIUpdater;
 window.ApiClient = ApiClient;
-window.EnhancedApiClient = EnhancedApiClient;
 window.FastAPIClient = FastAPIClient;
+window.UnifiedAPIClient = apiClient;  // New unified client available globally
 window.FastAPIIntegration = FastAPIIntegration;
 window.DataLayer = DataLayer;
 window.Dashboard = Dashboard;
@@ -137,8 +137,8 @@ export {
     ConsoleVisualizer,
     UIUpdater,
     ApiClient,
-    EnhancedApiClient,
     FastAPIClient,
+    apiClient,  // New unified client
     FastAPIIntegration,
     DataLayer,
     Dashboard,

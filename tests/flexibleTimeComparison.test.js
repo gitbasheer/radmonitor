@@ -4,12 +4,11 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { FlexibleTimeComparison } from '../assets/js/flexible-time-comparison.js';
-import { EnhancedApiClient } from '../assets/js/api-client-enhanced.js';
+import FlexibleTimeComparison from '../assets/js/flexible-time-comparison.js';
 
-// Mock the EnhancedApiClient
-vi.mock('../assets/js/api-client-enhanced.js', () => ({
-    EnhancedApiClient: {
+// Mock dependencies
+vi.mock('../assets/js/api-interface.js', () => ({
+    unifiedAPI: {
         trafficAnalysis: vi.fn()
     }
 }));
@@ -62,7 +61,7 @@ describe('FlexibleTimeComparison', () => {
                 }
             };
 
-            EnhancedApiClient.trafficAnalysis.mockResolvedValue(mockResponse);
+            unifiedAPI.trafficAnalysis.mockResolvedValue(mockResponse);
 
             // Execute
             const result = await FlexibleTimeComparison.compareCustomPeriods(
@@ -74,7 +73,7 @@ describe('FlexibleTimeComparison', () => {
             );
 
             // Verify
-            expect(EnhancedApiClient.trafficAnalysis).toHaveBeenCalledWith({
+            expect(unifiedAPI.trafficAnalysis).toHaveBeenCalledWith({
                 baseline_start: baselineStart.toISOString(),
                 baseline_end: baselineEnd.toISOString(),
                 comparison_start: comparisonStart.toISOString(),
@@ -98,7 +97,7 @@ describe('FlexibleTimeComparison', () => {
         it('should handle API errors gracefully', async () => {
             // Setup
             const errorMessage = 'API Error';
-            EnhancedApiClient.trafficAnalysis.mockResolvedValue({
+            unifiedAPI.trafficAnalysis.mockResolvedValue({
                 success: false,
                 error: { message: errorMessage }
             });
@@ -124,7 +123,7 @@ describe('FlexibleTimeComparison', () => {
             for (const strategy of strategies) {
                 vi.clearAllMocks();
 
-                EnhancedApiClient.trafficAnalysis.mockResolvedValue({
+                unifiedAPI.trafficAnalysis.mockResolvedValue({
                     success: true,
                     data: {
                         events: [],
@@ -140,7 +139,7 @@ describe('FlexibleTimeComparison', () => {
                     strategy
                 );
 
-                expect(EnhancedApiClient.trafficAnalysis).toHaveBeenCalledWith(
+                expect(unifiedAPI.trafficAnalysis).toHaveBeenCalledWith(
                     expect.objectContaining({
                         time_comparison_strategy: strategy
                     })
@@ -155,11 +154,11 @@ describe('FlexibleTimeComparison', () => {
                 success: true,
                 data: { events: [], metadata: {} }
             };
-            EnhancedApiClient.trafficAnalysis.mockResolvedValue(mockResponse);
+            unifiedAPI.trafficAnalysis.mockResolvedValue(mockResponse);
 
             await FlexibleTimeComparison.compareLastMinutes(39, 7, 3.5);
 
-            const call = EnhancedApiClient.trafficAnalysis.mock.calls[0][0];
+            const call = unifiedAPI.trafficAnalysis.mock.calls[0][0];
 
             // Verify time calculations
             const baselineStart = new Date(call.baseline_start);
@@ -179,7 +178,7 @@ describe('FlexibleTimeComparison', () => {
         });
 
         it('should handle fractional days in baseline', async () => {
-            EnhancedApiClient.trafficAnalysis.mockResolvedValue({
+            unifiedAPI.trafficAnalysis.mockResolvedValue({
                 success: true,
                 data: { events: [], metadata: {} }
             });
@@ -187,7 +186,7 @@ describe('FlexibleTimeComparison', () => {
             // 2.25 days = 2 days and 6 hours
             await FlexibleTimeComparison.compareLastMinutes(60, 7, 2.25);
 
-            const call = EnhancedApiClient.trafficAnalysis.mock.calls[0][0];
+            const call = unifiedAPI.trafficAnalysis.mock.calls[0][0];
             const baselineStart = new Date(call.baseline_start);
             const baselineEnd = new Date(call.baseline_end);
 
@@ -211,7 +210,7 @@ describe('FlexibleTimeComparison', () => {
             const strategies = ['linear_scale', 'hourly_average', 'daily_pattern'];
             let callCount = 0;
 
-            EnhancedApiClient.trafficAnalysis.mockImplementation(() => {
+            unifiedAPI.trafficAnalysis.mockImplementation(() => {
                 const strategy = strategies[callCount % 3];
                 callCount++;
                 return Promise.resolve({
@@ -234,7 +233,7 @@ describe('FlexibleTimeComparison', () => {
                 expect(results[strategy]).toHaveProperty('summary');
             });
 
-            expect(EnhancedApiClient.trafficAnalysis).toHaveBeenCalledTimes(3);
+            expect(unifiedAPI.trafficAnalysis).toHaveBeenCalledTimes(3);
         });
 
         it('should handle strategy failures gracefully', async () => {
@@ -247,7 +246,7 @@ describe('FlexibleTimeComparison', () => {
 
             // Make hourly_average fail
             let callCount = 0;
-            EnhancedApiClient.trafficAnalysis.mockImplementation(() => {
+            unifiedAPI.trafficAnalysis.mockImplementation(() => {
                 callCount++;
                 if (callCount === 2) { // hourly_average is second
                     return Promise.reject(new Error('Strategy failed'));
@@ -272,14 +271,14 @@ describe('FlexibleTimeComparison', () => {
             const windowMinutes = 60;
             const baselineWeeks = 4;
 
-            EnhancedApiClient.trafficAnalysis.mockResolvedValue({
+            unifiedAPI.trafficAnalysis.mockResolvedValue({
                 success: true,
                 data: { events: [], metadata: {} }
             });
 
             await FlexibleTimeComparison.analyzeHourlyPattern(targetTime, windowMinutes, baselineWeeks);
 
-            const call = EnhancedApiClient.trafficAnalysis.mock.calls[0][0];
+            const call = unifiedAPI.trafficAnalysis.mock.calls[0][0];
 
             // Verify comparison window
             const comparisonStart = new Date(call.comparison_start);
@@ -365,7 +364,7 @@ describe('FlexibleTimeComparison', () => {
     describe('runExamples', () => {
         it('should run all examples without errors', async () => {
             // Mock successful responses for all example calls
-            EnhancedApiClient.trafficAnalysis.mockResolvedValue({
+            unifiedAPI.trafficAnalysis.mockResolvedValue({
                 success: true,
                 data: {
                     events: [
@@ -387,11 +386,11 @@ describe('FlexibleTimeComparison', () => {
             await expect(FlexibleTimeComparison.runExamples()).resolves.not.toThrow();
 
             // Should have made multiple API calls for different examples
-            expect(EnhancedApiClient.trafficAnalysis).toHaveBeenCalledTimes(3);
+            expect(unifiedAPI.trafficAnalysis).toHaveBeenCalledTimes(3);
         });
 
         it('should handle example failures gracefully', async () => {
-            EnhancedApiClient.trafficAnalysis.mockRejectedValue(new Error('Example failed'));
+            unifiedAPI.trafficAnalysis.mockRejectedValue(new Error('Example failed'));
 
             // Should not throw, just log errors
             await expect(FlexibleTimeComparison.runExamples()).resolves.not.toThrow();
@@ -430,7 +429,7 @@ describe('FlexibleTimeComparison', () => {
                 }
             };
 
-            EnhancedApiClient.trafficAnalysis.mockResolvedValue({
+            unifiedAPI.trafficAnalysis.mockResolvedValue({
                 success: true,
                 data: mockData
             });
@@ -451,7 +450,7 @@ describe('FlexibleTimeComparison', () => {
             it('should handle zero duration comparison periods', async () => {
                 const now = new Date();
 
-                EnhancedApiClient.trafficAnalysis.mockResolvedValue({
+                unifiedAPI.trafficAnalysis.mockResolvedValue({
                     success: true,
                     data: {
                         events: [],
@@ -480,7 +479,7 @@ describe('FlexibleTimeComparison', () => {
                 const now = new Date();
                 const later = new Date(now.getTime() + 60 * 60 * 1000);
 
-                EnhancedApiClient.trafficAnalysis.mockResolvedValue({
+                unifiedAPI.trafficAnalysis.mockResolvedValue({
                     success: true,
                     data: { events: [], metadata: {} }
                 });
@@ -499,7 +498,7 @@ describe('FlexibleTimeComparison', () => {
                 const twoYearsAgo = new Date(now.getTime() - 2 * 365 * 24 * 60 * 60 * 1000);
                 const oneSecondAgo = new Date(now.getTime() - 1000);
 
-                EnhancedApiClient.trafficAnalysis.mockResolvedValue({
+                unifiedAPI.trafficAnalysis.mockResolvedValue({
                     success: true,
                     data: {
                         events: [],
@@ -526,7 +525,7 @@ describe('FlexibleTimeComparison', () => {
                 const baseTime = new Date('2023-11-11T12:30:45.123Z');
                 const baseTimePlus100ms = new Date(baseTime.getTime() + 100);
 
-                EnhancedApiClient.trafficAnalysis.mockResolvedValue({
+                unifiedAPI.trafficAnalysis.mockResolvedValue({
                     success: true,
                     data: { events: [], metadata: {} }
                 });
@@ -538,7 +537,7 @@ describe('FlexibleTimeComparison', () => {
                     baseTimePlus100ms
                 );
 
-                const call = EnhancedApiClient.trafficAnalysis.mock.calls[0][0];
+                const call = unifiedAPI.trafficAnalysis.mock.calls[0][0];
                 expect(call.comparison_start).toContain('.123');
                 expect(call.comparison_end).toContain('.223');
             });
@@ -548,7 +547,7 @@ describe('FlexibleTimeComparison', () => {
             it('should handle null/undefined strategy gracefully', async () => {
                 const now = new Date();
 
-                EnhancedApiClient.trafficAnalysis.mockResolvedValue({
+                unifiedAPI.trafficAnalysis.mockResolvedValue({
                     success: true,
                     data: { events: [], metadata: { comparison_method: 'linear_scale' } }
                 });
@@ -569,7 +568,7 @@ describe('FlexibleTimeComparison', () => {
                 const strategies = ['linear_scale', 'hourly_average', 'daily_pattern'];
                 let callCount = 0;
 
-                EnhancedApiClient.trafficAnalysis.mockImplementation(() => {
+                unifiedAPI.trafficAnalysis.mockImplementation(() => {
                     const strategy = strategies[callCount % 3];
                     callCount++;
                     return Promise.resolve({
@@ -605,7 +604,7 @@ describe('FlexibleTimeComparison', () => {
                 const dstStart = new Date('2023-03-12T02:00:00');
                 const afterDst = new Date('2023-03-12T03:30:00');
 
-                EnhancedApiClient.trafficAnalysis.mockResolvedValue({
+                unifiedAPI.trafficAnalysis.mockResolvedValue({
                     success: true,
                     data: { events: [], metadata: {} }
                 });
@@ -622,7 +621,7 @@ describe('FlexibleTimeComparison', () => {
                 const leapDay = new Date('2024-02-29T12:00:00Z');
                 const dayBefore = new Date('2024-02-28T12:00:00Z');
 
-                EnhancedApiClient.trafficAnalysis.mockResolvedValue({
+                unifiedAPI.trafficAnalysis.mockResolvedValue({
                     success: true,
                     data: { events: [], metadata: {} }
                 });
@@ -634,7 +633,7 @@ describe('FlexibleTimeComparison', () => {
                     leapDay
                 );
 
-                const call = EnhancedApiClient.trafficAnalysis.mock.calls[0][0];
+                const call = unifiedAPI.trafficAnalysis.mock.calls[0][0];
                 expect(call.baseline_end).toContain('2024-02-29');
             });
 
@@ -642,7 +641,7 @@ describe('FlexibleTimeComparison', () => {
                 const epoch = new Date('1970-01-01T00:00:00Z');
                 const epochPlus1Day = new Date('1970-01-02T00:00:00Z');
 
-                EnhancedApiClient.trafficAnalysis.mockResolvedValue({
+                unifiedAPI.trafficAnalysis.mockResolvedValue({
                     success: true,
                     data: { events: [], metadata: {} }
                 });
@@ -654,7 +653,7 @@ describe('FlexibleTimeComparison', () => {
                     epochPlus1Day
                 );
 
-                const call = EnhancedApiClient.trafficAnalysis.mock.calls[0][0];
+                const call = unifiedAPI.trafficAnalysis.mock.calls[0][0];
                 expect(call.baseline_start).toContain('1970-01-01');
             });
 
@@ -662,7 +661,7 @@ describe('FlexibleTimeComparison', () => {
                 const futureDate = new Date('2030-01-01T00:00:00Z');
                 const futureDatePlus1Hour = new Date('2030-01-01T01:00:00Z');
 
-                EnhancedApiClient.trafficAnalysis.mockResolvedValue({
+                unifiedAPI.trafficAnalysis.mockResolvedValue({
                     success: true,
                     data: { events: [], metadata: {} }
                 });
@@ -681,7 +680,7 @@ describe('FlexibleTimeComparison', () => {
                 const yearInMs = 365 * 24 * 60 * 60 * 1000;
                 const secondInMs = 1000;
 
-                EnhancedApiClient.trafficAnalysis.mockResolvedValue({
+                unifiedAPI.trafficAnalysis.mockResolvedValue({
                     success: true,
                     data: {
                         events: [{
@@ -709,7 +708,7 @@ describe('FlexibleTimeComparison', () => {
             });
 
             it('should handle normalization factor < 1 (comparison > baseline)', async () => {
-                EnhancedApiClient.trafficAnalysis.mockResolvedValue({
+                unifiedAPI.trafficAnalysis.mockResolvedValue({
                     success: true,
                     data: {
                         events: [],
@@ -769,7 +768,7 @@ describe('FlexibleTimeComparison', () => {
             });
 
             it('should handle malformed API responses', async () => {
-                EnhancedApiClient.trafficAnalysis.mockResolvedValue({
+                unifiedAPI.trafficAnalysis.mockResolvedValue({
                     success: true,
                     data: null // Malformed response
                 });

@@ -56,16 +56,23 @@ export const UIUpdater = (() => {
             const eventId = item.event_id || item.eventId || item.displayName || '';
             const kibanaUrl = buildKibanaUrl(eventId);
 
+            // Get RAD type configuration
+            const radType = item.rad_type || 'unknown';
+            const config = ConfigService.getConfig();
+            const radConfig = config.rad_types?.[radType] || {};
+            const radDisplayName = radConfig.display_name || radType.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+            const radColor = radConfig.color || '#666';
+
             const row = document.createElement('tr');
             row.innerHTML = `
                 <td><a href="${kibanaUrl}" target="_blank" class="event-link">
-                    <span class="event-name">${eventId}</span>
+                    <span class="event-name">${item.displayName || eventId}</span>
                 </a></td>
+                <td><span class="rad-type-badge" style="background: ${radColor}; color: white; padding: 2px 8px; border-radius: 3px; font-size: 11px; font-weight: 600;">${radDisplayName}</span></td>
                 <td><span class="badge ${(item.status || 'normal').toLowerCase()}">${item.status || 'NORMAL'}</span></td>
                 <td class="number"><span class="score ${score_class}">${score_text}</span></td>
                 <td class="number">${current.toLocaleString()}</td>
                 <td class="number">${baseline.toLocaleString()}</td>
-                <td class="number">${(item.dailyAvg || 0).toLocaleString()}</td>
                 <td><span class="impact ${impact_class}">${impact}</span></td>
             `;
             tbody.appendChild(row);
@@ -118,10 +125,19 @@ export const UIUpdater = (() => {
         const envStatusEl = document.getElementById('envStatus');
         const cookieStatusEl = document.getElementById('cookieStatus');
 
-        // Don't override authentication error messages
+        // Don't override authentication error messages, but add a timeout to prevent permanent lockup
         if (statusEl && statusEl.dataset.authRequired === 'true') {
-            console.log('⏭️ SKIPPING status update - authentication error is showing');
-            return;
+            const authErrorTime = statusEl.dataset.authErrorTime;
+            const now = Date.now();
+            
+            // If auth error has been showing for more than 30 seconds, clear it
+            if (authErrorTime && (now - parseInt(authErrorTime)) > 30000) {
+                delete statusEl.dataset.authRequired;
+                delete statusEl.dataset.authErrorTime;
+            } else {
+                console.log('⏭️ SKIPPING status update - authentication error is showing');
+                return;
+            }
         }
 
         // If FastAPI is working, don't test legacy auth
@@ -163,11 +179,17 @@ export const UIUpdater = (() => {
                         // FastAPI is working, so auth is good
                         statusEl.innerHTML = `Ready for real-time! | <a href="#" onclick="Dashboard.testApiConnection(); return false;" style="color: #333;">Test API</a> | <a href="#" onclick="Dashboard.showApiSetupInstructions(); return false;" style="color: #333;">Setup</a>`;
                     } else {
-                        // Test legacy auth
+                        // Test legacy auth with timeout
                         statusEl.innerHTML = `Testing authentication... | <a href="#" onclick="Dashboard.setCookieForRealtime(); return false;" style="color: #333;">Update Cookie</a>`;
                         
+                        // Add timeout to auth test to prevent hanging
+                        const authTestPromise = ApiClient.testAuthentication();
+                        const timeoutPromise = new Promise((resolve) => {
+                            setTimeout(() => resolve({ success: false, error: 'Authentication test timed out' }), 5000);
+                        });
+                        
                         try {
-                            const testResult = await ApiClient.testAuthentication();
+                            const testResult = await Promise.race([authTestPromise, timeoutPromise]);
                             if (testResult.success) {
                                 statusEl.innerHTML = `Ready for real-time! | <a href="#" onclick="Dashboard.testApiConnection(); return false;" style="color: #333;">Test API</a> | <a href="#" onclick="Dashboard.showApiSetupInstructions(); return false;" style="color: #333;">Setup</a>`;
                             } else {
@@ -180,6 +202,7 @@ export const UIUpdater = (() => {
                 }
                 // Clear auth flag when successfully updating status
                 delete statusEl.dataset.authRequired;
+                delete statusEl.dataset.authErrorTime;
             }
         } else {
             // GitHub Pages - no CORS proxy needed
@@ -197,11 +220,17 @@ export const UIUpdater = (() => {
                         // FastAPI is working, so auth is good
                         statusEl.innerHTML = `Real-time enabled | <a href="#" onclick="Dashboard.testApiConnection(); return false;" style="color: #333;">Test API</a> | <a href="#" onclick="Dashboard.setCookieForRealtime(); return false;" style="color: #333;">Update Cookie</a>`;
                     } else {
-                        // Test legacy auth
+                        // Test legacy auth with timeout
                         statusEl.innerHTML = `Testing authentication... | <a href="#" onclick="Dashboard.setCookieForRealtime(); return false;" style="color: #333;">Update Cookie</a>`;
                         
+                        // Add timeout to auth test to prevent hanging
+                        const authTestPromise = ApiClient.testAuthentication();
+                        const timeoutPromise = new Promise((resolve) => {
+                            setTimeout(() => resolve({ success: false, error: 'Authentication test timed out' }), 5000);
+                        });
+                        
                         try {
-                            const testResult = await ApiClient.testAuthentication();
+                            const testResult = await Promise.race([authTestPromise, timeoutPromise]);
                             if (testResult.success) {
                                 statusEl.innerHTML = `Real-time enabled | <a href="#" onclick="Dashboard.testApiConnection(); return false;" style="color: #333;">Test API</a> | <a href="#" onclick="Dashboard.setCookieForRealtime(); return false;" style="color: #333;">Update Cookie</a>`;
                             } else {
@@ -214,7 +243,31 @@ export const UIUpdater = (() => {
                 }
                 // Clear auth flag when successfully updating status
                 delete statusEl.dataset.authRequired;
+                delete statusEl.dataset.authErrorTime;
             }
+        }
+    }
+
+    /**
+     * Set authentication error state with timestamp
+     */
+    function setAuthenticationError(message) {
+        const statusEl = document.getElementById('refreshStatus');
+        if (statusEl) {
+            statusEl.innerHTML = message;
+            statusEl.dataset.authRequired = 'true';
+            statusEl.dataset.authErrorTime = Date.now().toString();
+        }
+    }
+
+    /**
+     * Clear authentication error state
+     */
+    function clearAuthenticationError() {
+        const statusEl = document.getElementById('refreshStatus');
+        if (statusEl) {
+            delete statusEl.dataset.authRequired;
+            delete statusEl.dataset.authErrorTime;
         }
     }
 
@@ -466,6 +519,105 @@ export const UIUpdater = (() => {
         `;
     }
 
+    /**
+     * Initialize RAD type filter buttons
+     */
+    function initializeRadTypeFilters() {
+        const container = document.getElementById('radTypeButtons');
+        if (!container) return;
+
+        // Clear existing buttons
+        container.innerHTML = '';
+
+        // Get RAD types from config
+        const config = ConfigService.getConfig();
+        const radTypes = config.rad_types || {};
+
+        // Add "All" button
+        const allBtn = document.createElement('button');
+        allBtn.className = 'filter-btn rad-filter-btn active';
+        allBtn.dataset.radType = 'all';
+        allBtn.textContent = 'ALL';
+        allBtn.onclick = function() {
+            // Toggle all selection
+            const radButtons = document.querySelectorAll('.rad-filter-btn');
+            const isActive = this.classList.contains('active');
+            
+            if (!isActive) {
+                // Activate all
+                radButtons.forEach(btn => btn.classList.add('active'));
+            } else {
+                // Keep at least this one active
+                radButtons.forEach(btn => {
+                    if (btn !== this) btn.classList.remove('active');
+                });
+            }
+            
+            // Trigger filter update
+            if (typeof SearchFilter !== 'undefined' && SearchFilter.applyRadTypeFilter) {
+                SearchFilter.applyRadTypeFilter();
+            }
+        };
+        container.appendChild(allBtn);
+
+        // Add button for each enabled RAD type
+        Object.entries(radTypes).forEach(([radKey, radConfig]) => {
+            if (radConfig.enabled) {
+                const btn = document.createElement('button');
+                btn.className = 'filter-btn rad-filter-btn active';
+                btn.dataset.radType = radKey;
+                btn.textContent = radConfig.display_name;
+                btn.style.cssText = `
+                    position: relative;
+                    padding-left: 20px;
+                `;
+                
+                // Add color indicator
+                const colorDot = document.createElement('span');
+                colorDot.style.cssText = `
+                    position: absolute;
+                    left: 8px;
+                    top: 50%;
+                    transform: translateY(-50%);
+                    width: 8px;
+                    height: 8px;
+                    border-radius: 50%;
+                    background: ${radConfig.color};
+                `;
+                btn.appendChild(colorDot);
+                
+                btn.onclick = function() {
+                    // Toggle this button
+                    this.classList.toggle('active');
+                    
+                    // Update "All" button state
+                    const allActive = Array.from(document.querySelectorAll('.rad-filter-btn:not([data-rad-type="all"])')).every(b => b.classList.contains('active'));
+                    const allBtn = document.querySelector('.rad-filter-btn[data-rad-type="all"]');
+                    if (allBtn) {
+                        if (allActive) {
+                            allBtn.classList.add('active');
+                        } else {
+                            allBtn.classList.remove('active');
+                        }
+                    }
+                    
+                    // Ensure at least one is selected
+                    const anyActive = Array.from(document.querySelectorAll('.rad-filter-btn')).some(b => b.classList.contains('active'));
+                    if (!anyActive) {
+                        this.classList.add('active');
+                    }
+                    
+                    // Trigger filter update
+                    if (typeof SearchFilter !== 'undefined' && SearchFilter.applyRadTypeFilter) {
+                        SearchFilter.applyRadTypeFilter();
+                    }
+                };
+                
+                container.appendChild(btn);
+            }
+        });
+    }
+
     // Public API
     return {
         updateSummaryCards,
@@ -476,10 +628,14 @@ export const UIUpdater = (() => {
         hideLoading,
         buildKibanaUrl,
         updateProxyStatusIndicator,
-        updatePerformanceWidget
+        updatePerformanceWidget,
+        setAuthenticationError,
+        clearAuthenticationError,
+        initializeRadTypeFilters
     };
 })();
 
 // ESM: Export as default for convenience
 export default UIUpdater;
+
 

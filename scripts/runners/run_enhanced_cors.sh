@@ -1,12 +1,11 @@
 #!/bin/bash
-# run_enhanced_cors.sh - Run dashboard with enhanced CORS proxy using FastAPI
+# run_enhanced_cors.sh - Run dashboard with centralized API (includes CORS proxy)
 
-echo "=== RAD Monitor with Enhanced CORS Proxy (FastAPI) ==="
+echo "=== RAD Monitor with Centralized API ==="
 echo ""
 
 # Make scripts executable
 chmod +x scripts/generate_dashboard_refactored.sh
-chmod +x bin/cors_proxy_enhanced.py
 
 # Check for configuration
 if [ -f ".env" ]; then
@@ -69,11 +68,11 @@ else
     exit 1
 fi
 
-# Function to stop both processes
+# Function to stop server
 cleanup() {
     echo ""
-    echo "Stopping servers..."
-    kill $PROXY_PID $SERVER_PID 2>/dev/null
+    echo "Stopping server..."
+    kill $SERVER_PID 2>/dev/null
     deactivate
     exit
 }
@@ -81,53 +80,45 @@ cleanup() {
 # Set up cleanup on Ctrl+C
 trap cleanup INT
 
-# Start centralized API (includes enhanced CORS proxy + utilities)
+# Start unified server (includes everything: dashboard, API, CORS proxy, WebSocket)
 echo ""
-echo "Starting centralized API with FastAPI on port 8889..."
-python3 bin/centralized_api.py &
-PROXY_PID=$!
+echo "Starting RAD Monitor Unified Server on port 8000..."
+python3 bin/server.py &
+SERVER_PID=$!
 
-# Give proxy time to start
+# Give server time to start
 sleep 3
 
-# Check if proxy started
-if ! kill -0 $PROXY_PID 2>/dev/null; then
-    echo "Error: Enhanced CORS proxy failed to start"
+# Check if server started
+if ! kill -0 $SERVER_PID 2>/dev/null; then
+    echo "Error: Unified server failed to start"
     deactivate
     exit 1
 fi
 
-# Start HTTP server
-echo "Starting HTTP server on port 8888..."
-python3 -m http.server 8888 &
-SERVER_PID=$!
-
-# Give server time to start
-sleep 1
-
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
-echo "✅ RAD Monitor is running with Centralized API!"
+echo "✅ RAD Monitor Unified Server is running!"
 echo ""
-echo "🌐 Dashboard URL: http://localhost:8888"
-echo "🔌 Centralized API: http://localhost:8889"
-echo "📚 API Documentation: http://localhost:8889/docs"
+echo "🌐 Dashboard URL: http://localhost:8000"
+echo "📚 API Documentation: http://localhost:8000/docs"
+echo "🔌 WebSocket: ws://localhost:8000/ws"
 echo ""
-echo "🛠️  Utility endpoints:"
-echo "   • POST /api/utils/cleanup-ports - Clean up ports"
-echo "   • GET  /api/utils/port-status/{port} - Check port status"
-echo "   • POST /api/utils/validate - Run validation checks"
+echo "🛠️  API v1 endpoints:"
+echo "   • POST /api/v1/utils/cleanup-ports - Clean up ports"
+echo "   • POST /api/v1/utils/validate - Run validation checks"
+echo "   • GET  /api/v1/metrics - View server metrics"
 echo ""
-echo "🔍 Search endpoints:"
-echo "   • POST /api/search/traffic - Typed traffic search with caching"
-echo "   • POST /api/proxy - CORS proxy (new endpoint)"
-echo "   • POST /kibana-proxy - CORS proxy (backward compatible)"
+echo "🔍 Dashboard endpoints:"
+echo "   • GET  /api/v1/dashboard/config - Dashboard configuration"
+echo "   • GET  /api/v1/dashboard/stats - Dashboard statistics"
+echo "   • POST /api/v1/kibana/proxy - CORS proxy (built-in)"
 echo ""
 echo "⚙️  Configuration endpoints:"
-echo "   • GET  /api/config/settings - View all settings"
-echo "   • GET  /api/config/health - Check configuration health"
-echo "   • GET  /api/status - System status with port usage"
+echo "   • GET  /api/v1/config/settings - View all settings"
+echo "   • POST /api/v1/config/update - Update configuration"
+echo "   • GET  /api/v1/config/health - Check configuration health"
 echo ""
 echo "📝 To enable real-time updates:"
 echo "   1. Open the dashboard"
@@ -135,7 +126,7 @@ echo "   2. Click 'SET COOKIE FOR REAL-TIME'"
 echo "   3. Enter your Elastic cookie (sid=...)"
 echo "   4. Click 'REFRESH NOW' to test"
 echo ""
-echo "Use Ctrl+C to stop both servers"
+echo "Use Ctrl+C to stop the server"
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""

@@ -179,7 +179,7 @@ class IntegrationTest:
             # Start enhanced CORS proxy
             print("  Starting enhanced CORS proxy...")
             self.proxy_process = subprocess.Popen(
-                [sys.executable, 'cors_proxy_enhanced.py'],
+                [sys.executable, 'bin/cors_proxy.py'],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE
             )
@@ -257,7 +257,7 @@ class IntegrationTest:
 
             # Check for required scripts
             assert 'dashboard-main.js' in response.text
-            assert 'api-client-enhanced.js' in response.text
+            assert 'api-interface.js' in response.text
             print("  ✅ Required scripts are loaded")
 
             # Check for configuration integration

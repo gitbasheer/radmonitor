@@ -219,6 +219,11 @@ export const Dashboard = (() => {
                 }
             });
         }
+
+        // Initialize RAD type filter buttons
+        if (typeof UIUpdater !== 'undefined' && UIUpdater.initializeRadTypeFilters) {
+            UIUpdater.initializeRadTypeFilters();
+        }
     }
 
     /**
@@ -681,7 +686,7 @@ export const Dashboard = (() => {
 OPTION 1: Use CORS Proxy (Recommended)
 1. Open a new terminal
 2. Run: python3 bin/cors_proxy.py
-3. Leave it running (port 8889)
+                    3. Leave it running (port 8000)
 4. Refresh this dashboard
 5. Set your Elastic cookie when prompted
 

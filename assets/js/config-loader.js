@@ -12,8 +12,8 @@ const API_ENDPOINTS_CONFIG = {
         description: 'Production Kibana/Elasticsearch endpoint'
     },
     corsProxy: { 
-        url: 'http://localhost:8889', 
-        path: '/kibana-proxy',
+                    url: 'http://localhost:8000',
+            path: '/api/fetch-kibana-data',
         description: 'Local CORS proxy for development'
     },
     fastapi: { 

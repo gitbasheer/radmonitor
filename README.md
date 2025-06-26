@@ -213,10 +213,10 @@ All common tasks can be run via npm:
 
 | Command | Description |
 |---------|-------------|
-| `npm run dev` | **🎯 Smart development server** - Auto-detects best mode (FastAPI or Simple) |
-| `npm run dev:simple` | **Fast startup** - Simple HTTP server + CORS proxy |
-| `npm run dev:fastapi` | **Full features** - FastAPI server with WebSocket, API docs, validation |
-| `npm run dev:setup` | **First-time setup** - Install FastAPI dependencies and run |
+| `npm run dev` | **🎯 Unified server** - All features in one server (recommended) |
+| `npm run dev:simple` | **Legacy** - Simple HTTP server + CORS proxy |
+| `npm run dev:fastapi` | **Legacy** - Old FastAPI server (use unified server instead) |
+| `npm run dev:setup` | **First-time setup** - Install dependencies and run unified server |
 | `npm run cors-proxy` | Start only the CORS proxy server (port 8889) |
 | `npm run serve` | Start only the web server (port 8000) |
 | `npm run generate` | Generate dashboard with latest data |
@@ -770,12 +770,12 @@ rad_monitor/
 ├── index.html                   # Main dashboard with live functionality
 ├── bin/                         # Python executables
 │   ├── generate_dashboard.py    # Python dashboard generator (main script)
-│   ├── cors_proxy.py           # Local CORS proxy server
-│   ├── cors_proxy_enhanced.py  # Enhanced CORS proxy with typed endpoints
-│   ├── dev_server.py           # Simple development server
-│   ├── dev_server_unified.py   # Unified development server with auto-detection
-│   ├── dev_server_fastapi.py   # FastAPI development server with WebSocket
-│   ├── centralized_api.py      # Centralized API with FastAPI
+│   ├── server.py               # Unified server with all features
+│   ├── dev_server_unified.py   # Launcher for unified server
+│   ├── cors_proxy.py           # (deprecated - built into unified server)
+│   ├── dev_server.py           # (deprecated - use unified server)
+│   ├── dev_server_fastapi.py   # (deprecated - merged into unified server)
+│   ├── centralized_api.py      # (deprecated - merged into unified server)
 │   ├── cleanup_ports.py        # Port cleanup utility
 │   ├── validate_connections.py # Connection validation utility
 │   ├── health_check.py         # Health check utility

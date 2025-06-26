@@ -128,6 +128,21 @@ export const DataLayer = (() => {
             return query;
         },
 
+        // Add multiple wildcard filters with OR logic
+        multiWildcard(query, field, patterns) {
+            const shouldClauses = patterns.map(pattern => ({
+                wildcard: { [field]: { value: pattern } }
+            }));
+            
+            query.query.bool.filter.push({
+                bool: {
+                    should: shouldClauses,
+                    minimum_should_match: 1
+                }
+            });
+            return query;
+        },
+
         // Add terms aggregation
         termsAgg(query, name, field, size = 500) {
             query.aggs[name] = {
@@ -185,14 +200,39 @@ export const DataLayer = (() => {
             // Get query configuration
             const queryConfig = ConfigService.getConfig();
             const eventField = 'detail.event.data.traffic.eid.keyword'; // Fixed value
-            const eventPattern = queryConfig.queryEventPattern || 'pandc.vnext.recommendations.feed.feed*';
             const hostFilter = 'dashboard.godaddy.com'; // Fixed value
             const minEventDate = queryConfig.minEventDate || '2025-05-19T04:00:00.000Z';
 
-            // Add filters
+            // Get RAD types configuration
+            const radTypes = queryConfig.rad_types || {};
+            const enabledPatterns = [];
+            
+            // Collect enabled RAD patterns
+            for (const [radKey, radConfig] of Object.entries(radTypes)) {
+                if (radConfig.enabled && radConfig.pattern) {
+                    enabledPatterns.push(radConfig.pattern);
+                }
+            }
+            
+            // Fallback to default pattern if no RAD types are enabled
+            if (enabledPatterns.length === 0) {
+                enabledPatterns.push(queryConfig.queryEventPattern || 'pandc.vnext.recommendations.feed.feed*');
+            }
+
+            // Add time range filter
             QueryBuilder.timeRange(query, '@timestamp', minEventDate, 'now');
-            QueryBuilder.wildcard(query, eventField, eventPattern);
+            
+            // Add host filter
             QueryBuilder.term(query, 'detail.global.page.host', hostFilter);
+            
+            // Add pattern filter(s)
+            if (enabledPatterns.length === 1) {
+                // Single pattern - use simple wildcard
+                QueryBuilder.wildcard(query, eventField, enabledPatterns[0]);
+            } else {
+                // Multiple patterns - use should query
+                QueryBuilder.multiWildcard(query, eventField, enabledPatterns);
+            }
 
             // Add main aggregation
             QueryBuilder.termsAgg(query, 'events', eventField);

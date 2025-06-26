@@ -117,6 +117,14 @@
                     </div>
                 </div>
                 
+                <!-- RAD Type Filters -->
+                <div class="rad-filters" style="margin-top: 10px;">
+                    <label style="font-weight: 600; margin-right: 10px;">RAD Types:</label>
+                    <div id="radTypeButtons" class="filter-buttons" style="display: inline-flex;">
+                        <!-- RAD type buttons will be dynamically inserted here -->
+                    </div>
+                </div>
+                
                 <!-- Loading Indicator -->
                 <div id="loadingIndicator" class="loading" style="display: none;">
                     <div class="spinner"></div>
@@ -130,12 +138,13 @@
                 <table class="data-table">
                     <thead>
                         <tr>
-                            <th data-sort="event_id" style="width: 40%">Traffic Event Identifier</th>
+                            <th data-sort="event_id" style="width: 35%">Traffic Event Identifier</th>
+                            <th data-sort="rad_type" style="width: 12%">RAD Type</th>
                             <th data-sort="status" style="width: 10%">Health Status</th>
-                            <th data-sort="score" style="width: 10%">Change %</th>
+                            <th data-sort="score" style="width: 8%">Change %</th>
                             <th data-sort="current" style="width: 10%; text-align: right">Current Count</th>
                             <th data-sort="baseline12h" style="width: 10%; text-align: right">Expected Count</th>
-                            <th data-sort="change" style="width: 20%">Business Impact</th>
+                            <th data-sort="change" style="width: 15%">Business Impact</th>
                         </tr>
                     </thead>
                     <tbody id="tableBody">

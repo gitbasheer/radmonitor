@@ -172,17 +172,47 @@ def fetch_kibana_data(cookie: str, config: DashboardConfig, args: argparse.Names
 
     logger.info("📊 Fetching traffic data from Kibana...")
 
-    # Build the Elasticsearch query (same as old bash script)
+    # Load RAD types from settings
+    settings = Settings()
+    rad_types = settings.rad_types
+    
+    # Build wildcard filters for enabled RAD types
+    wildcard_filters = []
+    for rad_key, rad_config in rad_types.items():
+        if rad_config.get('enabled', False) and rad_config.get('pattern'):
+            wildcard_filters.append({
+                "wildcard": {
+                    "detail.event.data.traffic.eid.keyword": {
+                        "value": rad_config['pattern']
+                    }
+                }
+            })
+    
+    # If no RAD types are enabled, fall back to default
+    if not wildcard_filters:
+        logger.warning("No RAD types enabled, using default pattern")
+        wildcard_filters = [{
+            "wildcard": {
+                "detail.event.data.traffic.eid.keyword": {
+                    "value": "pandc.vnext.recommendations.feed.feed*"
+                }
+            }
+        }]
+    
+    # Log which patterns we're using
+    patterns = [f['wildcard']['detail.event.data.traffic.eid.keyword']['value'] for f in wildcard_filters]
+    logger.info(f"Using RAD patterns: {', '.join(patterns)}")
+
+    # Build the Elasticsearch query with multiple patterns using OR logic
     query = {
         "size": 0,
         "query": {
             "bool": {
                 "filter": [
                     {
-                        "wildcard": {
-                            "detail.event.data.traffic.eid.keyword": {
-                                "value": "pandc.vnext.recommendations.feed.feed*"
-                            }
+                        "bool": {
+                            "should": wildcard_filters,
+                            "minimum_should_match": 1
                         }
                     },
                     {

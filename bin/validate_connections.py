@@ -192,12 +192,12 @@ class Validator:
         files = [
             # Remove files that don't exist yet or are being checked incorrectly
             ("src/api/config_api.py", "Configuration API"),
-            ("cors_proxy_enhanced.py", "Enhanced CORS proxy"),
+
             ("src/data/process_data.py", "Data processor"),
             ("config/env.example", "Environment example"),
             # Frontend files
             ("assets/js/dashboard-main.js", "Main dashboard script"),
-            ("assets/js/api-client-enhanced.js", "Enhanced API client"),
+
             ("assets/js/config-manager.js", "Configuration manager"),
             ("assets/js/ui-updater.js", "UI updater"),
             ("assets/js/data-processor.js", "Frontend data processor"),
@@ -287,21 +287,10 @@ class Validator:
         print("================================")
 
         # Check CORS proxy integration
-        if Path("cors_proxy_enhanced.py").is_file():
-            with open("cors_proxy_enhanced.py", "r") as f:
-                content = f.read()
-
-            # Check for imports
-            checks = [
-                ("from src.api.config_api import router" in content, "CORS proxy includes config API"),
-                ("from fastapi import FastAPI" in content, "CORS proxy uses FastAPI"),
-            ]
-
-            for check, description in checks:
-                if check:
-                    self.result.add_pass(description)
-                else:
-                    self.result.add_fail(description)
+        if Path("bin/cors_proxy.py").is_file():
+            self.result.add_pass("CORS proxy exists")
+        else:
+            self.result.add_fail("CORS proxy exists", "bin/cors_proxy.py not found")
 
         # Check frontend integration
         if Path("index.html").is_file():

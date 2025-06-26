@@ -4,9 +4,9 @@
     "description": "Production Kibana/Elasticsearch endpoint"
   },
   "corsProxy": {
-    "url": "http://localhost:8889",
-    "path": "/kibana-proxy",
-    "description": "Local CORS proxy for development"
+    "url": "http://localhost:8000",
+    "path": "/api/fetch-kibana-data",
+    "description": "FastAPI proxy endpoint for development"
   },
   "fastapi": {
     "url": "http://localhost:8000",
