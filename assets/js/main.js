@@ -110,6 +110,39 @@ window.ConsoleControl = {
         StateLoggingDemo.demo();
     },
     
+    testCookie: async (cookie) => {
+        console.log('%c🔍 Testing Elasticsearch cookie...', 'color: #2196F3; font-weight: bold;');
+        
+        // Save the cookie
+        const cookieData = {
+            cookie: cookie.trim(),
+            expires: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+            saved: new Date().toISOString()
+        };
+        localStorage.setItem('elasticCookie', JSON.stringify(cookieData));
+        
+        // Test it
+        try {
+            const auth = await apiClient.getAuthenticationDetails();
+            if (auth.valid) {
+                console.log('%c✅ Cookie is valid!', 'color: #4CAF50; font-weight: bold;');
+                console.log('Authentication details:', auth);
+                
+                // Try a test query
+                const health = await apiClient.checkHealth();
+                console.log('Server health:', health);
+                
+                return true;
+            } else {
+                console.log('%c❌ Cookie is invalid', 'color: #f44336; font-weight: bold;');
+                return false;
+            }
+        } catch (error) {
+            console.error('%c❌ Cookie test failed:', 'color: #f44336; font-weight: bold;', error.message);
+            return false;
+        }
+    },
+    
     showHelp: () => {
         console.log('%c🔧 Console Control Commands:', 'color: #ffe66d; font-size: 14px; font-weight: bold;');
         console.log('');
@@ -122,6 +155,7 @@ window.ConsoleControl = {
         console.log('%cOther Commands:', 'color: #4CAF50; font-weight: bold;');
         console.log('  %cDashboard.showPerformanceStats()%c - View performance metrics', 'color: #2196F3;', 'color: #666;');
         console.log('  %cDashboard.refresh()%c - Refresh dashboard data', 'color: #2196F3;', 'color: #666;');
+        console.log('  %cConsoleControl.testCookie("your_cookie")%c - Test an Elasticsearch cookie', 'color: #2196F3;', 'color: #666;');
         console.log('  %cConsoleControl.runDemo()%c - Run state logging demo', 'color: #2196F3;', 'color: #666;');
         console.log('');
     }

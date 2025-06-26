@@ -306,22 +306,75 @@ const ConfigEditor = {
                 }
             });
             
-            // Update configuration using ConfigService
-            await ConfigService.updateConfig(flatConfig);
+            // Update configuration using ConfigService - save locally only for now
+            await ConfigService.updateConfig(flatConfig, { saveToBackend: false, saveToLocalStorage: true });
             
-            statusEl.textContent = '✓ Configuration saved successfully!';
-            statusEl.style.color = '#28a745';
-            
-            // Notify other parts of the app
-            if (typeof Dashboard !== 'undefined' && Dashboard.refresh) {
-                setTimeout(() => {
-                    statusEl.textContent = 'Refreshing dashboard...';
-                    Dashboard.refresh();
-                    // Clear the status after a reasonable time
+            // If elastic cookie was updated, test the connection immediately
+            if (flatConfig.elasticCookie) {
+                statusEl.textContent = '✓ Cookie saved! Testing connection...';
+                statusEl.style.color = '#17a2b8';
+                
+                // Save cookie to localStorage in the format expected by the API client
+                const cookieData = {
+                    cookie: flatConfig.elasticCookie,
+                    expires: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+                    saved: new Date().toISOString()
+                };
+                localStorage.setItem('elasticCookie', JSON.stringify(cookieData));
+                
+                // Test the connection using the unified API
+                try {
+                    // Import the unified API client
+                    const { unifiedAPI } = await import('./api-interface.js');
+                    
+                    // Test authentication
+                    const authResult = await unifiedAPI.getAuthenticationDetails();
+                    
+                    if (authResult.valid) {
+                        // Try a simple health check query
+                        const testResult = await unifiedAPI.checkHealth();
+                        
+                        if (testResult) {
+                            statusEl.textContent = '✓ Configuration saved & connection verified!';
+                            statusEl.style.color = '#28a745';
+                            
+                            // Refresh dashboard after successful save
+                            if (typeof Dashboard !== 'undefined' && Dashboard.refresh) {
+                                setTimeout(() => {
+                                    statusEl.textContent = 'Refreshing dashboard...';
+                                    Dashboard.refresh();
+                                    setTimeout(() => {
+                                        statusEl.textContent = '';
+                                    }, 3000);
+                                }, 1000);
+                            }
+                        } else {
+                            statusEl.textContent = '⚠️ Cookie saved but connection test failed';
+                            statusEl.style.color = '#ffc107';
+                        }
+                    } else {
+                        statusEl.textContent = '⚠️ Cookie saved but authentication invalid';
+                        statusEl.style.color = '#ffc107';
+                    }
+                } catch (error) {
+                    statusEl.textContent = `⚠️ Cookie saved. Connection test: ${error.message}`;
+                    statusEl.style.color = '#ffc107';
+                }
+            } else {
+                // No cookie change, just save normally
+                statusEl.textContent = '✓ Configuration saved successfully!';
+                statusEl.style.color = '#28a745';
+                
+                // Notify other parts of the app
+                if (typeof Dashboard !== 'undefined' && Dashboard.refresh) {
                     setTimeout(() => {
-                        statusEl.textContent = '';
-                    }, 3000);
-                }, 1000);
+                        statusEl.textContent = 'Refreshing dashboard...';
+                        Dashboard.refresh();
+                        setTimeout(() => {
+                            statusEl.textContent = '';
+                        }, 3000);
+                    }, 1000);
+                }
             }
             
         } catch (error) {

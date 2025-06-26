@@ -11,13 +11,13 @@ export const ConfigService = (() => {
     let listeners = [];
     let syncTimer = null;
 
-    // Backend endpoints
+    // Backend endpoints - updated for unified server
     const ENDPOINTS = {
-        get: '/api/config/settings',
-        update: '/api/config/update',
-        validate: '/api/config/validate',
-        export: '/api/config/export',
-        environment: '/api/config/environment'
+        get: '/api/v1/config/settings',
+        update: '/api/v1/config/settings',  // Using the same endpoint for GET/POST
+        validate: '/api/v1/config/validate',
+        export: '/api/v1/config/export',
+        environment: '/api/v1/config/environment'
     };
 
     /**

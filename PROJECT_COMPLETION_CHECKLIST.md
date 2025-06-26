@@ -8,9 +8,9 @@ This checklist consolidates all tasks needed to complete the vh-rad-traffic-moni
 - **Phase 2: Multi-RAD Support** - ✅ **COMPLETED**
 - **Phase 3: Backend Consolidation** - ✅ **COMPLETED**
 - **Phase 4: Frontend Consolidation** - ⚡ **IN PROGRESS** (API Client done, Module System next)
-- **Phase 5-10**: Not started
+- **Phase 5-11**: Not started
 
-**Overall Progress**: ~35% Complete (4 of 10 phases started, 3.5 completed)
+**Overall Progress**: ~32% Complete (4 of 11 phases started, 3.5 completed)
 
 ## Priority Legend
 - 🔴 **CRITICAL**: Blocking issues or high-impact improvements
@@ -327,6 +327,209 @@ This checklist consolidates all tasks needed to complete the vh-rad-traffic-moni
 
 ---
 
+## Phase 11: Advanced Query Filtering System (7-10 days)
+
+### 🔴 Core Query Engine Enhancements
+
+#### Query Language Parser
+- [ ] Create `assets/js/query-language-parser.js`:
+  - [ ] Implement tokenizer for Lens-like formula syntax
+  - [ ] Build AST (Abstract Syntax Tree) parser
+  - [ ] Support nested expressions and parentheses
+  - [ ] Validate syntax and provide meaningful error messages
+  - [ ] Example: `sum(bytes, kql='status:200') / sum(bytes) * 100`
+
+#### Query Builder Extensions
+- [ ] Enhance `assets/js/data-layer.js` QueryBuilder:
+  - [ ] Add support for Elasticsearch metrics (sum, avg, min, max, percentile)
+  - [ ] Implement bucket selectors for complex calculations
+  - [ ] Add support for pipeline aggregations
+  - [ ] Support sub-aggregations with filters
+  - [ ] Add metric math calculations
+
+#### Formula Functions Implementation
+- [ ] Create `assets/js/formula-functions.js`:
+  - [ ] **Elasticsearch Functions**:
+    - [ ] `average()`, `count()`, `sum()`, `min()`, `max()`
+    - [ ] `median()`, `percentile()`, `percentile_rank()`
+    - [ ] `standard_deviation()`, `unique_count()`
+    - [ ] `last_value()` for latest state
+  - [ ] **Time Series Functions**:
+    - [ ] `cumulative_sum()`, `differences()`
+    - [ ] `moving_average()`, `counter_rate()`
+    - [ ] `normalize_by_unit()` for time normalization
+  - [ ] **Window Functions**:
+    - [ ] `overall_sum()`, `overall_average()`
+    - [ ] `overall_max()`, `overall_min()`
+  - [ ] **Math Functions**:
+    - [ ] Basic: `add()`, `subtract()`, `multiply()`, `divide()`
+    - [ ] Advanced: `pow()`, `sqrt()`, `log()`, `exp()`
+    - [ ] Rounding: `round()`, `floor()`, `ceil()`
+    - [ ] Comparison: `eq()`, `gt()`, `gte()`, `lt()`, `lte()`
+    - [ ] Conditional: `ifelse()`, `defaults()`
+
+### 🔴 Advanced Filtering Features
+
+#### KQL/Lucene Integration
+- [ ] Implement KQL parser in `assets/js/kql-parser.js`:
+  - [ ] Parse KQL syntax within formula functions
+  - [ ] Convert KQL to Elasticsearch DSL
+  - [ ] Support field:value, wildcards, ranges
+  - [ ] Handle escaping and special characters
+  - [ ] Example: `count(kql='rad_type:venture_feed AND status:error')`
+
+#### Dynamic Filter Builder UI
+- [ ] Create `assets/js/filter-builder-ui.js`:
+  - [ ] Visual filter builder with drag-and-drop
+  - [ ] Formula editor with syntax highlighting
+  - [ ] Real-time validation and preview
+  - [ ] Save/load filter templates
+  - [ ] Export filters as shareable URLs
+
+#### Context-Aware Filtering
+- [ ] Implement smart filter suggestions:
+  - [ ] Auto-complete for field names
+  - [ ] Value suggestions based on data
+  - [ ] Common formula templates
+  - [ ] Performance warnings for expensive queries
+
+### 🟡 Integration & Performance
+
+#### Query Optimization
+- [ ] Create `assets/js/query-optimizer.js`:
+  - [ ] Analyze and optimize complex queries
+  - [ ] Implement query caching strategy
+  - [ ] Detect and prevent expensive operations
+  - [ ] Suggest more efficient alternatives
+  - [ ] Add query cost estimation
+
+#### Real-time Query Updates
+- [ ] Enhance WebSocket integration:
+  - [ ] Stream query results as they arrive
+  - [ ] Support partial result updates
+  - [ ] Handle query cancellation
+  - [ ] Implement backpressure handling
+
+#### Multi-RAD Formula Support
+- [ ] Extend formula functions for RAD types:
+  - [ ] `rad_type()` function to filter by type
+  - [ ] `compare_rad_types()` for cross-type analysis
+  - [ ] `rad_performance()` for type-specific metrics
+  - [ ] Example: `sum(events, kql='rad_type:venture_feed') / sum(events)`
+
+### 🟢 User Experience Enhancements
+
+#### Formula Library
+- [ ] Create pre-built formula templates:
+  - [ ] **Performance Metrics**:
+    - [ ] Error rate: `count(kql='status:error') / count() * 100`
+    - [ ] Success rate: `count(kql='status:success') / count() * 100`
+    - [ ] Average response time: `average(response_time)`
+  - [ ] **Comparison Formulas**:
+    - [ ] Week-over-week: `sum(events) / sum(events, shift='1w')`
+    - [ ] Percent of total: `sum(events) / overall_sum(sum(events))`
+    - [ ] Baseline comparison: `(current - baseline) / baseline * 100`
+  - [ ] **RAD-Specific**:
+    - [ ] RAD conversion rate by type
+    - [ ] Cross-RAD performance comparison
+    - [ ] Time-based RAD trends
+
+#### Interactive Query Builder
+- [ ] Visual query construction:
+  - [ ] Drag fields to build formulas
+  - [ ] Preview results in real-time
+  - [ ] Show query explanation
+  - [ ] Estimated query time/cost
+
+#### Query History & Sharing
+- [ ] Implement query management:
+  - [ ] Save query history locally
+  - [ ] Share queries via URL
+  - [ ] Export queries as code
+  - [ ] Import/export query collections
+
+### 🟢 Developer Experience
+
+#### Query Testing Framework
+- [ ] Create `tests/query-formulas.test.js`:
+  - [ ] Unit tests for formula parser
+  - [ ] Integration tests for query execution
+  - [ ] Performance benchmarks
+  - [ ] Edge case handling
+
+#### Documentation & Examples
+- [ ] Create comprehensive docs:
+  - [ ] `docs/QUERY_LANGUAGE_GUIDE.md`
+  - [ ] `docs/FORMULA_REFERENCE.md`
+  - [ ] Interactive formula playground
+  - [ ] Video tutorials
+
+#### API Extensions
+- [ ] Enhance REST API:
+  - [ ] POST `/api/v1/query/parse` - Validate formulas
+  - [ ] POST `/api/v1/query/execute` - Run formulas
+  - [ ] GET `/api/v1/query/suggest` - Get suggestions
+  - [ ] GET `/api/v1/query/templates` - List templates
+
+### 🔵 Advanced Features (Future)
+
+#### Machine Learning Integration
+- [ ] Smart query suggestions based on usage
+- [ ] Anomaly detection in query results
+- [ ] Predictive query completion
+- [ ] Query performance prediction
+
+#### Natural Language Queries
+- [ ] Convert natural language to formulas
+- [ ] "Show me error rate for venture feed last week"
+- [ ] Context-aware query interpretation
+- [ ] Multi-language support
+
+### Implementation Order
+
+1. **Week 1**: Query Language Parser & Basic Functions
+   - Tokenizer and AST parser
+   - Basic Elasticsearch functions
+   - Simple math operations
+
+2. **Week 2**: Advanced Functions & KQL Integration
+   - Time series and window functions
+   - KQL parser implementation
+   - Complex aggregations
+
+3. **Week 3**: UI Components & Integration
+   - Filter builder UI
+   - Formula editor
+   - Real-time preview
+
+4. **Week 4**: Performance & Polish
+   - Query optimizer
+   - Caching strategy
+   - Documentation
+
+5. **Week 5**: Testing & Release
+   - Comprehensive testing
+   - Performance tuning
+   - User documentation
+
+### Success Metrics
+
+- [ ] Query execution time < 500ms for 90% of queries
+- [ ] Support for 50+ formula functions
+- [ ] 95% query syntax validation accuracy
+- [ ] < 2% query failure rate
+- [ ] User satisfaction score > 4.5/5
+
+### Technical Considerations
+
+1. **Parser Technology**: Consider using PEG.js or Nearley for robust parsing
+2. **Performance**: Implement query result caching with Redis
+3. **Security**: Validate all queries to prevent injection attacks
+4. **Compatibility**: Ensure backward compatibility with existing queries
+5. **Extensibility**: Design plugin system for custom functions
+
+---
+
 ## Completion Metrics
 
 ### Success Criteria
@@ -364,6 +567,7 @@ For fastest impact, complete in this order:
 3. **Week 3**: Phase 4 (Frontend) + Phase 5 (Testing)
 4. **Week 4**: Phase 6 (Security) + Phase 7 (Performance)
 5. **Week 5**: Phase 8 (Documentation) + Phase 9 (Advanced Features)
+6. **Week 6-7**: Phase 11 (Advanced Query Filtering System)
 
 ---
 

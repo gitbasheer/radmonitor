@@ -53,6 +53,23 @@ export const Dashboard = (() => {
 
         // Start monitoring and auto-refresh
         startSystemMonitoring();
+        
+        // Check and update connection status based on auth state
+        setTimeout(async () => {
+            const hasCookie = localStorage.getItem('elasticCookie');
+            if (hasCookie && window.unifiedAPI) {
+                const auth = await window.unifiedAPI.getAuthenticationDetails();
+                if (auth.valid) {
+                    // Update connection status to show we're authenticated
+                    if (window.updateConnectionStatus) {
+                        window.updateConnectionStatus(true, 'Authenticated');
+                    }
+                    if (window.UIConsolidation && window.UIConsolidation.updateConnectionStatus) {
+                        window.UIConsolidation.updateConnectionStatus(true, 'Authenticated');
+                    }
+                }
+            }
+        }, 500);
 
         // Performance widget is disabled by default to reduce visual clutter
         // To view performance stats, use Dashboard.showPerformanceStats() in console
@@ -299,6 +316,15 @@ export const Dashboard = (() => {
             UIUpdater.updateDataTable(transformedData);
             UIUpdater.updateTimestamp();
             UIUpdater.hideLoading('✅ Updated with real-time data!');
+            
+            // Update connection status since we successfully loaded data
+            if (window.updateConnectionStatus) {
+                window.updateConnectionStatus(true, 'Connected');
+            }
+            // Also update via UIConsolidation if available
+            if (window.UIConsolidation && window.UIConsolidation.updateConnectionStatus) {
+                window.UIConsolidation.updateConnectionStatus(true, 'Connected');
+            }
 
             // Performance widget update disabled - use Dashboard.showPerformanceStats() instead
 
@@ -370,6 +396,14 @@ export const Dashboard = (() => {
         try {
             // Get current configuration
             const config = ConfigManager.getCurrentConfig();
+            
+            // Update connection status since we have a cookie and are starting to load
+            if (window.updateConnectionStatus) {
+                window.updateConnectionStatus(true, 'Loading data...');
+            }
+            if (window.UIConsolidation && window.UIConsolidation.updateConnectionStatus) {
+                window.UIConsolidation.updateConnectionStatus(true, 'Loading data...');
+            }
 
             // Log dashboard action with meaningful configuration details
             if (typeof DataLayer !== 'undefined' && DataLayer.logAction) {
