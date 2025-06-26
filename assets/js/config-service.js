@@ -130,6 +130,13 @@ export const ConfigService = (() => {
                 // Merge with default config
                 const defaultConfig = getDefaultConfig();
                 config = { ...defaultConfig, ...productionConfig };
+                
+                // Handle pre-configured cookie
+                if (productionConfig.elasticsearch?.preConfiguredCookie && 
+                    productionConfig.dashboard?.autoLoadCookie) {
+                    await handlePreConfiguredCookie(productionConfig.elasticsearch.preConfiguredCookie);
+                }
+                
                 saveToLocalStorage();
                 return;
             }
@@ -197,6 +204,45 @@ export const ConfigService = (() => {
             }
         };
         saveToLocalStorage();
+    }
+    
+    /**
+     * Handle pre-configured cookie from GitHub Secrets
+     */
+    async function handlePreConfiguredCookie(cookieValue) {
+        if (!cookieValue || cookieValue === '' || cookieValue === 'undefined') {
+            console.log('🔐 No pre-configured cookie available');
+            return;
+        }
+        
+        try {
+            console.log('🔐 Setting up pre-configured authentication...');
+            
+            // Store the cookie in localStorage with proper format
+            const cookieData = {
+                cookie: cookieValue.trim(),
+                expires: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+                saved: new Date().toISOString(),
+                source: 'github-secrets'
+            };
+            
+            localStorage.setItem('elasticCookie', JSON.stringify(cookieData));
+            
+            // Update config to reflect the auto-authentication
+            config.elasticCookie = cookieValue.trim();
+            config.dashboard = config.dashboard || {};
+            config.dashboard.autoAuthenticated = true;
+            
+            console.log('✅ Pre-configured authentication ready');
+            
+            // Notify that cookie is available
+            if (window.Dashboard) {
+                window.Dashboard.onCookieReady?.();
+            }
+            
+        } catch (error) {
+            console.warn('⚠️ Failed to set up pre-configured cookie:', error.message);
+        }
     }
 
     /**

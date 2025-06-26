@@ -48,27 +48,33 @@ jobs:
           # Copy config directory for production
           cp -r config/ _site/config/
           
-          # Create production config override
-          cat > _site/config/production.json << 'EOF'
+                    # Create production config override with secrets
+          cat > _site/config/production.json << EOF
           {
             "environment": "production",
             "baseUrl": "https://balkhalil-godaddy.github.io/vh-rad-traffic-monitor",
-                          "corsProxy": {
-                "enabled": true,
-                "url": "https://rad-monitor-demo-jbgygggfw-basheers-projects-d3b7a207.vercel.app/api/proxy",
-                "fallbackToDirect": true,
-                "message": "Using serverless proxy to avoid CORS issues"
-              },
+            "corsProxy": {
+              "enabled": true,
+              "url": "https://rad-monitor-demo-jbgygggfw-basheers-projects-d3b7a207.vercel.app/api/proxy",
+              "fallbackToDirect": true,
+              "message": "Using serverless proxy to avoid CORS issues"
+            },
             "elasticsearch": {
               "directConnection": false,
               "url": "https://usieventho-prod-usw2.kb.us-west-2.aws.found.io:9243",
-              "path": "/elasticsearch/usi*/_search"
+              "path": "/elasticsearch/usi*/_search",
+              "preConfiguredCookie": "${{ secrets.ELASTICSEARCH_COOKIE }}"
             },
             "features": {
               "fastapi": false,
               "localServer": false,
               "corsProxy": true,
-              "proxyFallback": true
+              "proxyFallback": true,
+              "autoAuthentication": true
+            },
+            "dashboard": {
+              "autoLoadCookie": true,
+              "skipCookiePrompt": ${{ secrets.ELASTICSEARCH_COOKIE != '' && 'true' || 'false' }}
             }
           }
           EOF

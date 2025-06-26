@@ -164,6 +164,9 @@ window.ProductionHelper = (() => {
         if (ConfigService.isProduction()) {
             console.log('🌐 Running in production mode on GitHub Pages');
             
+            // Check for auto-authentication
+            checkAutoAuthentication();
+            
             // Show production banner
             showProductionBanner();
             
@@ -189,6 +192,35 @@ window.ProductionHelper = (() => {
                 }
             };
         }
+    }
+    
+    /**
+     * Check for auto-authentication setup
+     */
+    function checkAutoAuthentication() {
+        // Wait for config to load
+        ConfigService.subscribe((event) => {
+            if (event.event === 'initialized') {
+                const config = event.newConfig;
+                
+                if (config.dashboard?.autoAuthenticated) {
+                    console.log('🔐 Auto-authentication enabled - cookie pre-configured');
+                    
+                    // Update the banner to show auto-auth status
+                    setTimeout(() => {
+                        const banner = document.getElementById('productionBanner');
+                        if (banner) {
+                            banner.innerHTML = banner.innerHTML.replace(
+                                'GitHub Pages Mode',
+                                'GitHub Pages Mode | 🔐 Auto-Authenticated'
+                            );
+                        }
+                    }, 1000);
+                } else if (config.dashboard?.skipCookiePrompt === false) {
+                    console.log('🔐 Cookie prompt will be shown - no pre-configured authentication');
+                }
+            }
+        });
     }
 
     /**
@@ -242,7 +274,8 @@ window.ProductionHelper = (() => {
         showProductionBanner,
         hideBanner,
         getProductionInfo,
-        showQuickSetupGuide
+        showQuickSetupGuide,
+        checkAutoAuthentication
     };
 })();
 
