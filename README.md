@@ -1473,3 +1473,4 @@ const errors = await EnhancedApiClient.getErrorAnalysis({
 
 **Q: How is the data fetched from Kibana?**
 A: Initially, the data was fetched using a bash script (`fetch_kibana_data.sh`). This has been replaced with more robust solutions. The data fetching is now handled by `bin/generate_dashboard.py` which automatically tries the FastAPI endpoint first, then falls back to the CORS proxy if needed:
+# Triggering rebuild with .nojekyll
