@@ -332,6 +332,29 @@ export const ApiClient = (() => {
      */
     async function testAuthentication() {
         try {
+            // Check if we're in production mode and have unified API client
+            const isProduction = window.location.hostname !== 'localhost';
+            
+            if (isProduction && window.UnifiedApiClient) {
+                console.log('🔍 Using unified API client for production authentication test');
+                
+                // Use unified API client health check in production
+                const healthCheck = await window.UnifiedApiClient.checkHealth();
+                if (healthCheck.healthy && healthCheck.authenticated) {
+                    return { 
+                        success: true, 
+                        method: 'production-proxy', 
+                        message: 'Authentication validated successfully via proxy' 
+                    };
+                } else {
+                    return { 
+                        success: false, 
+                        error: healthCheck.message || 'Authentication failed via proxy' 
+                    };
+                }
+            }
+
+            // Fallback to old method for localhost or when unified client not available
             const auth = await getAuthenticationDetails();
 
             if (!auth.valid) {
@@ -357,7 +380,7 @@ export const ApiClient = (() => {
             let response;
 
             if (auth.method === 'proxy') {
-                // Test through CORS proxy (FastAPI endpoint)
+                // Test through CORS proxy (FastAPI endpoint - localhost only)
                 response = await fetch(getCorsProxyUrl(), {
                     method: 'POST',
                     headers: {
@@ -411,6 +434,12 @@ export const ApiClient = (() => {
             if (error.name === 'TimeoutError') {
                 return { success: false, error: 'Authentication test timed out - check network connection' };
             }
+            
+            // Check for CORS errors in production
+            if (error.message && error.message.includes('CORS')) {
+                return { success: false, error: 'CORS Error: Failed to fetch. Please set up CORS extension (see instructions).' };
+            }
+            
             return { success: false, error: `Authentication test failed: ${error.message}` };
         }
     }
