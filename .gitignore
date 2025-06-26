@@ -42,3 +42,4 @@ dev_index.html
 # Legacy scripts (preserved but not in active use)
 scripts/legacy/
 docs/G.md
+venv/
