@@ -114,25 +114,47 @@ export const DataLayer = (() => {
 
         // Add term filter
         term(query, field, value) {
+            // Create proper term filter structure
+            const termFilter = {};
+            termFilter[field] = value;
+
             query.query.bool.filter.push({
-                term: { [field]: value }
+                term: termFilter
+            });
+            return query;
+        },
+
+                // Add match_phrase filter
+        matchPhrase(query, field, value) {
+            // Create proper match_phrase filter structure
+            const matchFilter = {};
+            matchFilter[field] = value;
+
+            query.query.bool.filter.push({
+                match_phrase: matchFilter
             });
             return query;
         },
 
         // Add wildcard filter
         wildcard(query, field, pattern) {
+            // Create proper wildcard filter structure
+            const wildcardFilter = {};
+            wildcardFilter[field] = { value: pattern };
+
             query.query.bool.filter.push({
-                wildcard: { [field]: { value: pattern } }
+                wildcard: wildcardFilter
             });
             return query;
         },
 
-        // Add multiple wildcard filters with OR logic
+                // Add multiple wildcard filters with OR logic
         multiWildcard(query, field, patterns) {
-            const shouldClauses = patterns.map(pattern => ({
-                wildcard: { [field]: { value: pattern } }
-            }));
+            const shouldClauses = patterns.map(pattern => {
+                const wildcardFilter = {};
+                wildcardFilter[field] = { value: pattern };
+                return { wildcard: wildcardFilter };
+            });
 
             query.query.bool.filter.push({
                 bool: {
@@ -195,12 +217,10 @@ export const DataLayer = (() => {
     const QueryTemplates = {
         // Traffic analysis query
         trafficAnalysis(config) {
-            const query = QueryBuilder.base();
-
-            // Get query configuration
+            // Build query structure manually to ensure correctness
             const queryConfig = ConfigService.getConfig();
-            const eventField = 'detail.event.data.traffic.eid.keyword'; // Fixed value
-            const hostFilter = 'dashboard.godaddy.com'; // Fixed value
+            const eventField = 'detail.event.data.traffic.eid.keyword';
+            const hostFilter = 'dashboard.godaddy.com';
             const minEventDate = queryConfig.minEventDate || '2025-05-19T04:00:00.000Z';
 
             // Get RAD types configuration
@@ -223,20 +243,88 @@ export const DataLayer = (() => {
 
             console.log('📡 DataLayer query patterns:', enabledPatterns);
 
-            // Add time range filter
-            QueryBuilder.timeRange(query, '@timestamp', minEventDate, 'now');
+            // Build query manually to ensure correct structure
+            const query = {
+                size: 0,
+                query: {
+                    bool: {
+                        filter: [
+                            {
+                                range: {
+                                    "@timestamp": {
+                                        gte: minEventDate,
+                                        lte: "now"
+                                    }
+                                }
+                            },
+                            {
+                                match_phrase: {
+                                    "detail.global.page.host": hostFilter
+                                }
+                            }
+                        ]
+                    }
+                },
+                aggs: {
+                    events: {
+                        terms: {
+                            field: eventField,
+                            size: 500,
+                            order: { _key: 'asc' }
+                        },
+                        aggs: {
+                            baseline: {
+                                filter: {
+                                    range: {
+                                        "@timestamp": {
+                                            gte: config.baselineStart,
+                                            lt: config.baselineEnd
+                                        }
+                                    }
+                                }
+                            },
+                            current: {
+                                filter: {
+                                    range: {
+                                        "@timestamp": TimeRangeUtils.parseTimeRangeToFilter(config.currentTimeRange)
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            };
 
-            // Add host filter
-            QueryBuilder.term(query, 'detail.global.page.host', hostFilter);
-
-            // Add pattern filter(s)
+            // Add pattern filter
             if (enabledPatterns.length === 1) {
-                // Single pattern - use simple wildcard
-                QueryBuilder.wildcard(query, eventField, enabledPatterns[0]);
+                // Single pattern
+                query.query.bool.filter.push({
+                    wildcard: {
+                        [eventField]: {
+                            value: enabledPatterns[0]
+                        }
+                    }
+                });
             } else {
-                // Multiple patterns - use should query
-                QueryBuilder.multiWildcard(query, eventField, enabledPatterns);
+                // Multiple patterns
+                const shouldClauses = enabledPatterns.map(pattern => ({
+                    wildcard: {
+                        [eventField]: {
+                            value: pattern
+                        }
+                    }
+                }));
+
+                query.query.bool.filter.push({
+                    bool: {
+                        should: shouldClauses,
+                        minimum_should_match: 1
+                    }
+                });
             }
+
+            // Debug: Log the query structure before returning
+            console.log('📡 Generated query structure:', JSON.stringify(query, null, 2));
 
             // Add main aggregation
             QueryBuilder.termsAgg(query, 'events', eventField);
@@ -664,6 +752,9 @@ export const DataLayer = (() => {
         // Send query to Elasticsearch
         async sendQuery(query) {
             try {
+                // Debug: Log the exact query being sent
+                console.log('📤 Sending query to Elasticsearch:', JSON.stringify(query, null, 2));
+
                 // Use unified API - ensure it's initialized
                 if (!unifiedAPI || !unifiedAPI.initialized) {
                     if (!unifiedAPI) {

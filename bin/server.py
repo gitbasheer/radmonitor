@@ -199,9 +199,13 @@ def get_real_client_ip(request: Request) -> str:
 
 # Initialize components
 metrics_tracker = MetricsTracker()
+
+# More permissive rate limits for development
+default_limits = ["500 per minute", "5000 per hour"] if ENVIRONMENT == "development" else ["200 per minute", "1000 per hour"]
+
 limiter = Limiter(
     key_func=get_real_client_ip,
-    default_limits=["200 per minute", "1000 per hour"],
+    default_limits=default_limits,
     storage_uri="memory://"
 )
 es_circuit_breaker = CircuitBreaker(
@@ -472,13 +476,13 @@ async def websocket_endpoint(websocket: WebSocket):
 
 # Dashboard endpoints
 @app.get("/api/v1/dashboard/config", response_model=DashboardConfig)
-@limiter.limit("30 per minute")
+@limiter.limit("100 per minute" if ENVIRONMENT == "development" else "30 per minute")
 async def get_dashboard_config(request: Request):
     """Get current dashboard configuration"""
     return dashboard_state["config"]
 
 @app.post("/api/v1/dashboard/config", response_model=DashboardConfig)
-@limiter.limit("30 per minute")
+@limiter.limit("100 per minute" if ENVIRONMENT == "development" else "30 per minute")
 async def update_dashboard_config(request: Request, config: DashboardConfig):
     """Update dashboard configuration"""
     dashboard_state["config"] = config
@@ -489,7 +493,7 @@ async def update_dashboard_config(request: Request, config: DashboardConfig):
     return config
 
 @app.get("/api/v1/dashboard/stats", response_model=DashboardStats)
-@limiter.limit("60 per minute")
+@limiter.limit("100 per minute" if ENVIRONMENT == "development" else "60 per minute")
 async def get_dashboard_stats(request: Request):
     """Get current dashboard statistics"""
     return dashboard_state["stats"]
@@ -497,7 +501,7 @@ async def get_dashboard_stats(request: Request):
 # Kibana proxy endpoint (built-in CORS support)
 @app.post("/api/v1/kibana/proxy")
 @app.post("/kibana-proxy")  # Legacy compatibility
-@limiter.limit("10 per minute")
+@limiter.limit("100 per minute" if ENVIRONMENT == "development" else "30 per minute")
 async def kibana_proxy(
     request: Request,
     x_elastic_cookie: Optional[str] = Header(None, alias="X-Elastic-Cookie")

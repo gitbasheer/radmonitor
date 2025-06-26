@@ -7,29 +7,29 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    
+
     <!-- Dashboard CSS with sidebar layout -->
     <link rel="stylesheet" href="assets/css/dashboard.css">
-    
+
     <!-- CORS Direct Override (must load FIRST to override API client) -->
     <script src="assets/js/cors-direct-override.js"></script>
-    
+
     <!-- Production Helper (must load before main.js) -->
     <script src="assets/js/production-helper.js"></script>
-    
+
     <!-- JavaScript Entry Point -->
     <script type="module" src="assets/js/main.js?v=10"></script>
 </head>
 <body>
     <!-- Hidden input for server-side cookie -->
     <input type="hidden" id="elasticCookie" value="">
-    
+
     <!-- Sidebar Control Panel -->
     <div class="control-panel">
         <div class="control-header">
             CONTROL PANEL
         </div>
-        
+
         <div class="control-content">
             <!-- Connection Status -->
             <div class="control-section">
@@ -42,7 +42,7 @@
                     <button onclick="Dashboard.testApiConnection()" class="control-button secondary">Test Connection</button>
                 </div>
             </div>
-            
+
             <!-- Quick Actions -->
             <div class="control-section">
                 <label class="control-label">Quick Actions</label>
@@ -54,26 +54,25 @@
                 </button>
                 <div class="refresh-status" id="refreshStatus" style="margin-top: 8px;">Ready</div>
             </div>
-            
+
             <!-- Additional Options -->
             <div class="control-section">
                 <label class="control-label">Tools</label>
                 <button onclick="ConfigManager.exportConfiguration()" class="control-button secondary" style="width: 100%; margin-bottom: 5px;">Export Config</button>
                 <button onclick="Dashboard.showApiSetupInstructions()" class="control-button secondary" style="width: 100%;">Help</button>
             </div>
-            
+
             <!-- Quick Stats -->
             <div class="control-section">
                 <label class="control-label">Current Settings</label>
                 <div style="font-size: 11px; color: #666; line-height: 1.6;">
                     <div><strong>Time Range:</strong> <span id="quickTimeRange">now-12h</span></div>
                     <div><strong>Baseline:</strong> <span id="quickBaseline">Loading...</span></div>
-                    <div><strong>Theme:</strong> <span id="quickTheme">light</span></div>
                 </div>
             </div>
         </div>
     </div>
-    
+
     <!-- Main Content Area -->
     <div class="main-content">
         <div class="container">
@@ -85,7 +84,7 @@
                     <div class="timestamp">Last updated: <span id="lastUpdate">Never</span></div>
                 </div>
             </div>
-            
+
             <div class="content">
                 <!-- Summary Cards -->
                 <div class="summary">
@@ -110,7 +109,7 @@
                         <div class="subtitle">Traffic higher than usual</div>
                     </div>
                 </div>
-                
+
                 <!-- Search and Filters -->
                 <div class="filters">
                     <input type="text" id="searchInput" placeholder="Search events..." class="search-input">
@@ -122,7 +121,7 @@
                         <button class="filter-btn" data-filter="increased">INCREASED</button>
                     </div>
                 </div>
-                
+
                 <!-- RAD Type Filters -->
                 <div class="rad-filters" style="margin-top: 10px;">
                     <label style="font-weight: 600; margin-right: 10px;">RAD Types:</label>
@@ -130,16 +129,16 @@
                         <!-- RAD type buttons will be dynamically inserted here -->
                     </div>
                 </div>
-                
+
                 <!-- Loading Indicator -->
                 <div id="loadingIndicator" class="loading" style="display: none;">
                     <div class="spinner"></div>
                     <span>Loading data...</span>
                 </div>
-                
+
                 <!-- Results Info -->
                 <div id="resultsInfo" class="results-info"></div>
-                
+
                 <!-- Data Table -->
                 <table class="data-table">
                     <thead>
@@ -160,16 +159,16 @@
             </div>
         </div>
     </div>
-    
+
     <!-- Hidden elements for compatibility -->
     <div style="display: none;">
         <!-- API Status -->
         <span id="apiStatus"></span>
-        
+
         <!-- Hidden form elements for ConfigEditor compatibility -->
         <button id="testApiBtn">Test API</button>
     </div>
-    
+
     <!-- How It Works Modal -->
     <div id="howItWorksModal" class="modal" style="display: none;">
         <div class="modal-content">
@@ -182,7 +181,7 @@
             </div>
         </div>
     </div>
-    
+
     <!-- Advanced Editor Modal -->
     <div id="advancedEditorModal" class="modal" style="display: none;">
         <div class="modal-content" style="max-width: 900px; max-height: 90vh; overflow-y: auto;">
@@ -203,7 +202,7 @@
             </div>
         </div>
     </div>
-    
+
     <style>
         /* Header controls styling */
         .container .header {
@@ -212,13 +211,13 @@
             align-items: center !important;
             margin-bottom: 30px;
         }
-        
+
         .header-controls {
             display: flex;
             align-items: center;
             gap: 20px;
         }
-        
+
         .info-button {
             background: #2196F3;
             color: white;
@@ -230,11 +229,11 @@
             font-weight: 500;
             transition: background 0.2s;
         }
-        
+
         .info-button:hover {
             background: #1976D2;
         }
-        
+
         /* Modal styling */
         .modal {
             position: fixed;
@@ -246,7 +245,7 @@
             background-color: rgba(0,0,0,0.5);
             backdrop-filter: blur(2px);
         }
-        
+
         .modal-content {
             background-color: white;
             margin: 2% auto;
@@ -258,7 +257,7 @@
             overflow-y: auto;
             box-shadow: 0 10px 30px rgba(0,0,0,0.3);
         }
-        
+
         .modal-header {
             display: flex;
             justify-content: space-between;
@@ -268,13 +267,13 @@
             background: #f8f9fa;
             border-radius: 12px 12px 0 0;
         }
-        
+
         .modal-header h2 {
             margin: 0;
             color: #333;
             font-size: 24px;
         }
-        
+
         .close {
             color: #666;
             font-size: 28px;
@@ -284,17 +283,17 @@
             border-radius: 50%;
             transition: background 0.2s;
         }
-        
+
         .close:hover {
             background: #e0e0e0;
         }
-        
+
         .modal-body {
             padding: 20px 25px;
             line-height: 1.5;
             color: #333;
         }
-        
+
         .math-section {
             margin-bottom: 30px;
             padding: 20px;
@@ -302,17 +301,17 @@
             border-radius: 8px;
             border-left: 4px solid #2196F3;
         }
-        
+
         .math-section h3 {
             margin: 0 0 15px 0;
             color: #1976D2;
             font-size: 18px;
         }
-        
+
         .math-section p {
             margin: 10px 0;
         }
-        
+
         .formula {
             background: #e3f2fd;
             padding: 10px 15px;
@@ -321,7 +320,7 @@
             margin: 10px 0;
             border: 1px solid #bbdefb;
         }
-        
+
         .example {
             background: #fff3e0;
             padding: 15px;
@@ -329,24 +328,24 @@
             margin: 10px 0;
             border: 1px solid #ffcc02;
         }
-        
+
         .example strong {
             color: #f57c00;
         }
     </style>
-    
+
     <script>
         // How It Works Modal Functions
         function showHowItWorksModal() {
             const modal = document.getElementById('howItWorksModal');
             const content = document.getElementById('howItWorksContent');
-            
+
             // Load the content
             content.innerHTML = generateHowItWorksContent();
-            
+
             // Show modal
             modal.style.display = 'block';
-            
+
             // Close on outside click
             modal.onclick = function(event) {
                 if (event.target === modal) {
@@ -354,21 +353,21 @@
                 }
             };
         }
-        
+
         function closeHowItWorksModal() {
             document.getElementById('howItWorksModal').style.display = 'none';
         }
-        
+
         // Advanced Editor Modal Functions
         async function showAdvancedEditor() {
             const modal = document.getElementById('advancedEditorModal');
-            
+
             // Load the configuration
             await ConfigEditor.loadConfig();
-            
+
             // Show modal
             modal.style.display = 'block';
-            
+
             // Close on outside click
             modal.onclick = function(event) {
                 if (event.target === modal) {
@@ -376,11 +375,11 @@
                 }
             };
         }
-        
+
         function closeAdvancedEditor() {
             document.getElementById('advancedEditorModal').style.display = 'none';
         }
-        
+
         function generateHowItWorksContent() {
             return `
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
@@ -458,20 +457,20 @@
                 </div>
             `;
         }
-        
+
         // Initialize UI helpers
         document.addEventListener('DOMContentLoaded', function() {
             // Update connection status
             window.updateConnectionStatus = function(connected, message) {
                 const statusDot = document.querySelector('.status-dot');
                 const statusText = document.querySelector('.status-text');
-                
+
                 if (statusDot && statusText) {
                     statusDot.style.backgroundColor = connected ? '#4CAF50' : '#f44336';
                     statusText.textContent = message || (connected ? 'Connected' : 'Disconnected');
                 }
             };
-            
+
             // Listen for API status changes
             if (window.unifiedAPI) {
                 window.addEventListener('api:statusChange', () => {
@@ -479,18 +478,18 @@
                     updateConnectionStatus(true, mode === 'fastapi' ? 'FastAPI Connected' : 'Connected');
                 });
             }
-            
+
             // Update quick stats display
             window.updateQuickStats = async function() {
                 try {
                     const config = await ConfigService.getConfig();
-                    
+
                     // Update time range
                     const timeRangeEl = document.getElementById('quickTimeRange');
                     if (timeRangeEl) {
                         timeRangeEl.textContent = config.currentTimeRange || 'now-12h';
                     }
-                    
+
                     // Update baseline
                     const baselineEl = document.getElementById('quickBaseline');
                     if (baselineEl && config.baselineStart && config.baselineEnd) {
@@ -498,7 +497,7 @@
                         const end = new Date(config.baselineEnd).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
                         baselineEl.textContent = `${start} - ${end}`;
                     }
-                    
+
                     // Update theme
                     const themeEl = document.getElementById('quickTheme');
                     if (themeEl) {
@@ -508,7 +507,7 @@
                     console.debug('Error updating quick stats:', error);
                 }
             };
-            
+
             // Update quick stats on config changes
             if (window.ConfigService) {
                 ConfigService.subscribe(() => {
@@ -517,7 +516,7 @@
                 // Initial update
                 setTimeout(updateQuickStats, 500);
             }
-            
+
         });
     </script>
 </body>
