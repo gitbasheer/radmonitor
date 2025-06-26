@@ -350,7 +350,7 @@ export class UnifiedAPIClient {
         let result;
         
         if (this.useProxy) {
-            // Production mode: use proxy service
+            // Production mode: try proxy service first
             const config = ConfigService.getConfig();
             const proxyUrl = config.corsProxy?.url;
             
@@ -379,6 +379,37 @@ export class UnifiedAPIClient {
                     'Content-Type': 'application/json'
                 }
             });
+
+            // If proxy fails, try direct Elasticsearch (requires CORS extension)
+            if (!result.success && result.error && result.error.includes('CORS')) {
+                console.log('🔄 Proxy failed, trying direct Elasticsearch connection...');
+                
+                try {
+                    const directResponse = await fetch(`${esUrl}${esPath}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Cookie': auth.cookie
+                        },
+                        body: JSON.stringify(query)
+                    });
+
+                    if (directResponse.ok) {
+                        const directData = await directResponse.json();
+                        if (!directData.error) {
+                            console.log('✅ Direct Elasticsearch connection successful!');
+                            result = { 
+                                success: true, 
+                                data: directData, 
+                                method: 'direct-elasticsearch-fallback' 
+                            };
+                        }
+                    }
+                } catch (directError) {
+                    console.log('⚠️ Direct connection also failed:', directError.message);
+                    // Keep original proxy error
+                }
+            }
         } else {
             // Development mode: use unified server
             result = await this.request(`${this.apiV1}/kibana/proxy`, {
