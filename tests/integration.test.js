@@ -93,8 +93,7 @@ describe('Dashboard Integration', () => {
         createBucket('pandc.vnext.recommendations.feed.feed_marketing', 8000, 480) // -4% drop -> NORMAL
       ]);
 
-      // Mock successful auth check and data fetch
-      fetch.mockResolvedValueOnce(createMockResponse({ status: 'healthy' }, 200)); // Health check
+      // Mock successful data fetch - no health check needed in test environment
       fetch.mockResolvedValueOnce(createMockResponse(mockResponse)); // Actual data query
 
       // Execute

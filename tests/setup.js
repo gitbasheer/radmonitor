@@ -77,12 +77,28 @@ global.setLocation = (hostname = 'localhost') => {
 // Reset mocks before each test
 beforeEach(() => {
   global.fetch.mockReset();
+  
+  // Clear localStorage data
+  Object.keys(localStorageData).forEach(key => delete localStorageData[key]);
+  
+  // Reset localStorage mocks but restore implementations
   localStorage.getItem.mockReset();
   localStorage.setItem.mockReset();
   localStorage.removeItem.mockReset();
   localStorage.clear.mockReset();
-  // Clear localStorage data
-  Object.keys(localStorageData).forEach(key => delete localStorageData[key]);
+  
+  // Restore implementations
+  localStorage.getItem.mockImplementation((key) => localStorageData[key] || null);
+  localStorage.setItem.mockImplementation((key, value) => {
+    localStorageData[key] = value;
+  });
+  localStorage.removeItem.mockImplementation((key) => {
+    delete localStorageData[key];
+  });
+  localStorage.clear.mockImplementation(() => {
+    Object.keys(localStorageData).forEach(key => delete localStorageData[key]);
+  });
+  
   cookies = {};
 
   // Reset DOM

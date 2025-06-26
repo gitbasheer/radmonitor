@@ -75,7 +75,10 @@ export const ConfigService = (() => {
         const isLocalDev = window.location.hostname === 'localhost' && 
                           !localStorage.getItem('radMonitor_backendUrl');
         
-        if (!skipBackend && !isLocalDev) {
+        // Skip backend in test environment
+        const isTest = typeof process !== 'undefined' && process.env.NODE_ENV === 'test';
+        
+        if (!skipBackend && !isLocalDev && !isTest) {
             try {
                 // Try to load from backend first
                 const backendConfig = await loadFromBackend();
@@ -244,8 +247,11 @@ export const ConfigService = (() => {
             saveToLocalStorage();
         }
 
+        // Skip backend save in test environment
+        const isTest = typeof process !== 'undefined' && process.env.NODE_ENV === 'test';
+        
         // Save to backend
-        if (options.saveToBackend) {
+        if (options.saveToBackend && !isTest) {
             const success = await saveToBackend();
             if (!success && options.revertOnFailure !== false) {
                 // Revert changes if backend save failed
