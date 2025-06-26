@@ -335,11 +335,11 @@ export const ApiClient = (() => {
             // Check if we're in production mode and have unified API client
             const isProduction = window.location.hostname !== 'localhost';
             
-            if (isProduction && window.UnifiedApiClient) {
+            if (isProduction && window.UnifiedAPIClient) {
                 console.log('🔍 Using unified API client for production authentication test');
                 
                 // Use unified API client health check in production
-                const healthCheck = await window.UnifiedApiClient.checkHealth();
+                const healthCheck = await window.UnifiedAPIClient.checkHealth();
                 if (healthCheck.healthy && healthCheck.authenticated) {
                     return { 
                         success: true, 
