@@ -139,7 +139,7 @@ class MetricsTracker:
     """Track performance metrics for monitoring"""
     def __init__(self):
         self.reset()
-    
+
     def reset(self):
         """Reset metrics for new time window"""
         self.window_start = datetime.now()
@@ -148,21 +148,21 @@ class MetricsTracker:
         self.response_times = defaultdict(list)
         self.rate_limit_triggers = 0
         self.circuit_breaker_trips = 0
-        
+
     def record_request(self, endpoint: str, duration_ms: float, success: bool):
         """Record a request with its metrics"""
         self.requests[endpoint] += 1
         self.response_times[endpoint].append(duration_ms)
         if not success:
             self.errors[endpoint] += 1
-            
+
         logger.info("request_metrics",
             endpoint=endpoint,
             duration_ms=duration_ms,
             success=success,
             timestamp=datetime.now().isoformat()
         )
-    
+
     def get_metrics(self) -> Dict[str, Any]:
         """Get current metrics summary"""
         total_requests = sum(self.requests.values())
@@ -170,7 +170,7 @@ class MetricsTracker:
         all_times = []
         for times in self.response_times.values():
             all_times.extend(times)
-        
+
         return {
             "window_start": self.window_start.isoformat(),
             "window_duration_seconds": (datetime.now() - self.window_start).total_seconds(),
@@ -237,7 +237,7 @@ async def broadcast_to_websockets(message: WebSocketMessage):
             await connection.send_json(message.model_dump())
         except:
             disconnected.append(connection)
-    
+
     for conn in disconnected:
         if conn in active_connections:
             active_connections.remove(conn)
@@ -247,15 +247,15 @@ def process_dashboard_template(config: DashboardConfig, stats: DashboardStats) -
     html_path = Path("index.html")
     if not html_path.exists():
         raise FileNotFoundError("index.html not found")
-    
+
     with open(html_path, 'r') as f:
         content = f.read()
-    
+
     # Replace configuration values
     content = content.replace('value="2025-06-01"', f'value="{config.baseline_start}"')
     content = content.replace('value="2025-06-09"', f'value="{config.baseline_end}"')
     content = content.replace('value="now-12h"', f'value="{config.time_range}"')
-    
+
     # Inject Elasticsearch cookie from environment
     elastic_cookie = os.environ.get('ELASTIC_COOKIE', '')
     if elastic_cookie:
@@ -266,7 +266,7 @@ def process_dashboard_template(config: DashboardConfig, stats: DashboardStats) -
         console.log('🔍 Environment cookie loaded:', window.ELASTIC_COOKIE ? 'Yes' : 'No');
     </script>"""
         content = content.replace('</head>', f'{cookie_script}\n</head>')
-    
+
     return content
 
 async def clean_cache():
@@ -293,7 +293,7 @@ async def lifespan(app: FastAPI):
     """Manage application lifecycle"""
     # Startup
     signal.signal(signal.SIGINT, signal_handler)
-    
+
     # Clear screen and show banner
     os.system('clear' if os.name != 'nt' else 'cls')
     print(f"""
@@ -311,11 +311,11 @@ async def lifespan(app: FastAPI):
 ║                                                          ║
 ╚══════════════════════════════════════════════════════════╝
     """)
-    
+
     logger.info("server_started", port=SERVER_PORT, environment=ENVIRONMENT)
-    
+
     yield
-    
+
     # Shutdown
     logger.info("server_stopped")
 
@@ -366,7 +366,7 @@ async def track_metrics(request: Request, call_next):
     start_time = time.time()
     response = None
     success = False
-    
+
     try:
         response = await call_next(request)
         success = response.status_code < 400
@@ -431,24 +431,24 @@ async def websocket_endpoint(websocket: WebSocket):
     """WebSocket endpoint for real-time updates"""
     await websocket.accept()
     active_connections.append(websocket)
-    
+
     try:
         # Send initial configuration
         await websocket.send_json({
             "type": "config",
             "data": dashboard_state["config"].model_dump()
         })
-        
+
         # Send initial stats
         await websocket.send_json({
-            "type": "stats", 
+            "type": "stats",
             "data": dashboard_state["stats"].model_dump()
         })
-        
+
         # Keep connection alive and handle messages
         while True:
             data = await websocket.receive_json()
-            
+
             # Handle different message types
             if data.get("type") == "ping":
                 await websocket.send_json({"type": "pong"})
@@ -458,7 +458,7 @@ async def websocket_endpoint(websocket: WebSocket):
                     "type": "stats",
                     "data": dashboard_state["stats"].model_dump()
                 })
-                
+
     except WebSocketDisconnect:
         active_connections.remove(websocket)
     except Exception as e:
@@ -505,27 +505,83 @@ async def kibana_proxy(
     """Proxy requests to Kibana with CORS support"""
     try:
         # Get request body
-        body = await request.body()
-        
+        raw_body = await request.body()
+
         # Use cookie from header or environment
         cookie = x_elastic_cookie or os.environ.get('ELASTIC_COOKIE', '')
         if not cookie:
             raise HTTPException(status_code=401, detail="No authentication cookie provided")
-        
+
+        # Clean up cookie format - extract sid value if full cookie header provided
+        if 'sid=' in cookie:
+            # Extract just the sid value from full cookie header
+            for part in cookie.split(';'):
+                part = part.strip()
+                if part.startswith('sid='):
+                    cookie = part.split('=', 1)[1]
+                    break
+
+        logger.info("kibana_proxy",
+            action="cookie_processed",
+            cookie_length=len(cookie),
+            has_sid_prefix='sid=' in x_elastic_cookie if x_elastic_cookie else False
+        )
+
+        # Parse request body - support both wrapped and direct formats
+        try:
+            body_data = json.loads(raw_body)
+
+                        # Check if it's wrapped in our structured format
+            if isinstance(body_data, dict) and "query" in body_data:
+                # Extract the actual Elasticsearch query
+                es_query = body_data["query"]
+                query_body = json.dumps(es_query).encode('utf-8')
+
+                # Debug: Log query structure for troubleshooting
+                query_preview = {
+                    "size": es_query.get("size", "not_set"),
+                    "has_aggs": "aggs" in es_query,
+                    "has_query": "query" in es_query
+                }
+                if "query" in es_query and "bool" in es_query["query"]:
+                    bool_query = es_query["query"]["bool"]
+                    query_preview["bool_structure"] = {
+                        "has_filter": "filter" in bool_query,
+                        "filter_count": len(bool_query.get("filter", [])),
+                        "has_should": "should" in bool_query,
+                        "has_must": "must" in bool_query
+                    }
+
+                logger.info("kibana_proxy",
+                    action="extracted_structured_query",
+                    force_refresh=body_data.get("force_refresh", False),
+                    query_preview=query_preview
+                )
+            else:
+                # Assume it's already a raw Elasticsearch query
+                query_body = raw_body
+                logger.info("kibana_proxy", action="using_raw_query")
+
+        except json.JSONDecodeError:
+            # If we can't parse as JSON, pass through as-is
+            query_body = raw_body
+            logger.info("kibana_proxy", action="passthrough_non_json")
+
         # Build request
         proxy_url = f"{KIBANA_URL}{KIBANA_SEARCH_PATH}"
+        # Build headers with proper cookie format
         headers = {
             "Content-Type": "application/json",
             "kbn-xsrf": "true",
-            "Cookie": f"sid={cookie}"
+            "Cookie": f"sid={cookie}" if not cookie.startswith('sid=') else cookie
         }
-        
+
         # Execute with circuit breaker
         @es_circuit_breaker
         async def execute_request():
             async with httpx.AsyncClient(timeout=30.0, verify=False) as client:
-                return await client.post(proxy_url, content=body, headers=headers)
-        
+                return await client.post(proxy_url, content=query_body, headers=headers)
+
         try:
             response = await execute_request()
         except Exception as e:
@@ -533,7 +589,7 @@ async def kibana_proxy(
                 metrics_tracker.circuit_breaker_trips += 1
                 raise HTTPException(status_code=503, detail="Elasticsearch temporarily unavailable")
             raise
-        
+
         return Response(
             content=response.content,
             status_code=response.status_code,
@@ -542,7 +598,7 @@ async def kibana_proxy(
                 "X-Cache": "miss"
             }
         )
-        
+
     except HTTPException:
         raise
     except httpx.TimeoutException:
@@ -563,22 +619,55 @@ async def reset_metrics():
     metrics_tracker.reset()
     return {"status": "success", "message": "Metrics reset"}
 
+# Debug endpoint for cookie testing
+@app.post("/api/v1/debug/test-cookie")
+async def test_cookie_format(
+    request: Request,
+    x_elastic_cookie: Optional[str] = Header(None, alias="X-Elastic-Cookie")
+):
+    """Test cookie format and processing"""
+    try:
+        # Get cookie from header or environment
+        raw_cookie = x_elastic_cookie or os.environ.get('ELASTIC_COOKIE', '')
+        if not raw_cookie:
+            return {"error": "No cookie provided", "status": "missing"}
+
+        # Process cookie same way as main proxy
+        processed_cookie = raw_cookie
+        if 'sid=' in processed_cookie:
+            for part in processed_cookie.split(';'):
+                part = part.strip()
+                if part.startswith('sid='):
+                    processed_cookie = part.split('=', 1)[1]
+                    break
+
+        return {
+            "status": "processed",
+            "raw_cookie_length": len(raw_cookie),
+            "processed_cookie_length": len(processed_cookie),
+            "has_sid_prefix": 'sid=' in raw_cookie,
+            "processed_cookie_preview": processed_cookie[:20] + "..." if len(processed_cookie) > 20 else processed_cookie,
+            "cookie_format": "full_header" if 'sid=' in raw_cookie else "sid_value_only"
+        }
+    except Exception as e:
+        return {"error": str(e), "status": "error"}
+
 # Utility endpoints
 @app.post("/api/v1/utils/cleanup-ports")
 async def cleanup_ports(request: PortCleanupRequest):
     """Clean up processes using specified ports"""
     # Import here to avoid circular imports
     from cleanup_ports import cleanup_port, find_process_by_port
-    
+
     try:
         ports_cleaned = {}
         total_killed = 0
-        
+
         for port in request.ports:
             killed = cleanup_port(port, force=request.force)
             ports_cleaned[port] = killed > 0
             total_killed += killed
-        
+
         return {
             "success": all(not find_process_by_port(port) for port in request.ports),
             "ports_cleaned": ports_cleaned,
@@ -592,10 +681,10 @@ async def validate_connections(request: ValidationRequest):
     """Validate project connections and configuration"""
     # Import here to avoid circular imports
     from validate_connections import Validator
-    
+
     try:
         validator = Validator(verbose=request.verbose)
-        
+
         # Run validations
         if request.categories:
             for category in request.categories:
@@ -612,7 +701,7 @@ async def validate_connections(request: ValidationRequest):
             validator.validate_integration_points()
             validator.validate_test_configuration()
             validator.validate_data_flow()
-        
+
         results = validator.result.to_json()
         return {
             "success": results['success'],
@@ -632,13 +721,13 @@ if __name__ == "__main__":
     # Clean up ports first
     if os.path.exists("scripts/setup/cleanup-ports.sh"):
         os.system("scripts/setup/cleanup-ports.sh >/dev/null 2>&1")
-    
+
     # Run server
     uvicorn.run(
-        "bin.server:app",  # Module string format for reload to work
+        app,  # Pass the app directly instead of module string
         host=SERVER_HOST,
         port=SERVER_PORT,
-        reload=ENVIRONMENT == "development",
+        reload=False,  # Disable reload when running directly
         log_level="info",
         access_log=False  # We have our own request tracking
-    ) 
+    )

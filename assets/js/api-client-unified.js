@@ -14,28 +14,28 @@ import { ConfigService } from './config-service.js';
 export class UnifiedAPIClient {
     constructor() {
         // Environment detection
-        this.isLocalDev = window.location.hostname === 'localhost' || 
+        this.isLocalDev = window.location.hostname === 'localhost' ||
                          window.location.hostname === '127.0.0.1';
         this.isProduction = window.location.hostname.includes('github.io');
-        
+
         // Base URLs - unified server handles everything
         this.baseUrl = this.isLocalDev ? 'http://localhost:8000' : '';
         this.apiV1 = `${this.baseUrl}/api/v1`;
         this.wsUrl = this.isLocalDev ? 'ws://localhost:8000/ws' : null;
-        
+
         // Production mode uses proxy, not direct API calls
         this.useProxy = this.isProduction;
-        
+
         // WebSocket state
         this.websocket = null;
         this.wsHandlers = new Map();
         this.wsReconnectInterval = null;
         this.wsState = 'disconnected';
-        
+
         // Cache
         this.cache = new Map();
         this.CACHE_TTL = 5 * 60 * 1000; // 5 minutes
-        
+
         // Performance tracking
         this.metrics = {
             requests: 0,
@@ -79,13 +79,13 @@ export class UnifiedAPIClient {
      */
     saveElasticCookie(cookie) {
         if (!cookie || !cookie.trim()) return false;
-        
+
         const cookieData = {
             cookie: cookie.trim(),
             expires: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
             saved: new Date().toISOString()
         };
-        
+
         localStorage.setItem('elasticCookie', JSON.stringify(cookieData));
         return true;
     }
@@ -95,7 +95,7 @@ export class UnifiedAPIClient {
      */
     async getAuthenticationDetails() {
         const cookie = this.getElasticCookie();
-        
+
         if (cookie) {
             return {
                 valid: true,
@@ -103,7 +103,7 @@ export class UnifiedAPIClient {
                 cookie: cookie
             };
         }
-        
+
         return {
             valid: false,
             method: null,
@@ -145,7 +145,7 @@ export class UnifiedAPIClient {
     async request(url, options = {}) {
         const startTime = Date.now();
         const requestId = `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-        
+
         try {
             // Add default headers
             options.headers = {
@@ -156,53 +156,53 @@ export class UnifiedAPIClient {
             // Add timeout
             const controller = new AbortController();
             const timeout = setTimeout(() => controller.abort(), options.timeout || 30000);
-            
+
             try {
                 const response = await fetch(url, {
                     ...options,
                     signal: controller.signal
                 });
-                
+
                 clearTimeout(timeout);
-                
+
                 const duration = Date.now() - startTime;
                 this.metrics.requests++;
                 this.metrics.totalTime += duration;
-                
+
                 if (!response.ok) {
                     const error = await response.json().catch(() => ({}));
                     throw new Error(error.detail || `HTTP ${response.status}: ${response.statusText}`);
                 }
-                
+
                 const data = await response.json();
-                
+
                 // Log success
                 console.log(
                     `✅ API Request → ${options.method || 'GET'} ${url} | ${duration}ms`,
                     { requestId, status: response.status }
                 );
-                
+
                 return { success: true, data, duration, requestId };
-                
+
             } catch (error) {
                 clearTimeout(timeout);
                 throw error;
             }
-            
+
         } catch (error) {
             const duration = Date.now() - startTime;
             this.metrics.errors++;
-            
+
             console.error(
                 `❌ API Request Failed → ${options.method || 'GET'} ${url} | ${duration}ms`,
                 { requestId, error: error.message }
             );
-            
-            return { 
-                success: false, 
-                error: error.message, 
-                duration, 
-                requestId 
+
+            return {
+                success: false,
+                error: error.message,
+                duration,
+                requestId
             };
         }
     }
@@ -238,20 +238,24 @@ export class UnifiedAPIClient {
     buildQuery(config) {
         const settings = ConfigService.getConfig();
         const radTypes = settings.rad_types || {};
-        
+
         // Get enabled RAD patterns
-        const enabledPatterns = Object.entries(radTypes)
-            .filter(([_, radConfig]) => radConfig.enabled)
-            .map(([_, radConfig]) => radConfig.pattern);
-            
+        let enabledPatterns = Object.entries(radTypes)
+            .filter(([_, radConfig]) => radConfig.enabled && radConfig.pattern)
+            .map(([_, radConfig]) => radConfig.pattern.trim())
+            .filter(pattern => pattern.length > 0);
+
+        // Fallback to default pattern if no valid patterns found
         if (enabledPatterns.length === 0) {
-            console.warn('No RAD types enabled, using default pattern');
-            enabledPatterns.push('pandc.vnext.recommendations.feed.feed*');
+            console.warn('No valid RAD patterns found, using default pattern');
+            enabledPatterns = ['pandc.vnext.recommendations.feed.feed*'];
         }
-        
+
+        console.log('🔍 Query patterns:', enabledPatterns);
+
         // Parse time range
         const currentTimeFilter = TimeRangeUtils.parseTimeRangeToFilter(config.currentTimeRange);
-        
+
         // Build query
         const query = {
             size: 0,
@@ -286,19 +290,27 @@ export class UnifiedAPIClient {
             query: {
                 bool: {
                     filter: [
-                        {
-                            // Multi-pattern support
-                            bool: {
-                                should: enabledPatterns.map(pattern => ({
-                                    wildcard: {
-                                        "detail.event.data.traffic.eid.keyword": {
-                                            value: pattern
-                                        }
+                        // Pattern filter - handle single or multiple patterns
+                        enabledPatterns.length === 1
+                            ? {
+                                wildcard: {
+                                    "detail.event.data.traffic.eid.keyword": {
+                                        value: enabledPatterns[0]
                                     }
-                                })),
-                                minimum_should_match: 1
+                                }
                             }
-                        },
+                            : {
+                                bool: {
+                                    should: enabledPatterns.map(pattern => ({
+                                        wildcard: {
+                                            "detail.event.data.traffic.eid.keyword": {
+                                                value: pattern
+                                            }
+                                        }
+                                    })),
+                                    minimum_should_match: 1
+                                }
+                            },
                         {
                             match_phrase: {
                                 "detail.global.page.host": "dashboard.godaddy.com"
@@ -316,7 +328,7 @@ export class UnifiedAPIClient {
                 }
             }
         };
-        
+
         return query;
     }
 
@@ -329,14 +341,14 @@ export class UnifiedAPIClient {
      */
     async executeQuery(query, forceRefresh = false) {
         const auth = await this.getAuthenticationDetails();
-        
+
         if (!auth.valid) {
             return {
                 success: false,
                 error: 'No authentication available. Please set your cookie.'
             };
         }
-        
+
         // Check cache
         const cacheKey = JSON.stringify(query);
         if (!forceRefresh && this.cache.has(cacheKey)) {
@@ -346,32 +358,32 @@ export class UnifiedAPIClient {
                 return { success: true, data: cached.data, cached: true };
             }
         }
-        
+
         let result;
-        
+
         if (this.useProxy) {
             // Production mode: try proxy service first
             const config = ConfigService.getConfig();
             const proxyUrl = config.corsProxy?.url;
-            
+
             if (!proxyUrl) {
                 return {
                     success: false,
                     error: 'Proxy service not configured for production mode'
                 };
             }
-            
+
             // Send everything securely in request body
             const esUrl = config.elasticsearch?.url || 'https://usieventho-prod-usw2.kb.us-west-2.aws.found.io:9243';
             const esPath = config.elasticsearch?.path || '/elasticsearch/usi*/_search';
-            
+
             const requestBody = {
                 esUrl,
                 esPath,
                 cookie: auth.cookie,
                 query
             };
-            
+
             result = await this.request(proxyUrl, {
                 method: 'POST',
                 body: JSON.stringify(requestBody),
@@ -383,7 +395,7 @@ export class UnifiedAPIClient {
             // If proxy fails, try direct Elasticsearch (requires CORS extension)
             if (!result.success && result.error && result.error.includes('CORS')) {
                 console.log('🔄 Proxy failed, trying direct Elasticsearch connection...');
-                
+
                 try {
                     const directResponse = await fetch(`${esUrl}${esPath}`, {
                         method: 'POST',
@@ -398,10 +410,10 @@ export class UnifiedAPIClient {
                         const directData = await directResponse.json();
                         if (!directData.error) {
                             console.log('✅ Direct Elasticsearch connection successful!');
-                            result = { 
-                                success: true, 
-                                data: directData, 
-                                method: 'direct-elasticsearch-fallback' 
+                            result = {
+                                success: true,
+                                data: directData,
+                                method: 'direct-elasticsearch-fallback'
                             };
                         }
                     }
@@ -421,7 +433,7 @@ export class UnifiedAPIClient {
                 }
             });
         }
-        
+
         // Cache successful results
         if (result.success) {
             this.cache.set(cacheKey, {
@@ -429,7 +441,7 @@ export class UnifiedAPIClient {
                 timestamp: Date.now()
             });
         }
-        
+
         return result;
     }
 
@@ -449,14 +461,14 @@ export class UnifiedAPIClient {
             // In production, we don't have a health endpoint
             // Instead, check if we have authentication
             const auth = await this.getAuthenticationDetails();
-            return { 
-                healthy: auth.valid, 
+            return {
+                healthy: auth.valid,
                 mode: 'production-proxy',
                 authenticated: auth.valid,
                 message: auth.valid ? 'Proxy authentication ready' : 'No authentication cookie'
             };
         }
-        
+
         const result = await this.request(`${this.baseUrl}/health`);
         return result.success ? result.data : { healthy: false, error: result.error };
     }
@@ -500,25 +512,25 @@ export class UnifiedAPIClient {
         if (!this.wsUrl || !this.isLocalDev) {
             return false; // WebSocket only available in local dev
         }
-        
+
         if (this.websocket?.readyState === WebSocket.OPEN) {
             return true; // Already connected
         }
-        
+
         return new Promise((resolve) => {
             try {
                 this.websocket = new WebSocket(this.wsUrl);
-                
+
                 this.websocket.onopen = () => {
                     console.log('🔌 WebSocket connected');
                     this.wsState = 'connected';
                     this.clearReconnectInterval();
-                    
+
                     // Send initial ping
                     this.websocket.send(JSON.stringify({ type: 'ping' }));
                     resolve(true);
                 };
-                
+
                 this.websocket.onmessage = (event) => {
                     try {
                         const message = JSON.parse(event.data);
@@ -527,19 +539,19 @@ export class UnifiedAPIClient {
                         console.error('Error parsing WebSocket message:', error);
                     }
                 };
-                
+
                 this.websocket.onerror = (error) => {
                     console.error('WebSocket error:', error);
                     this.wsState = 'error';
                     resolve(false);
                 };
-                
+
                 this.websocket.onclose = () => {
                     console.log('🔌 WebSocket disconnected');
                     this.wsState = 'disconnected';
                     this.scheduleReconnect();
                 };
-                
+
             } catch (error) {
                 console.error('Failed to create WebSocket:', error);
                 resolve(false);
@@ -636,8 +648,8 @@ export class UnifiedAPIClient {
     getClientMetrics() {
         return {
             ...this.metrics,
-            avgResponseTime: this.metrics.requests > 0 
-                ? Math.round(this.metrics.totalTime / this.metrics.requests) 
+            avgResponseTime: this.metrics.requests > 0
+                ? Math.round(this.metrics.totalTime / this.metrics.requests)
                 : 0,
             successRate: this.metrics.requests > 0
                 ? Math.round(((this.metrics.requests - this.metrics.errors) / this.metrics.requests) * 100)
@@ -652,16 +664,16 @@ export class UnifiedAPIClient {
      */
     async initialize() {
         console.log('🚀 Initializing Unified API Client');
-        
+
         // Check health
         const health = await this.checkHealth();
         console.log('Health check:', health);
-        
+
         // Connect WebSocket if in local dev
         if (this.isLocalDev) {
             await this.connectWebSocket();
         }
-        
+
         return health.healthy !== false;
     }
 
@@ -679,4 +691,4 @@ export class UnifiedAPIClient {
 export const apiClient = new UnifiedAPIClient();
 
 // Export as default
-export default apiClient; 
+export default apiClient;

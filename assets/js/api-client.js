@@ -138,6 +138,7 @@ export const ApiClient = (() => {
      */
     async function promptForCookie(purpose = 'API access') {
         const cookie = prompt(`Enter your Elastic authentication cookie for ${purpose}:\n\n` +
+            `📝 INSTRUCTIONS:\n` +
             `1. Open Kibana in another tab\n` +
             `2. Open Developer Tools (F12)\n` +
             `3. Go to Network tab\n` +
@@ -145,17 +146,37 @@ export const ApiClient = (() => {
             `5. Find any request to Kibana\n` +
             `6. Copy the 'Cookie' header value\n` +
             `7. Paste it below\n\n` +
-            `Look for: sid=xxxxx`);
+            `✅ ACCEPTED FORMATS:\n` +
+            `• Full cookie: sid=abc123def456; Path=/; HttpOnly\n` +
+            `• Just the value: abc123def456\n` +
+            `• Multiple cookies: sid=abc123; other=value\n\n` +
+            `🔍 Look for the 'sid=' part in the cookie`);
 
         if (cookie && cookie.trim()) {
+            const trimmedCookie = cookie.trim();
+
+            // Basic validation
+            if (trimmedCookie.length < 10) {
+                alert('Cookie seems too short. Please make sure you copied the full cookie value.');
+                return null;
+            }
+
             // Save cookie with 24-hour expiration
             const cookieData = {
-                cookie: cookie.trim(),
+                cookie: trimmedCookie,
                 expires: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-                saved: new Date().toISOString()
+                saved: new Date().toISOString(),
+                format: trimmedCookie.includes('sid=') ? 'full_header' : 'sid_value_only'
             };
             localStorage.setItem('elasticCookie', JSON.stringify(cookieData));
-            return cookie.trim();
+
+            console.log('🍪 Cookie saved:', {
+                length: trimmedCookie.length,
+                format: cookieData.format,
+                preview: trimmedCookie.substring(0, 20) + '...'
+            });
+
+            return trimmedCookie;
         }
 
         return null;
@@ -328,28 +349,55 @@ export const ApiClient = (() => {
     }
 
     /**
+     * Test cookie format using debug endpoint
+     */
+    async function testCookieFormat(cookie) {
+        try {
+            const response = await fetch('http://localhost:8000/api/v1/debug/test-cookie', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Elastic-Cookie': cookie
+                }
+            });
+
+            if (response.ok) {
+                const result = await response.json();
+                console.log('🍪 Cookie format test:', result);
+                return result;
+            } else {
+                console.error('Cookie format test failed:', response.status);
+                return null;
+            }
+        } catch (error) {
+            console.error('Cookie format test error:', error);
+            return null;
+        }
+    }
+
+    /**
      * Test authentication by doing a minimal query
      */
     async function testAuthentication() {
         try {
             // Check if we're in production mode and have unified API client
             const isProduction = window.location.hostname !== 'localhost';
-            
+
             if (isProduction && window.UnifiedAPIClient) {
                 console.log('🔍 Using unified API client for production authentication test');
-                
+
                 // Use unified API client health check in production
                 const healthCheck = await window.UnifiedAPIClient.checkHealth();
                 if (healthCheck.healthy && healthCheck.authenticated) {
-                    return { 
-                        success: true, 
-                        method: 'production-proxy', 
-                        message: 'Authentication validated successfully via proxy' 
+                    return {
+                        success: true,
+                        method: 'production-proxy',
+                        message: 'Authentication validated successfully via proxy'
                     };
                 } else {
-                    return { 
-                        success: false, 
-                        error: healthCheck.message || 'Authentication failed via proxy' 
+                    return {
+                        success: false,
+                        error: healthCheck.message || 'Authentication failed via proxy'
                     };
                 }
             }
@@ -361,11 +409,19 @@ export const ApiClient = (() => {
                 return { success: false, error: 'No authentication cookie found' };
             }
 
+            // Test cookie format first (localhost only)
+            if (window.location.hostname === 'localhost') {
+                const formatTest = await testCookieFormat(auth.cookie);
+                if (formatTest) {
+                    console.log('🍪 Cookie format validation:', formatTest);
+                }
+            }
+
             // Minimal test query - just check if we can access the index
             const testQuery = {
                 size: 0,
-                query: { 
-                    bool: { 
+                query: {
+                    bool: {
                         filter: [{
                             range: {
                                 "@timestamp": {
@@ -424,22 +480,22 @@ export const ApiClient = (() => {
             }
 
             // Success - we got a valid response
-            return { 
-                success: true, 
-                method: auth.method, 
-                message: 'Authentication validated successfully' 
+            return {
+                success: true,
+                method: auth.method,
+                message: 'Authentication validated successfully'
             };
 
         } catch (error) {
             if (error.name === 'TimeoutError') {
                 return { success: false, error: 'Authentication test timed out - check network connection' };
             }
-            
+
             // Check for CORS errors in production
             if (error.message && error.message.includes('CORS')) {
                 return { success: false, error: 'CORS Error: Failed to fetch. Please set up CORS extension (see instructions).' };
             }
-            
+
             return { success: false, error: `Authentication test failed: ${error.message}` };
         }
     }
@@ -530,7 +586,8 @@ export const ApiClient = (() => {
         // NEW - Data layer integration
         executeQuery,
         checkHealth,
-        testAuthentication
+        testAuthentication,
+        testCookieFormat
     };
 })();
 

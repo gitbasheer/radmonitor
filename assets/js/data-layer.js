@@ -133,7 +133,7 @@ export const DataLayer = (() => {
             const shouldClauses = patterns.map(pattern => ({
                 wildcard: { [field]: { value: pattern } }
             }));
-            
+
             query.query.bool.filter.push({
                 bool: {
                     should: shouldClauses,
@@ -196,7 +196,7 @@ export const DataLayer = (() => {
         // Traffic analysis query
         trafficAnalysis(config) {
             const query = QueryBuilder.base();
-            
+
             // Get query configuration
             const queryConfig = ConfigService.getConfig();
             const eventField = 'detail.event.data.traffic.eid.keyword'; // Fixed value
@@ -205,26 +205,30 @@ export const DataLayer = (() => {
 
             // Get RAD types configuration
             const radTypes = queryConfig.rad_types || {};
-            const enabledPatterns = [];
-            
-            // Collect enabled RAD patterns
+            let enabledPatterns = [];
+
+            // Collect enabled RAD patterns with validation
             for (const [radKey, radConfig] of Object.entries(radTypes)) {
-                if (radConfig.enabled && radConfig.pattern) {
-                    enabledPatterns.push(radConfig.pattern);
+                if (radConfig.enabled && radConfig.pattern && radConfig.pattern.trim().length > 0) {
+                    enabledPatterns.push(radConfig.pattern.trim());
                 }
             }
-            
-            // Fallback to default pattern if no RAD types are enabled
+
+            // Fallback to default pattern if no valid RAD patterns found
             if (enabledPatterns.length === 0) {
-                enabledPatterns.push(queryConfig.queryEventPattern || 'pandc.vnext.recommendations.feed.feed*');
+                const defaultPattern = queryConfig.queryEventPattern || 'pandc.vnext.recommendations.feed.feed*';
+                enabledPatterns = [defaultPattern];
+                console.log('📡 Using default pattern:', defaultPattern);
             }
+
+            console.log('📡 DataLayer query patterns:', enabledPatterns);
 
             // Add time range filter
             QueryBuilder.timeRange(query, '@timestamp', minEventDate, 'now');
-            
+
             // Add host filter
             QueryBuilder.term(query, 'detail.global.page.host', hostFilter);
-            
+
             // Add pattern filter(s)
             if (enabledPatterns.length === 1) {
                 // Single pattern - use simple wildcard
@@ -667,7 +671,7 @@ export const DataLayer = (() => {
                     }
                     await unifiedAPI.initialize();
                 }
-                
+
                 // Use unified API which will delegate to the appropriate implementation
                 const result = await unifiedAPI.executeQuery(query);
                 if (!result || !result.success) {
@@ -676,7 +680,7 @@ export const DataLayer = (() => {
                 return result.data;
             } catch (error) {
                 console.error('sendQuery failed:', error);
-                
+
                 // Provide a more helpful error message
                 if (error.message.includes('authentication') || error.message.includes('cookie')) {
                     throw new Error('Authentication required - please set your cookie');
@@ -740,7 +744,7 @@ export const DataLayer = (() => {
             // Count aggregation buckets
             if (response.aggregations) {
                 summary.aggregations = Object.keys(response.aggregations);
-                
+
                 // Count total buckets across all aggregations
                 Object.values(response.aggregations).forEach(agg => {
                     if (agg.buckets && Array.isArray(agg.buckets)) {
@@ -908,7 +912,7 @@ export const DataLayer = (() => {
                     hits: ResponseParser.parseHits(response),
                     error: ResponseParser.parseError(response)
                 };
-                
+
                 // Check for Elasticsearch errors in response
                 if (parsed.error) {
                     logAction('ELASTICSEARCH_ERROR_DETECTED', {
@@ -918,7 +922,7 @@ export const DataLayer = (() => {
                     });
                     throw new Error(`Elasticsearch error: ${parsed.error.reason}`);
                 }
-                
+
                 logAction('RESPONSE_PARSE_COMPLETE', {
                     queryId,
                     hasAggregations: !!parsed.aggregations,
@@ -1100,7 +1104,7 @@ export const DataLayer = (() => {
      */
     function configureLogging(options = {}) {
         Object.assign(stateLogging, options);
-        
+
         // Verbosity changes are applied silently to reduce console noise
     }
 
@@ -1162,7 +1166,7 @@ export const DataLayer = (() => {
         executeSearch,
 
         // State access
-        getQueryState: () => ({ 
+        getQueryState: () => ({
             ...queryState,
             lastProcessedResults: queryState.lastProcessedResults
         }),
