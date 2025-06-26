@@ -361,18 +361,20 @@ export class UnifiedAPIClient {
                 };
             }
             
-            // Build proxy request URL
+            // Send everything securely in request body
             const esUrl = config.elasticsearch?.url || 'https://usieventho-prod-usw2.kb.us-west-2.aws.found.io:9243';
             const esPath = config.elasticsearch?.path || '/elasticsearch/usi*/_search';
             
-            const proxyRequestUrl = new URL(proxyUrl);
-            proxyRequestUrl.searchParams.set('esUrl', esUrl);
-            proxyRequestUrl.searchParams.set('esPath', esPath);
-            proxyRequestUrl.searchParams.set('cookie', auth.cookie);
+            const requestBody = {
+                esUrl,
+                esPath,
+                cookie: auth.cookie,
+                query
+            };
             
-            result = await this.request(proxyRequestUrl.toString(), {
+            result = await this.request(proxyUrl, {
                 method: 'POST',
-                body: JSON.stringify(query),
+                body: JSON.stringify(requestBody),
                 headers: {
                     'Content-Type': 'application/json'
                 }
