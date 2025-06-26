@@ -40,18 +40,44 @@ jobs:
           # Create deployment directory with only web assets
           mkdir -p _site
           
-          # Copy only the files needed for the web dashboard
+          # Copy main web files
           cp index.html _site/
           cp -r assets/ _site/assets/
           cp .nojekyll _site/
           
+          # Copy config directory for production
+          cp -r config/ _site/config/
+          
+          # Create production config override
+          cat > _site/config/production.json << 'EOF'
+          {
+            "environment": "production",
+            "baseUrl": "https://balkhalil-godaddy.github.io/vh-rad-traffic-monitor",
+            "corsProxy": {
+              "enabled": false,
+              "message": "Direct Elasticsearch connection required in production"
+            },
+            "elasticsearch": {
+              "directConnection": true,
+              "url": "https://usieventho-prod-usw2.kb.us-west-2.aws.found.io:9243",
+              "path": "/elasticsearch/usi*/_search"
+            },
+            "features": {
+              "fastapi": false,
+              "localServer": false,
+              "corsProxy": false
+            }
+          }
+          EOF
+          
           # Copy any other static files that might be needed
           if [ -f favicon.ico ]; then cp favicon.ico _site/; fi
           if [ -f robots.txt ]; then cp robots.txt _site/; fi
+          if [ -d examples ]; then cp -r examples/ _site/examples/; fi
           
           # List what we're deploying
           echo "Files being deployed:"
-          find _site -type f | head -20
+          find _site -type f | head -30
       
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3

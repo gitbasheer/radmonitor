@@ -10,6 +10,28 @@ export const ConfigService = (() => {
     let config = null;
     let listeners = [];
     let syncTimer = null;
+    let isInitialized = false;
+    let environment = detectEnvironment();
+    
+    // Environment detection
+    function detectEnvironment() {
+        const hostname = window.location.hostname;
+        if (hostname.includes('github.io') || hostname.includes('githubusercontent.com')) {
+            return 'production';
+        } else if (hostname === 'localhost' || hostname === '127.0.0.1') {
+            return 'development';
+        } else {
+            return 'unknown';
+        }
+    }
+    
+    function isProduction() {
+        return environment === 'production';
+    }
+    
+    function isDevelopment() {
+        return environment === 'development';
+    }
 
     // Backend endpoints - updated for unified server
     const ENDPOINTS = {
@@ -68,84 +90,151 @@ export const ConfigService = (() => {
      * Initialize configuration from backend or localStorage
      */
     async function initialize() {
-        // Check if we should skip backend initialization
-        const skipBackend = localStorage.getItem('radMonitor_skipBackendConfig') === 'true';
-        
-        // Auto-skip backend if we're on localhost without explicit backend URL
-        const isLocalDev = window.location.hostname === 'localhost' && 
-                          !localStorage.getItem('radMonitor_backendUrl');
-        
-        // Skip backend in test environment
-        const isTest = typeof process !== 'undefined' && process.env.NODE_ENV === 'test';
-        
-        if (!skipBackend && !isLocalDev && !isTest) {
-            try {
-                // Try to load from backend first
-                const backendConfig = await loadFromBackend();
-                if (backendConfig) {
-                    config = backendConfig;
-                    saveToLocalStorage();
-                    notifyListeners('initialized', config);
-                    return config;
-                }
-            } catch (error) {
-                // Silently handle CORS errors and connection failures
-                if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
-                    // This is likely a CORS error or connection failure - handle silently
-                    console.debug('Backend config service not available, using local configuration');
-                } else {
-                    // Log other types of errors with reduced verbosity
-                    console.debug('Config backend error:', error.message);
-                }
+        if (isInitialized) {
+            return config;
+        }
+
+        try {
+            console.log(`🔧 Loading configuration for ${environment} environment...`);
+            
+            if (isProduction()) {
+                await loadProductionConfig();
+            } else {
+                await loadDevelopmentConfig();
             }
+            
+            isInitialized = true;
+            console.log('✅ Configuration loaded successfully:', config);
+            notifyListeners('initialized', config);
+            return config;
+        } catch (error) {
+            console.error('❌ Failed to load configuration:', error);
+            loadFallbackConfig();
+            isInitialized = true;
+            notifyListeners('initialized', config);
+            return config;
         }
-
-        // Fallback to localStorage
-        config = loadFromLocalStorage();
+    }
+    
+    /**
+     * Load production configuration
+     */
+    async function loadProductionConfig() {
+        try {
+            // Try to load production config first
+            const productionResponse = await fetch('./config/production.json');
+            if (productionResponse.ok) {
+                const productionConfig = await productionResponse.json();
+                console.log('📦 Loaded production configuration');
+                
+                // Merge with default config
+                const defaultConfig = getDefaultConfig();
+                config = { ...defaultConfig, ...productionConfig };
+                saveToLocalStorage();
+                return;
+            }
+        } catch (error) {
+            console.warn('⚠️ Production config not found, using defaults with production overrides');
+        }
         
-        // If no config exists, use defaults
-        if (!config) {
-            config = getDefaultConfig();
-            saveToLocalStorage();
+        // Fallback to default config with production overrides
+        const defaultConfig = getDefaultConfig();
+        config = {
+            ...defaultConfig,
+            environment: 'production',
+            baseUrl: window.location.origin + window.location.pathname.replace(/\/$/, ''),
+            corsProxy: { enabled: false },
+            features: { fastapi: false, localServer: false, corsProxy: false },
+            elasticsearch: {
+                directConnection: true,
+                url: 'https://usieventho-prod-usw2.kb.us-west-2.aws.found.io:9243',
+                path: '/elasticsearch/usi*/_search',
+                corsRequired: true
+            }
+        };
+        saveToLocalStorage();
+    }
+    
+    /**
+     * Load development configuration
+     */
+    async function loadDevelopmentConfig() {
+        const defaultConfig = getDefaultConfig();
+        
+        // Try to load from backend
+        try {
+            const backendConfig = await loadFromBackend();
+            if (backendConfig) {
+                config = { ...defaultConfig, ...backendConfig };
+                console.log('📡 Loaded configuration from backend');
+                saveToLocalStorage();
+                return;
+            }
+        } catch (error) {
+            console.warn('⚠️ Backend config not available, using defaults');
         }
-
-        notifyListeners('initialized', config);
-        return config;
+        
+        config = {
+            ...defaultConfig,
+            environment: 'development',
+            features: { fastapi: true, localServer: true, corsProxy: true }
+        };
+        saveToLocalStorage();
+    }
+    
+    /**
+     * Load fallback configuration
+     */
+    function loadFallbackConfig() {
+        console.log('🆘 Loading fallback configuration');
+        config = {
+            ...getDefaultConfig(),
+            environment: environment,
+            features: {
+                fastapi: isDevelopment(),
+                localServer: isDevelopment(),
+                corsProxy: isDevelopment()
+            }
+        };
+        saveToLocalStorage();
     }
 
     /**
      * Load configuration from backend
      */
     async function loadFromBackend() {
+        if (!isDevelopment()) {
+            throw new Error('Backend loading only available in development');
+        }
+        
         try {
             const response = await apiRequest(ENDPOINTS.get);
             
-            // Convert backend format to frontend format
+            // Convert backend format to frontend format if needed
             return {
-                baselineStart: response.processing.baseline_start,
-                baselineEnd: response.processing.baseline_end,
-                currentTimeRange: response.processing.current_time_range,
-                highVolumeThreshold: response.processing.high_volume_threshold,
-                mediumVolumeThreshold: response.processing.medium_volume_threshold,
-                criticalThreshold: response.processing.critical_threshold,
-                warningThreshold: response.processing.warning_threshold,
-                minDailyVolume: response.processing.min_daily_volume,
-                autoRefreshEnabled: response.dashboard.enable_websocket,
-                autoRefreshInterval: response.dashboard.refresh_interval * 1000,
-                theme: response.dashboard.theme,
-                maxEventsDisplay: response.dashboard.max_events_display,
-                elasticCookie: response.elasticsearch.cookie,
-                kibanaUrl: response.kibana.url,
-                elasticsearchUrl: response.elasticsearch.url,
-                corsProxyPort: response.cors_proxy.port,
+                baselineStart: response.processing?.baseline_start || response.baselineStart,
+                baselineEnd: response.processing?.baseline_end || response.baselineEnd,
+                currentTimeRange: response.processing?.current_time_range || response.currentTimeRange,
+                highVolumeThreshold: response.processing?.high_volume_threshold || response.highVolumeThreshold,
+                mediumVolumeThreshold: response.processing?.medium_volume_threshold || response.mediumVolumeThreshold,
+                criticalThreshold: response.processing?.critical_threshold || response.criticalThreshold,
+                warningThreshold: response.processing?.warning_threshold || response.warningThreshold,
+                minDailyVolume: response.processing?.min_daily_volume || response.minDailyVolume,
+                autoRefreshEnabled: response.dashboard?.enable_websocket ?? response.autoRefreshEnabled,
+                autoRefreshInterval: (response.dashboard?.refresh_interval * 1000) || response.autoRefreshInterval,
+                theme: response.dashboard?.theme || response.theme,
+                maxEventsDisplay: response.dashboard?.max_events_display || response.maxEventsDisplay,
+                elasticCookie: response.elasticsearch?.cookie || response.elasticCookie,
+                kibanaUrl: response.kibana?.url || response.kibanaUrl,
+                elasticsearchUrl: response.elasticsearch?.url || response.elasticsearchUrl,
+                corsProxyPort: response.cors_proxy?.port || response.corsProxyPort,
                 debug: response.debug,
-                appName: response.app_name,
-                // Include rad_types from backend
-                rad_types: response.rad_types || getDefaultConfig().rad_types
+                appName: response.app_name || response.appName,
+                rad_types: response.rad_types || response.rad_types
             };
         } catch (error) {
-            // Error already logged in apiRequest at debug level
-            return null;
+            console.debug('Backend config load failed:', error.message);
+            throw error;
         }
     }
 
@@ -246,8 +335,8 @@ export const ConfigService = (() => {
      * Get current configuration
      */
     function getConfig() {
-        if (!config) {
-            console.warn('Config not initialized, returning defaults');
+        if (!isInitialized) {
+            console.warn('⚠️ Config requested before initialization');
             return getDefaultConfig();
         }
         return { ...config };
@@ -523,6 +612,48 @@ export const ConfigService = (() => {
     }
 
     /**
+     * Check if CORS setup instructions should be shown
+     */
+    function shouldShowCorsInstructions() {
+        return isProduction() && config?.elasticsearch?.corsRequired;
+    }
+    
+    /**
+     * Get CORS setup instructions
+     */
+    function getCorsInstructions() {
+        return {
+            title: "CORS Setup Required for GitHub Pages",
+            message: "To connect to Elasticsearch from this static site, you need to:",
+            steps: [
+                "1. Install a CORS browser extension:",
+                "   • Chrome: 'CORS Unblock' or 'CORS Unlocker'",
+                "   • Firefox: 'CORS Everywhere'",
+                "   • Safari: 'CORS Unblock'",
+                "",
+                "2. Enable the extension for this site",
+                "3. Refresh the page and enter your Elasticsearch cookie",
+                "",
+                "Alternative: Use the dashboard from your local development environment"
+            ],
+            note: "This is required because GitHub Pages is a static hosting service and cannot proxy requests to Elasticsearch."
+        };
+    }
+    
+    /**
+     * Get environment information
+     */
+    function getEnvironmentInfo() {
+        return {
+            environment,
+            isProduction: isProduction(),
+            isDevelopment: isDevelopment(),
+            hostname: window.location.hostname,
+            origin: window.location.origin
+        };
+    }
+
+    /**
      * UI Helper: Set preset time range
      * Migrated from ConfigManager for consolidation
      */
@@ -603,6 +734,12 @@ export const ConfigService = (() => {
         getComponentConfig,
         loadFromBackend,
         saveToBackend,
+        // Environment helpers
+        shouldShowCorsInstructions,
+        getCorsInstructions,
+        getEnvironmentInfo,
+        isProduction,
+        isDevelopment,
         // UI Helpers (migrated from ConfigManager)
         setPresetTimeRange,
         getCurrentConfigFromDOM,
@@ -610,7 +747,8 @@ export const ConfigService = (() => {
         // Expose internals for debugging
         _debug: {
             config: () => config,
-            listeners: () => listeners
+            listeners: () => listeners,
+            environment: () => environment
         }
     };
 })();
