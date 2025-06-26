@@ -5,10 +5,10 @@
 
 // Override immediately when script loads
 (function() {
+    console.log('🔧 Initializing CORS Direct Override...');
+    
     // Function to apply the override
     function applyCorsOverride() {
-        console.log('🔧 Initializing CORS Direct Override...');
-        
         if (window.UnifiedAPIClient) {
             // Override the executeQuery method to go direct to Elasticsearch
             const originalExecuteQuery = window.UnifiedAPIClient.executeQuery;
@@ -123,15 +123,23 @@
         }
     }
     
+    // Set up an interceptor for when UnifiedAPIClient gets created
+    let _unifiedAPIClient = null;
+    Object.defineProperty(window, 'UnifiedAPIClient', {
+        get: function() {
+            return _unifiedAPIClient;
+        },
+        set: function(value) {
+            _unifiedAPIClient = value;
+            console.log('🔍 UnifiedAPIClient detected, applying CORS override...');
+            // Apply override immediately when it gets set
+            setTimeout(() => applyCorsOverride(), 0);
+        },
+        configurable: true
+    });
+    
     // Try to apply immediately, then retry if needed
     applyCorsOverride();
-    
-    // If UnifiedAPIClient wasn't ready, try again after page load
-    if (!window.UnifiedAPIClient) {
-        document.addEventListener('DOMContentLoaded', function() {
-            setTimeout(applyCorsOverride, 100);
-        });
-    }
     
     // Also try to trigger a dashboard refresh after override is applied
     setTimeout(() => {
