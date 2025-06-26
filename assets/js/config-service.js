@@ -392,7 +392,7 @@ export const ConfigService = (() => {
                     environment: 'production',
                     corsProxy: {
                         enabled: true,
-                        url: "https://rad-monitor-demo-jbgygggfw-basheers-projects-d3b7a207.vercel.app/api/proxy"
+                        url: "https://rad-monitor-demo-bkipr4hig-basheers-projects-d3b7a207.vercel.app/api/proxy"
                     },
                     features: {
                         fastapi: false,
