@@ -322,7 +322,7 @@ export const ConfigService = (() => {
             elasticCookie: null,
             kibanaUrl: 'https://usieventho-prod-usw2.kb.us-west-2.aws.found.io:9243',
             elasticsearchUrl: 'https://usieventho-prod-usw2.es.us-west-2.aws.found.io:9243',
-            elasticsearchPath: '/usi*/_search',
+            elasticsearchPath: '/traffic-*/_search',
             corsProxyPort: 8000,
             debug: false,
             appName: 'RAD Monitor',

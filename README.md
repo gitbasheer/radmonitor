@@ -1,5 +1,8 @@
 # RAD Traffic Health Monitor
 
+[![Deploy Status](https://img.shields.io/badge/status-operational-brightgreen)](https://balkhalil-godaddy.github.io/vh-rad-traffic-monitor/)
+[![Proxy Status](https://img.shields.io/badge/proxy-netlify-00C7B7)](https://regal-youtiao-09c777.netlify.app/.netlify/functions/proxy)
+
 Real-time monitoring dashboard for RAD cards traffic health. Automatically detects and alerts on traffic anomalies using statistical analysis and visual indicators.
 
 ## Overview
@@ -32,6 +35,18 @@ This dashboard monitors impression and click traffic for RAD cards, comparing cu
 - Dark theme support
 - Interactive configuration editor
 - Performance monitoring dashboard
+
+## Production Access
+
+### 🚀 Live Dashboard
+Access the production dashboard at: https://balkhalil-godaddy.github.io/vh-rad-traffic-monitor/
+
+The dashboard runs entirely in your browser and connects to Elasticsearch through a secure proxy service. No local installation required!
+
+### 🔐 Authentication
+1. Get your Kibana cookie (see [Authentication](#authentication) section)
+2. Enter cookie when prompted by the dashboard
+3. Cookie is saved locally for 24 hours
 
 ## Quick Start
 
