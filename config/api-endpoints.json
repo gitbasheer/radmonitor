@@ -17,5 +17,10 @@
     "defaultTimeRange": "now-12h",
     "defaultSize": 0,
     "maxBuckets": 500
+  },
+  "proxy": {
+    "enabled": true,
+    "url": "https://regal-youtiao-09c777.netlify.app/.netlify/functions/proxy",
+    "type": "netlify"
   }
 }

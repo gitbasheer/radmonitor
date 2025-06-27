@@ -154,8 +154,8 @@ export const ConfigService = (() => {
             features: { fastapi: false, localServer: false, corsProxy: false },
             elasticsearch: {
                 directConnection: true,
-                url: 'https://usieventho-prod-usw2.kb.us-west-2.aws.found.io:9243',
-                path: '/elasticsearch/usi*/_search',
+                url: 'https://usieventho-prod-usw2.es.us-west-2.aws.found.io:9243',
+                path: '/usi*/_search',
                 corsRequired: true
             }
         };
@@ -322,6 +322,7 @@ export const ConfigService = (() => {
             elasticCookie: null,
             kibanaUrl: 'https://usieventho-prod-usw2.kb.us-west-2.aws.found.io:9243',
             elasticsearchUrl: 'https://usieventho-prod-usw2.es.us-west-2.aws.found.io:9243',
+            elasticsearchPath: '/usi*/_search',
             corsProxyPort: 8000,
             debug: false,
             appName: 'RAD Monitor',

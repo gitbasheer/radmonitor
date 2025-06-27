@@ -44,3 +44,6 @@ scripts/legacy/
 docs/G.md
 venv/
 .vercel
+
+# Local Netlify folder
+.netlify

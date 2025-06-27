@@ -4,5 +4,8 @@
   "description": "Simple CORS proxy for RAD Monitor - Netlify Functions",
   "scripts": {
     "test": "echo \"Ready for Netlify deployment\""
+  },
+  "devDependencies": {
+    "netlify-cli": "^22.2.0"
   }
 }

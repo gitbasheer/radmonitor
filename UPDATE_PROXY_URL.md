@@ -45,3 +45,34 @@ Your GitHub Pages site will automatically rebuild and start using the new proxy.
 Visit: https://balkhalil-godaddy.github.io/vh-rad-traffic-monitor/
 
 The proxy will handle all CORS issues and your team can access the dashboard without any special browser settings.
+
+# Update Proxy URL
+
+The proxy URL for the RAD Monitor dashboard is:
+
+```
+https://regal-youtiao-09c777.netlify.app/.netlify/functions/proxy
+```
+
+This proxy is deployed on Netlify and handles CORS requests to Elasticsearch.
+
+## Configuration Files to Update
+
+When changing the proxy URL, update the following files:
+
+1. `config/settings.json` - Update the `proxy.url` field
+2. `config/api-endpoints.json` - Update the `proxy.url` field
+
+## Testing the Proxy
+
+You can test the proxy is working by visiting:
+```
+https://regal-youtiao-09c777.netlify.app/.netlify/functions/proxy
+```
+
+You should see a response like:
+```
+{"error":"Missing target query parameter"}
+```
+
+This indicates the proxy is running correctly.

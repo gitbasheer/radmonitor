@@ -58,5 +58,11 @@
     "port": 8000,
     "allowed_origins": "*",
     "proxy_timeout": 30
+  },
+  "proxy": {
+    "type": "netlify",
+    "enabled": true,
+    "url": "https://regal-youtiao-09c777.netlify.app/.netlify/functions/proxy",
+    "timeout": 30000
   }
 }

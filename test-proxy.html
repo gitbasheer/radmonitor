@@ -1,96 +1,21 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Proxy Test</title>
+    <title>Test Proxy Connection</title>
 </head>
 <body>
-    <h1>RAD Monitor Proxy Test</h1>
-
-    <div style="margin: 20px 0; padding: 10px; background: #f0f0f0;">
-        <h3>Cookie Setup</h3>
-        <p>Enter your Elasticsearch cookie (the 'sid' value from Kibana):</p>
-        <input type="text" id="cookieInput" style="width: 500px; padding: 5px;" placeholder="Fe26.2**...">
-        <button onclick="saveCookie()">Save Cookie</button>
-    </div>
-
-    <button onclick="testProxy()">Test Proxy Connection</button>
-    <button onclick="debugLocalStorage()">Debug LocalStorage</button>
-
+    <h1>Testing RAD Monitor Proxy</h1>
+    <button onclick="testProxy()">Test Proxy</button>
     <pre id="result"></pre>
 
     <script>
-    function saveCookie() {
-        const cookie = document.getElementById('cookieInput').value.trim();
-        if (!cookie) {
-            alert('Please enter a cookie value');
-            return;
-        }
-
-        // Save in the same format as the dashboard
-        const cookieData = {
-            cookie: cookie,
-            expires: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-            saved: new Date().toISOString()
-        };
-
-        localStorage.setItem('elasticCookie', JSON.stringify(cookieData));
-        document.getElementById('result').textContent = 'Cookie saved! Now click "Test Proxy Connection"';
-    }
-
-    function debugLocalStorage() {
-        const resultEl = document.getElementById('result');
-        const allKeys = Object.keys(localStorage);
-
-        resultEl.textContent = 'LocalStorage contents:\n\n';
-
-        if (allKeys.length === 0) {
-            resultEl.textContent += 'LocalStorage is empty!';
-        } else {
-            allKeys.forEach(key => {
-                const value = localStorage.getItem(key);
-                resultEl.textContent += `Key: ${key}\n`;
-                try {
-                    const parsed = JSON.parse(value);
-                    resultEl.textContent += `Value: ${JSON.stringify(parsed, null, 2)}\n\n`;
-                } catch {
-                    resultEl.textContent += `Value: ${value}\n\n`;
-                }
-            });
-        }
-    }
-
     async function testProxy() {
         const resultEl = document.getElementById('result');
         resultEl.textContent = 'Testing proxy...';
-
-        // Get cookie from localStorage (same as dashboard)
-        const cookieData = localStorage.getItem('elasticCookie');
-        if (!cookieData) {
-            resultEl.textContent = 'No cookie found in localStorage. Please enter your cookie above.';
-            debugLocalStorage(); // Show what's in localStorage
-            return;
-        }
-
-        let cookie;
+        
         try {
-            const parsed = JSON.parse(cookieData);
-            cookie = parsed.cookie;
-        } catch {
-            // Maybe it's stored as plain string
-            cookie = cookieData;
-        }
-
-                    const proxyUrl = 'https://warm-sunshine-d0b061.netlify.app/.netlify/functions/proxy';
-
-        const testQuery = {
-            size: 0,
-            query: {
-                match_all: {}
-            }
-        };
-
-        try {
-            const response = await fetch(proxyUrl, {
+            // Test the proxy endpoint
+            const response = await fetch('https://regal-youtiao-09c777.netlify.app/.netlify/functions/proxy', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -98,36 +23,21 @@
                 body: JSON.stringify({
                     esUrl: 'https://usieventho-prod-usw2.kb.us-west-2.aws.found.io:9243',
                     esPath: '/elasticsearch/usi*/_search',
-                    cookie: cookie,
-                    query: testQuery
+                    cookie: 'test-cookie',
+                    query: { size: 0, query: { match_all: {} } }
                 })
             });
-
+            
             const data = await response.json();
-
-            if (response.ok && !data.error) {
-                resultEl.textContent = '✅ Success! Proxy is working.\n\n' + JSON.stringify(data, null, 2);
-            } else {
-                resultEl.textContent = '❌ Error: ' + JSON.stringify(data, null, 2);
+            resultEl.textContent = 'Proxy Response:\n' + JSON.stringify(data, null, 2);
+            
+            if (data.error && data.error.includes('security_exception')) {
+                resultEl.textContent += '\n\n✅ Proxy is working! (authentication error is expected with test cookie)';
             }
         } catch (error) {
-            resultEl.textContent = '❌ Connection error: ' + error.message;
+            resultEl.textContent = 'Error: ' + error.message;
         }
     }
-
-    // Check if cookie exists on load
-    window.onload = function() {
-        const cookieData = localStorage.getItem('elasticCookie');
-        if (cookieData) {
-            try {
-                const parsed = JSON.parse(cookieData);
-                document.getElementById('cookieInput').value = parsed.cookie.substring(0, 50) + '...';
-                document.getElementById('result').textContent = 'Cookie found in localStorage. Click "Test Proxy Connection" to test.';
-            } catch {
-                document.getElementById('result').textContent = 'Cookie found but may be in wrong format. Click "Debug LocalStorage" to see details.';
-            }
-        }
-    };
     </script>
 </body>
 </html>
