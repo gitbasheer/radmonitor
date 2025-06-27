@@ -1,16 +1,19 @@
 {
   "name": "rad-monitor-proxy",
   "version": "1.0.0",
-  "description": "CORS proxy for RAD Monitor Elasticsearch requests",
+  "description": "CORS proxy for RAD Monitor Elasticsearch access",
   "main": "index.js",
+  "type": "module",
   "scripts": {
-    "dev": "vercel dev",
-    "deploy": "vercel --prod"
-  },
-  "dependencies": {
-    "node-fetch": "^3.3.0"
+    "start": "node render-web-service.js",
+    "dev": "node render-web-service.js"
   },
   "engines": {
     "node": ">=16"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "node-fetch": "^3.3.2"
   }
-} 
+}
