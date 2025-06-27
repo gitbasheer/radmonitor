@@ -1,63 +1,47 @@
-# CORS Proxy Service for RAD Monitor
+# RAD Monitor Proxy - Simple Netlify Deployment
 
-## Quick Deploy to Vercel (5 minutes)
+A simple CORS proxy for RAD Monitor to access Elasticsearch from GitHub Pages.
 
-### 1. **Install Vercel CLI**
-```bash
-npm i -g vercel
-```
+## Deploy in 2 Minutes (No Login Required!)
 
-### 2. **Deploy from this directory**
-```bash
-cd proxy-service
-vercel --prod
-```
+### Option 1: Drag & Drop
 
-### 3. **Update the GitHub Pages config**
-Once deployed, update the proxy URL in `.github/workflows/static.yml`:
-```json
-"corsProxy": {
-  "url": "https://YOUR-VERCEL-URL.vercel.app/api/proxy"
-}
-```
+1. Visit [Netlify Drop](https://app.netlify.com/drop)
+2. Drag this entire `proxy-service` folder onto the page
+3. Netlify will deploy it instantly!
+4. Copy your new proxy URL (e.g., `https://amazing-site-12345.netlify.app`)
 
-## Alternative: Deploy to Netlify Functions
+### Option 2: Deploy Button (Requires GitHub)
 
-### 1. **Create netlify.toml**
-```toml
-[build]
-  functions = "functions"
+[![Deploy to Netlify](https://www.netlify.com/img/deploy/button.svg)](https://app.netlify.com/start/deploy?repository=https://github.com/balkhalil-godaddy/vh-rad-traffic-monitor)
 
-[[redirects]]
-  from = "/api/proxy"
-  to = "/.netlify/functions/proxy"
-  status = 200
-```
+## Update Your Configuration
 
-### 2. **Move index.js to functions/proxy.js**
-```bash
-mkdir functions
-cp index.js functions/proxy.js
-```
+After deployment, update these files with your new Netlify URL:
 
-### 3. **Deploy**
-```bash
-netlify deploy --prod
-```
+1. **config/production.json**
+   ```json
+   {
+     "corsProxy": {
+       "url": "https://YOUR-SITE.netlify.app/.netlify/functions/proxy"
+     }
+   }
+   ```
 
-## Testing
+2. **assets/js/config-service.js** (line ~394)
+   ```javascript
+   const proxyUrl = 'https://YOUR-SITE.netlify.app/.netlify/functions/proxy';
+   ```
 
-Once deployed, test the proxy:
-```bash
-curl "https://your-proxy-url.vercel.app/api/proxy?esUrl=https://usieventho-prod-usw2.kb.us-west-2.aws.found.io:9243&esPath=/elasticsearch/usi*/_search&cookie=YOUR_COOKIE" \
-  -X POST \
-  -H "Content-Type: application/json" \
-  -d '{"size":0,"query":{"match_all":{}}}'
-```
+3. **.github/workflows/static.yml** (line ~68)
+   ```yaml
+   echo 'window.PROXY_URL = "https://YOUR-SITE.netlify.app/.netlify/functions/proxy";'
+   ```
 
-## Benefits
+## Example
+If your Netlify URL is `https://amazing-site-12345.netlify.app`,
+your proxy endpoint will be: `https://amazing-site-12345.netlify.app/.netlify/functions/proxy`
 
-✅ **No CORS browser extensions needed**
-✅ **Works for all team members immediately**  
-✅ **Serverless (free tier available)**
-✅ **Automatically handles CORS headers** 
+## That's It!
+
+Your proxy is now deployed and ready to use. The dashboard at GitHub Pages will be able to access Elasticsearch data through this proxy.

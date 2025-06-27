@@ -1,39 +1,19 @@
 {
-  "name": "rad-monitor",
+  "name": "rad-monitor-proxy",
   "version": "1.0.0",
-  "description": "RAD Traffic Health Monitor Dashboard",
-  "type": "module",
+  "description": "CORS proxy for RAD Monitor Elasticsearch access",
   "main": "index.js",
+  "type": "module",
   "scripts": {
-    "test": "vitest",
-    "test:run": "vitest run",
-    "test:watch": "vitest watch",
-    "test:coverage": "vitest run --coverage",
-    "cors-proxy": "python3 bin/cors_proxy.py",
-    "dev": "python3 bin/dev_server_unified.py",
-    "dev:simple": "python3 bin/dev_server_unified.py --force-simple",
-    "dev:fastapi": "python3 bin/dev_server_unified.py --mode fastapi",
-    "dev:setup": "python3 bin/dev_server_unified.py --setup",
-    "serve": "python3 -m http.server 8000",
-    "cleanup": "./scripts/setup/cleanup-ports.sh",
-    "test:python": "cd tests && python -m pytest",
-    "test:bash": "cd tests && bats test_bash_scripts.bats",
-    "generate": "./scripts/generate_dashboard_refactored.sh",
-    "generate:python": "python3 bin/generate_dashboard.py",
-    "test:all": "./scripts/runners/run_all_tests.sh"
+    "start": "node render-web-service.js",
+    "dev": "node render-web-service.js"
   },
-  "keywords": [
-    "traffic",
-    "monitoring",
-    "dashboard",
-    "kibana"
-  ],
-  "author": "",
-  "license": "ISC",
-  "devDependencies": {
-    "@vitest/coverage-v8": "^1.2.1",
-    "concurrently": "^8.2.2",
-    "jsdom": "^24.0.0",
-    "vitest": "^1.2.1"
+  "engines": {
+    "node": ">=16"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "node-fetch": "^3.3.2"
   }
 }

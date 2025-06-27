@@ -392,7 +392,7 @@ export const ConfigService = (() => {
                     environment: 'production',
                     corsProxy: {
                         enabled: true,
-                        url: "https://rad-monitor-proxy-djsgj9pas-basheers-projects-d3b7a207.vercel.app/api/proxy"
+                        url: "https://warm-sunshine-d0b061.netlify.app/.netlify/functions/proxy"
                     },
                     features: {
                         fastapi: false,
