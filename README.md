@@ -1,64 +1,45 @@
-# RAD Traffic Health Monitor
+# RAD Monitor Dashboard
 
-[![Deploy Status](https://img.shields.io/badge/status-operational-brightgreen)](https://balkhalil-godaddy.github.io/vh-rad-traffic-monitor/)
-[![Proxy Status](https://img.shields.io/badge/proxy-netlify-00C7B7)](https://regal-youtiao-09c777.netlify.app/.netlify/functions/proxy)
+A real-time traffic monitoring dashboard for RAD (Recommendations and Discovery) events. Shows you when traffic drops so you can catch issues fast.
 
-Real-time monitoring dashboard for RAD cards traffic health. Automatically detects and alerts on traffic anomalies using statistical analysis and visual indicators.
+## Live Dashboard
 
-## Overview
+**Production URL**: https://balkhalil-godaddy.github.io/vh-rad-traffic-monitor/
 
-This dashboard monitors impression and click traffic for RAD cards, comparing current performance against historical baselines to identify issues quickly. It provides:
+Just need to monitor traffic? Go to the URL above, enter your Kibana cookie when prompted, and you're good to go.
 
-- **Real-time monitoring** with live data updates
-- **Automatic anomaly detection** using statistical analysis
-- **Visual status indicators** (Critical/Warning/Normal/Increased)
-- **Detailed metrics** including score, percentage change, and impact
-- **GitHub Pages hosting** with automatic updates
+## How It Works
 
-## Features
+```mermaid
+graph LR
+    A[Dashboard<br/>GitHub Pages] -->|HTTPS| B[Proxy<br/>Netlify Function]
+    B -->|Authenticated| C[Kibana API]
+    C -->|Query| D[Elasticsearch<br/>traffic-* indices]
 
-### Live Data Functionality
-- Real-time API calls to Elasticsearch/Kibana
-- CORS proxy support for local development
-- Automatic refresh with configurable intervals
-- Cookie-based authentication for secure access
+    style A fill:#e1f5fe
+    style B fill:#c8e6c9
+    style C fill:#fff9c4
+    style D fill:#ffccbc
+```
 
-### Intelligent Monitoring
-- Statistical analysis combining percentage change and z-score
-- Volume-weighted scoring to prioritize high-traffic cards
-- Customizable thresholds for alerts
-- Historical baseline comparison (8-day average)
+The dashboard queries Elasticsearch for RAD events, compares current traffic to historical baselines, and flags anything that looks wrong.
 
-### User Interface
-- Fixed sidebar layout with organized controls
-- Real-time search and filtering
-- Dark theme support
-- Interactive configuration editor
-- Performance monitoring dashboard
+## Getting Started
 
-## Production Access
+### For Monitoring (No Setup)
 
-### 🚀 Live Dashboard
-Access the production dashboard at: https://balkhalil-godaddy.github.io/vh-rad-traffic-monitor/
+1. Go to https://balkhalil-godaddy.github.io/vh-rad-traffic-monitor/
+2. Get your Kibana cookie:
+   - Open Kibana
+   - F12 → Network tab → Refresh page
+   - Find any request → Copy the Cookie header value
+   - Look for the `sid=Fe26.2**...` part
+3. Paste cookie in dashboard when prompted
+4. Watch your traffic
 
-The dashboard runs entirely in your browser and connects to Elasticsearch through a secure proxy service. No local installation required!
+### For Development
 
-### 🔐 Authentication
-1. Get your Kibana cookie (see [Authentication](#authentication) section)
-2. Enter cookie when prompted by the dashboard
-3. Cookie is saved locally for 24 hours
-
-## Quick Start
-
-### Prerequisites
-- Node.js and npm
-- Python 3.x and pip
-- Git
-- Elasticsearch/Kibana access with valid cookie
-
-### Installation
-
-1. **Clone and install dependencies**
+Clone and install:
 ```bash
 git clone https://github.com/balkhalil-godaddy/vh-rad-traffic-monitor.git
 cd vh-rad-traffic-monitor
@@ -66,264 +47,160 @@ npm install
 pip install -r requirements-enhanced.txt
 ```
 
-**Note**: The project has two requirements files:
-- `requirements-enhanced.txt` - Full dependencies for local development (includes FastAPI server, rate limiting, etc.)
-- `requirements-minimal.txt` - Minimal dependencies for dashboard generation only (used by GitHub Actions)
-
-2. **Start development server**
+Run locally:
 ```bash
-npm run dev
+npm run dev  # Starts everything you need on http://localhost:8000
 ```
-The unified server automatically detects your environment and starts the best available mode.
 
-3. **Configure authentication**
-   - Get your Elasticsearch cookie from Kibana (Developer Tools → Network → Copy `sid` value)
-   - Set environment variable: `export ES_COOKIE="your_cookie_here"`
-   - Or use the dashboard UI: Click gear icon → "Set Cookie for Real-time"
+## Key Files & URLs
 
-4. **Access dashboard**
-   - Open http://localhost:8000
-   - Click "Test Connection" to verify setup
-   - Dashboard will start displaying real-time data
+| What | Where | Why |
+|------|-------|-----|
+| Dashboard | https://balkhalil-godaddy.github.io/vh-rad-traffic-monitor/ | Live production dashboard |
+| Proxy | https://regal-youtiao-09c777.netlify.app/.netlify/functions/proxy | Handles CORS and auth |
+| Main Config | `config/production.json` | Controls proxy URL and index pattern |
+| Proxy Code | `proxy-service/netlify/functions/proxy.js` | The magic that makes it work |
 
-### Production Deployment
+## Architecture
 
-For GitHub Pages deployment:
+```mermaid
+graph TB
+    subgraph "Frontend"
+        A[index.html] --> B[api-client-unified.js]
+        B --> C[config-service.js]
+    end
 
-1. **Configure GitHub repository**
-   - Enable GitHub Pages in Settings → Pages
-   - Add `ELASTIC_COOKIE` secret in Settings → Secrets and variables → Actions
+    subgraph "Config"
+        D[production.json]
+        E[settings.json]
+        F[api-endpoints.json]
+    end
 
-2. **Automatic updates**
-   - GitHub Actions runs every 45 minutes
-   - Dashboard generates fresh data and updates automatically
-   - No server required - runs entirely in the browser
+    subgraph "Backend"
+        G[Netlify Proxy<br/>proxy.js]
+    end
+
+    C --> D
+    B --> G
+    G --> H[Kibana/Elasticsearch]
+```
+
+## Essential Commands
+
+```bash
+# Check if everything's configured right
+./scripts/verify-config.sh
+
+# Test the proxy
+curl https://regal-youtiao-09c777.netlify.app/.netlify/functions/proxy
+
+# Redeploy proxy (if you change proxy.js)
+cd proxy-service && npx netlify deploy --prod
+
+# Run tests
+npm test              # JavaScript tests
+npm run test:all      # Everything
+
+# Generate static dashboard (for GitHub Actions)
+npm run generate
+```
 
 ## Configuration
 
-### Dashboard Settings
+The important stuff lives in these files:
 
-Use the Control Panel (gear icon) to configure:
-
-- **Time Range**: Data window (1h to 48h, default 12h)
-- **Thresholds**: Critical (-80%) and Warning (-50%) alert levels
-- **Volume Filters**: Minimum daily volume to include events
-- **Auto Refresh**: Toggle and interval settings
-- **Theme**: Light/dark mode toggle
-
-### Advanced Configuration
-
-The dashboard includes an Advanced Configuration Editor with:
-- Live Elasticsearch query preview
-- Customizable event ID patterns
-- Aggregation size controls
-- One-click query copy for testing
-
-## NPM Commands
-
-| Command | Description |
-|---------|-------------|
-| `npm run dev` | Start unified development server (recommended) |
-| `npm run generate` | Generate dashboard with latest data |
-| `npm test` | Run JavaScript tests |
-| `npm run test:all` | Run complete test suite (JS, Python, Bash) |
-| `npm run cors-proxy` | Start CORS proxy only |
-| `npm run serve` | Start web server only |
-
-## Project Structure
-
+**`config/production.json`** - This gets deployed to GitHub Pages
+```json
+{
+  "corsProxy": {
+    "url": "https://regal-youtiao-09c777.netlify.app/.netlify/functions/proxy"
+  },
+  "elasticsearch": {
+    "path": "/api/console/proxy?path=traffic-*/_search&method=POST"
+  }
+}
 ```
-rad_monitor/
-├── index.html                 # Main dashboard
-├── bin/                       # Python executables
-│   ├── generate_dashboard.py  # Dashboard generator
-│   └── server.py              # Unified development server
-├── assets/                    # Frontend assets
-│   ├── css/                   # Stylesheets
-│   └── js/                    # JavaScript modules
-├── config/                    # Configuration files
-│   ├── api-endpoints.json     # API configuration
-│   └── settings.json          # Runtime settings
-├── tests/                     # Test suite
-├── scripts/                   # Utility scripts
-└── docs/                      # Documentation
+
+**Don't change these**:
+- The proxy URL (unless you deploy a new one)
+- The index pattern (`traffic-*`)
+- The Kibana proxy path format
+
+## Deployment
+
+### GitHub Pages (Dashboard)
+Pushes to `main` automatically deploy via GitHub Actions. Takes about 2-3 minutes.
+
+### Netlify (Proxy)
+The proxy function is deployed to Netlify. To update it:
+```bash
+cd proxy-service
+npx netlify deploy --prod
 ```
 
 ## Authentication
 
-The dashboard requires an Elasticsearch session cookie for data access.
+The dashboard needs a Kibana session cookie. The cookie:
+- Expires after 24 hours
+- Can be entered as `Fe26.2**...` or `sid=Fe26.2**...` (proxy handles both)
+- Gets stored in localStorage
 
-### Getting Your Cookie
+## Common Issues
 
-1. Open Kibana in your browser
-2. Open Developer Tools → Network tab
-3. Find any request to Kibana
-4. Copy the `sid` value from the Cookie header
+**"Invalid cookie header"**
+- Your cookie expired. Get a fresh one from Kibana.
 
-### Setting the Cookie
+**No data showing**
+- Check the browser console
+- Make sure you're looking at `traffic-*` indices
+- Verify time range isn't too restrictive
 
-**Local Development:**
-```bash
-export ES_COOKIE="your_cookie_value"
+**CORS errors**
+- The proxy might be down. Test it with curl (see commands above)
+- Redeploy the proxy if needed
+
+**Wrong index pattern errors**
+- Run `./scripts/verify-config.sh` to check configuration
+- Make sure all configs use `traffic-*` not `usi*`
+
+## What This Monitors
+
+The dashboard tracks RAD events matching this pattern:
+- `pandc.vnext.recommendations.feed.feed*`
+
+It compares:
+- Current period: Last 12 hours (configurable)
+- Baseline: June 1-9, 2025 (8 days)
+
+Status levels:
+- 🔴 **CRITICAL**: Traffic dropped >80%
+- 🟡 **WARNING**: Traffic dropped 50-80%
+- 🟢 **NORMAL**: Traffic looks fine
+- 🔵 **INCREASED**: Traffic is up
+
+## Project Structure
+
+```
+.
+├── index.html                    # The dashboard
+├── assets/js/
+│   ├── api-client-unified.js     # Handles API calls
+│   └── config-service.js         # Loads configuration
+├── config/
+│   ├── production.json           # Production settings
+│   └── settings.json             # Local settings
+├── proxy-service/
+│   └── netlify/functions/
+│       └── proxy.js              # CORS proxy function
+└── scripts/
+    └── verify-config.sh          # Config checker
 ```
 
-**GitHub Actions:**
-1. Go to repository Settings → Secrets and variables → Actions
-2. Add secret named `ELASTIC_COOKIE`
-3. Paste your cookie value
+## Need Help?
 
-**Dashboard UI:**
-1. Click gear icon in dashboard
-2. Select "Set Cookie for Real-time"
-3. Paste cookie and test connection
+1. Check the console for errors
+2. Run `./scripts/verify-config.sh`
+3. Test the proxy is alive
+4. Make sure your cookie is fresh
 
-## How It Works
-
-The dashboard uses a sophisticated scoring system:
-
-1. **Baseline Comparison**: Compares current traffic against 8-day historical average
-2. **Status Classification**:
-   - **CRITICAL**: Traffic dropped >80%
-   - **WARNING**: Traffic dropped 50-80%
-   - **NORMAL**: Traffic within expected range
-   - **INCREASED**: Traffic higher than usual
-3. **Volume Weighting**: Prioritizes high-traffic events for alerting
-
-### Data Flow
-
-```
-Elasticsearch/Kibana API → CORS Proxy/Direct API → Dashboard → Visual Display
-```
-
-## Testing
-
-The project includes comprehensive test coverage:
-
-### JavaScript Tests
-```bash
-npm test              # Watch mode
-npm run test:run      # Single run
-npm run test:coverage # With coverage
-```
-
-### Python Tests
-```bash
-python -m pytest tests/test_*.py
-```
-
-### Complete Test Suite
-```bash
-npm run test:all
-```
-
-## Performance
-
-- **Update Frequency**: Every 45 minutes (automated) or on-demand
-- **Data Period**: Last 12 hours vs 8-day baseline
-- **Response Time**: < 2 seconds for API calls
-- **Browser Support**: Chrome, Firefox, Safari, Edge
-
-## Troubleshooting
-
-### Common Issues
-
-**Authentication Error / 502 Bad Gateway:**
-- Cookie has expired - get fresh cookie from Kibana
-- Update environment variable or GitHub secret
-
-**CORS Errors (local development):**
-- Ensure development server is running: `npm run dev`
-- Check CORS proxy on port 8889
-
-**No Real-time Updates:**
-- Verify cookie is set correctly
-- Test connection in dashboard settings
-- Check browser console for errors
-
-**Development Server Issues:**
-- Use `npm run dev` for automatic mode detection
-- Force specific mode: `npm run dev:simple` or `npm run dev:fastapi`
-- Check ports 8000 and 8889 are available
-
-**Missing Python Dependencies:**
-- Run `pip install -r requirements-enhanced.txt` for local development
-- Use `requirements-minimal.txt` for dashboard generation only
-
-### Debug Commands
-
-```bash
-# Test connection
-python3 bin/generate_dashboard.py
-
-# Check proxy health
-curl http://localhost:8889/health
-
-# View GitHub Actions logs
-gh run list --workflow=update-dashboard.yml
-```
-
-## Contributing
-
-We welcome contributions! Here's how to get started:
-
-### Development Setup
-
-1. Fork the repository
-2. Create a feature branch: `git checkout -b feature-name`
-3. Make your changes
-4. Run tests: `npm run test:all`
-5. Submit a pull request
-
-### Code Style
-
-- **JavaScript**: ES6+ modules, async/await patterns
-- **Python**: PEP 8 compliant, type hints preferred
-- **Tests**: Comprehensive coverage for new features
-
-### Areas for Contribution
-
-- **Multi-RAD Support**: Extend monitoring beyond current focus
-- **Data Visualization**: Enhanced charts and graphs
-- **Performance Optimization**: Query optimization and caching
-- **Mobile Responsiveness**: Improve mobile experience
-- **Documentation**: API documentation and tutorials
-
-### Testing Your Changes
-
-```bash
-# Run all tests
-npm run test:all
-
-# Test specific components
-npm test -- --grep "your-feature"
-python -m pytest tests/test_your_feature.py
-
-# Test dashboard generation
-npm run generate
-```
-
-## Roadmap
-
-**Planned Enhancements:**
-- Formula filtering system using Lens formulas
-- Discover integration with Elasticsearch querying
-- Multi-RAD support beyond venture-feed
-- Python-based visualizations
-- FullStory hyperlinks for each EID
-- Experiment tracking capabilities
-
-## License
-
-MIT License - see LICENSE file for details.
-
-## Support
-
-- **Issues**: Use GitHub Issues for bug reports and feature requests
-- **Documentation**: Check the `docs/` directory for detailed guides
-- **Troubleshooting**: See troubleshooting section above
-
----
-
-**Live Dashboard**: Available at your GitHub Pages URL
-**Update Frequency**: Every 45 minutes via GitHub Actions
-**Data Source**: Elasticsearch/Kibana with real-time API access
+That's it. Keep it simple. Monitor your traffic. Fix issues fast.
