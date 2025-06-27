@@ -45,8 +45,8 @@ This dashboard monitors impression and click traffic for RAD cards, comparing cu
 
 1. **Clone and install dependencies**
 ```bash
-git clone https://github.com/balkhalil/rad_monitor.git
-cd rad_monitor
+git clone https://github.com/balkhalil-godaddy/vh-rad-traffic-monitor.git
+cd vh-rad-traffic-monitor
 npm install
 pip install -r requirements-enhanced.txt
 ```

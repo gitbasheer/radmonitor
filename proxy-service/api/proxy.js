@@ -7,8 +7,8 @@ export default async function handler(req, res) {
 
     // List of allowed origins
     const allowedOrigins = [
-        'https://balkhalil.github.io',
         'https://balkhalil-godaddy.github.io',
+        'https://balkhalil.github.io',
         'http://localhost:8000',
         'http://localhost:8001',
         'http://localhost:3000',
