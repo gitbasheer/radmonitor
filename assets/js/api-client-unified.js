@@ -375,7 +375,7 @@ export class UnifiedAPIClient {
 
             // Send everything securely in request body
             const esUrl = config.elasticsearch?.url || 'https://usieventho-prod-usw2.kb.us-west-2.aws.found.io:9243';
-            const esPath = config.elasticsearch?.path || '/api/console/proxy?path=usi*/_search&method=POST';
+            const esPath = config.elasticsearch?.path || '/api/console/proxy?path=traffic-*/_search&method=POST';
 
             const requestBody = {
                 esUrl,

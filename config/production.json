@@ -7,7 +7,7 @@
   "lastUpdated": "2025-06-27T17:58:00Z",
   "elasticsearch": {
     "url": "https://usieventho-prod-usw2.kb.us-west-2.aws.found.io:9243",
-    "path": "/api/console/proxy?path=usi*/_search&method=POST",
+    "path": "/api/console/proxy?path=traffic-*/_search&method=POST",
     "directConnection": false,
     "corsRequired": false
   },

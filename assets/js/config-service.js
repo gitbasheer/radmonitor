@@ -155,7 +155,7 @@ export const ConfigService = (() => {
             elasticsearch: {
                 directConnection: true,
                 url: 'https://usieventho-prod-usw2.kb.us-west-2.aws.found.io:9243',
-                path: '/api/console/proxy?path=usi*/_search&method=POST',
+                path: '/api/console/proxy?path=traffic-*/_search&method=POST',
                 corsRequired: true
             }
         };
