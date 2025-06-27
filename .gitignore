@@ -43,3 +43,4 @@ dev_index.html
 scripts/legacy/
 docs/G.md
 venv/
+.vercel

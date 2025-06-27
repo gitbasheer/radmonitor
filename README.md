@@ -26,7 +26,7 @@ This dashboard monitors impression and click traffic for RAD cards, comparing cu
 - Customizable thresholds for alerts
 - Historical baseline comparison (8-day average)
 
-### UI
+### User Interface
 - Fixed sidebar layout with organized controls
 - Real-time search and filtering
 - Dark theme support
@@ -168,10 +168,10 @@ The dashboard uses a sophisticated scoring system:
 
 1. **Baseline Comparison**: Compares current traffic against 8-day historical average
 2. **Status Classification**:
-   - CRITICAL: Traffic dropped >80%
-   - WARNING: Traffic dropped 50-80%
-   - NORMAL: Traffic as expected
-   - INCREASED: Traffic higher than usual
+   - **CRITICAL**: Traffic dropped >80%
+   - **WARNING**: Traffic dropped 50-80%
+   - **NORMAL**: Traffic within expected range
+   - **INCREASED**: Traffic higher than usual
 3. **Volume Weighting**: Prioritizes high-traffic events for alerting
 
 ### Data Flow
@@ -261,9 +261,9 @@ We welcome contributions! Here's how to get started:
 
 ### Code Style
 
-- JavaScript: ES6+ modules, async/await patterns
-- Python: PEP 8 compliant, type hints preferred
-- Tests: Comprehensive coverage for new features
+- **JavaScript**: ES6+ modules, async/await patterns
+- **Python**: PEP 8 compliant, type hints preferred
+- **Tests**: Comprehensive coverage for new features
 
 ### Areas for Contribution
 
@@ -287,17 +287,15 @@ python -m pytest tests/test_your_feature.py
 npm run generate
 ```
 
-## Next Steps
+## Roadmap
 
 **Planned Enhancements:**
-- Formula filtering system using Lens formulas (`lens_formula_reference.md`)
+- Formula filtering system using Lens formulas
 - Discover integration with Elasticsearch querying
 - Multi-RAD support beyond venture-feed
 - Python-based visualizations
 - FullStory hyperlinks for each EID
 - Experiment tracking capabilities
-
-*Open for developers and PMs to create tickets and add to Quokkas backlog.*
 
 ## License
 
@@ -314,4 +312,3 @@ MIT License - see LICENSE file for details.
 **Live Dashboard**: Available at your GitHub Pages URL
 **Update Frequency**: Every 45 minutes via GitHub Actions
 **Data Source**: Elasticsearch/Kibana with real-time API access
-# Auto-authentication enabled Thu Jun 26 13:00:08 PDT 2025

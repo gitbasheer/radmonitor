@@ -12,7 +12,7 @@ export const ConfigService = (() => {
     let syncTimer = null;
     let isInitialized = false;
     let environment = detectEnvironment();
-    
+
     // Environment detection
     function detectEnvironment() {
         const hostname = window.location.hostname;
@@ -24,11 +24,11 @@ export const ConfigService = (() => {
             return 'unknown';
         }
     }
-    
+
     function isProduction() {
         return environment === 'production';
     }
-    
+
     function isDevelopment() {
         return environment === 'development';
     }
@@ -96,13 +96,13 @@ export const ConfigService = (() => {
 
         try {
             console.log(`🔧 Loading configuration for ${environment} environment...`);
-            
+
             if (isProduction()) {
                 await loadProductionConfig();
             } else {
                 await loadDevelopmentConfig();
             }
-            
+
             isInitialized = true;
             console.log('✅ Configuration loaded successfully:', config);
             notifyListeners('initialized', config);
@@ -115,7 +115,7 @@ export const ConfigService = (() => {
             return config;
         }
     }
-    
+
     /**
      * Load production configuration
      */
@@ -126,24 +126,24 @@ export const ConfigService = (() => {
             if (productionResponse.ok) {
                 const productionConfig = await productionResponse.json();
                 console.log('📦 Loaded production configuration');
-                
+
                 // Merge with default config
                 const defaultConfig = getDefaultConfig();
                 config = { ...defaultConfig, ...productionConfig };
-                
+
                 // Handle pre-configured cookie
-                if (productionConfig.elasticsearch?.preConfiguredCookie && 
+                if (productionConfig.elasticsearch?.preConfiguredCookie &&
                     productionConfig.dashboard?.autoLoadCookie) {
                     await handlePreConfiguredCookie(productionConfig.elasticsearch.preConfiguredCookie);
                 }
-                
+
                 saveToLocalStorage();
                 return;
             }
         } catch (error) {
             console.warn('⚠️ Production config not found, using defaults with production overrides');
         }
-        
+
         // Fallback to default config with production overrides
         const defaultConfig = getDefaultConfig();
         config = {
@@ -161,13 +161,13 @@ export const ConfigService = (() => {
         };
         saveToLocalStorage();
     }
-    
+
     /**
      * Load development configuration
      */
     async function loadDevelopmentConfig() {
         const defaultConfig = getDefaultConfig();
-        
+
         // Try to load from backend
         try {
             const backendConfig = await loadFromBackend();
@@ -180,7 +180,7 @@ export const ConfigService = (() => {
         } catch (error) {
             console.warn('⚠️ Backend config not available, using defaults');
         }
-        
+
         config = {
             ...defaultConfig,
             environment: 'development',
@@ -188,7 +188,7 @@ export const ConfigService = (() => {
         };
         saveToLocalStorage();
     }
-    
+
     /**
      * Load fallback configuration
      */
@@ -205,7 +205,7 @@ export const ConfigService = (() => {
         };
         saveToLocalStorage();
     }
-    
+
     /**
      * Handle pre-configured cookie from GitHub Secrets
      */
@@ -214,10 +214,10 @@ export const ConfigService = (() => {
             console.log('🔐 No pre-configured cookie available');
             return;
         }
-        
+
         try {
             console.log('🔐 Setting up pre-configured authentication...');
-            
+
             // Store the cookie in localStorage with proper format
             const cookieData = {
                 cookie: cookieValue.trim(),
@@ -225,21 +225,21 @@ export const ConfigService = (() => {
                 saved: new Date().toISOString(),
                 source: 'github-secrets'
             };
-            
+
             localStorage.setItem('elasticCookie', JSON.stringify(cookieData));
-            
+
             // Update config to reflect the auto-authentication
             config.elasticCookie = cookieValue.trim();
             config.dashboard = config.dashboard || {};
             config.dashboard.autoAuthenticated = true;
-            
+
             console.log('✅ Pre-configured authentication ready');
-            
+
             // Notify that cookie is available
             if (window.Dashboard) {
                 window.Dashboard.onCookieReady?.();
             }
-            
+
         } catch (error) {
             console.warn('⚠️ Failed to set up pre-configured cookie:', error.message);
         }
@@ -252,10 +252,10 @@ export const ConfigService = (() => {
         if (!isDevelopment()) {
             throw new Error('Backend loading only available in development');
         }
-        
+
         try {
             const response = await apiRequest(ENDPOINTS.get);
-            
+
             // Convert backend format to frontend format if needed
             return {
                 baselineStart: response.processing?.baseline_start || response.baselineStart,
@@ -293,7 +293,7 @@ export const ConfigService = (() => {
                 method: 'POST',
                 body: JSON.stringify(configData)
             });
-            
+
             notifyListeners('saved', configData);
             return true;
         } catch (error) {
@@ -384,7 +384,7 @@ export const ConfigService = (() => {
         if (!isInitialized) {
             console.warn('⚠️ Config requested before initialization - returning defaults');
             const defaultConfig = getDefaultConfig();
-            
+
             // For production, add basic proxy settings even in defaults
             if (isProduction()) {
                 return {
@@ -392,7 +392,7 @@ export const ConfigService = (() => {
                     environment: 'production',
                     corsProxy: {
                         enabled: true,
-                        url: "https://rad-monitor-demo-it8q3h3mc-basheers-projects-d3b7a207.vercel.app/api/proxy"
+                        url: "https://rad-monitor-proxy-c31ioptw7-basheers-projects-d3b7a207.vercel.app/api/proxy"
                     },
                     features: {
                         fastapi: false,
@@ -401,7 +401,7 @@ export const ConfigService = (() => {
                     }
                 };
             }
-            
+
             return defaultConfig;
         }
         return { ...config };
@@ -428,7 +428,7 @@ export const ConfigService = (() => {
 
         // Skip backend save in test environment
         const isTest = typeof process !== 'undefined' && process.env.NODE_ENV === 'test';
-        
+
         // Save to backend
         if (options.saveToBackend && !isTest) {
             const success = await saveToBackend();
@@ -520,9 +520,9 @@ export const ConfigService = (() => {
     function exportConfig() {
         const dataStr = JSON.stringify(config, null, 2);
         const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
-        
+
         const exportFileDefaultName = `rad-monitor-config-${new Date().toISOString().split('T')[0]}.json`;
-        
+
         const linkElement = document.createElement('a');
         linkElement.setAttribute('href', dataUri);
         linkElement.setAttribute('download', exportFileDefaultName);
@@ -549,7 +549,7 @@ export const ConfigService = (() => {
                 reader.onload = async (event) => {
                     try {
                         const importedConfig = JSON.parse(event.target.result);
-                        
+
                         // Validate imported config
                         const validation = validateConfig(importedConfig);
                         if (!validation.valid) {
@@ -579,7 +579,7 @@ export const ConfigService = (() => {
             throw new Error('Listener must be a function');
         }
         listeners.push(listener);
-        
+
         // Return unsubscribe function
         return () => {
             const index = listeners.indexOf(listener);
@@ -607,7 +607,7 @@ export const ConfigService = (() => {
      */
     function startAutoSync(intervalMs = 60000) {
         stopAutoSync();
-        
+
         syncTimer = setInterval(async () => {
             try {
                 const backendConfig = await loadFromBackend();
@@ -682,7 +682,7 @@ export const ConfigService = (() => {
     function shouldShowCorsInstructions() {
         return isProduction() && config?.elasticsearch?.corsRequired;
     }
-    
+
     /**
      * Get CORS setup instructions
      */
@@ -704,7 +704,7 @@ export const ConfigService = (() => {
             note: "This is required because GitHub Pages is a static hosting service and cannot proxy requests to Elasticsearch."
         };
     }
-    
+
     /**
      * Get environment information
      */
@@ -730,7 +730,7 @@ export const ConfigService = (() => {
             '3d': 'now-3d',
             'inspection': 'inspection_time'
         };
-        
+
         const timeRange = presetMap[preset];
         if (timeRange) {
             set('currentTimeRange', timeRange);
@@ -741,7 +741,7 @@ export const ConfigService = (() => {
             }
         }
     }
-    
+
     /**
      * UI Helper: Get configuration from DOM elements
      * For backward compatibility with ConfigManager
@@ -751,7 +751,7 @@ export const ConfigService = (() => {
             const element = document.getElementById(id);
             return element ? element.value : defaultValue;
         };
-        
+
         return {
             baselineStart: getValue('baselineStart', '2025-06-01'),
             baselineEnd: getValue('baselineEnd', '2025-06-09'),
@@ -760,21 +760,21 @@ export const ConfigService = (() => {
             mediumVolumeThreshold: parseInt(getValue('mediumVolumeThreshold', '100'))
         };
     }
-    
+
     /**
      * UI Helper: Load configuration into DOM elements
      * For backward compatibility with ConfigManager
      */
     function loadConfigurationIntoDOM(config = null) {
         const configToLoad = config || getConfig();
-        
+
         const setValue = (id, value) => {
             const element = document.getElementById(id);
             if (element) {
                 element.value = value;
             }
         };
-        
+
         setValue('baselineStart', configToLoad.baselineStart);
         setValue('baselineEnd', configToLoad.baselineEnd);
         setValue('currentTimeRange', configToLoad.currentTimeRange);
@@ -823,4 +823,4 @@ if (typeof window !== 'undefined') {
     window.addEventListener('DOMContentLoaded', () => {
         ConfigService.initialize().catch(console.error);
     });
-} 
+}
