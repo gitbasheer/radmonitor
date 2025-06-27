@@ -52,7 +52,7 @@ exports.handler = async (event, context) => {
 
       // Build Elasticsearch URL
       const baseUrl = esUrl || 'https://usieventho-prod-usw2.kb.us-west-2.aws.found.io:9243';
-      const path = esPath || '/elasticsearch/usi*/_search';
+      const path = esPath || '/api/console/proxy?path=usi*/_search&method=POST';
       const fullUrl = `${baseUrl}${path}`;
 
       // Make request to Elasticsearch using HTTPS module (always available in Node)
@@ -73,7 +73,8 @@ exports.handler = async (event, context) => {
             'Content-Type': 'application/json',
             'Content-Length': Buffer.byteLength(requestData),
             'Cookie': cookie,
-            'Accept': 'application/json'
+            'Accept': 'application/json',
+            'kbn-xsrf': 'true'
           }
         };
 

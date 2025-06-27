@@ -154,8 +154,8 @@ export const ConfigService = (() => {
             features: { fastapi: false, localServer: false, corsProxy: false },
             elasticsearch: {
                 directConnection: true,
-                url: 'https://usieventho-prod-usw2.es.us-west-2.aws.found.io:9243',
-                path: '/usi*/_search',
+                url: 'https://usieventho-prod-usw2.kb.us-west-2.aws.found.io:9243',
+                path: '/api/console/proxy?path=usi*/_search&method=POST',
                 corsRequired: true
             }
         };
