@@ -37,7 +37,7 @@ This dashboard monitors impression and click traffic for RAD cards, comparing cu
 
 ### Prerequisites
 - Node.js and npm
-- Python 3.x
+- Python 3.x and pip
 - Git
 - Elasticsearch/Kibana access with valid cookie
 
@@ -47,14 +47,19 @@ This dashboard monitors impression and click traffic for RAD cards, comparing cu
 ```bash
 git clone https://github.com/balkhalil/rad_monitor.git
 cd rad_monitor
-   npm install
-   ```
+npm install
+pip install -r requirements-enhanced.txt
+```
+
+**Note**: The project has two requirements files:
+- `requirements-enhanced.txt` - Full dependencies for local development (includes FastAPI server, rate limiting, etc.)
+- `requirements-minimal.txt` - Minimal dependencies for dashboard generation only (used by GitHub Actions)
 
 2. **Start development server**
 ```bash
 npm run dev
-   ```
-   The unified server automatically detects your environment and starts the best available mode.
+```
+The unified server automatically detects your environment and starts the best available mode.
 
 3. **Configure authentication**
    - Get your Elasticsearch cookie from Kibana (Developer Tools → Network → Copy `sid` value)
@@ -162,7 +167,7 @@ export ES_COOKIE="your_cookie_value"
 The dashboard uses a sophisticated scoring system:
 
 1. **Baseline Comparison**: Compares current traffic against 8-day historical average
-2. **Status Classification**: 
+2. **Status Classification**:
    - CRITICAL: Traffic dropped >80%
    - WARNING: Traffic dropped 50-80%
    - NORMAL: Traffic as expected
@@ -192,7 +197,7 @@ python -m pytest tests/test_*.py
 ```
 
 ### Complete Test Suite
-   ```bash
+```bash
 npm run test:all
 ```
 
@@ -224,6 +229,10 @@ npm run test:all
 - Use `npm run dev` for automatic mode detection
 - Force specific mode: `npm run dev:simple` or `npm run dev:fastapi`
 - Check ports 8000 and 8889 are available
+
+**Missing Python Dependencies:**
+- Run `pip install -r requirements-enhanced.txt` for local development
+- Use `requirements-minimal.txt` for dashboard generation only
 
 ### Debug Commands
 
@@ -284,7 +293,7 @@ npm run generate
 - Formula filtering system using Lens formulas (`lens_formula_reference.md`)
 - Discover integration with Elasticsearch querying
 - Multi-RAD support beyond venture-feed
-- Python-based visualizations 
+- Python-based visualizations
 - FullStory hyperlinks for each EID
 - Experiment tracking capabilities
 
@@ -302,7 +311,7 @@ MIT License - see LICENSE file for details.
 
 ---
 
-**Live Dashboard**: Available at your GitHub Pages URL  
-**Update Frequency**: Every 45 minutes via GitHub Actions  
+**Live Dashboard**: Available at your GitHub Pages URL
+**Update Frequency**: Every 45 minutes via GitHub Actions
 **Data Source**: Elasticsearch/Kibana with real-time API access
 # Auto-authentication enabled Thu Jun 26 13:00:08 PDT 2025

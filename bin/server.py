@@ -561,6 +561,12 @@ async def kibana_proxy(
                     force_refresh=body_data.get("force_refresh", False),
                     query_preview=query_preview
                 )
+
+                # Debug: Log first 500 chars of query being sent to ES
+                logger.info("kibana_proxy",
+                    action="sending_to_elasticsearch",
+                    query_snippet=query_body.decode('utf-8')[:500] + "..." if len(query_body) > 500 else query_body.decode('utf-8')
+                )
             else:
                 # Assume it's already a raw Elasticsearch query
                 query_body = raw_body
@@ -593,6 +599,22 @@ async def kibana_proxy(
                 metrics_tracker.circuit_breaker_trips += 1
                 raise HTTPException(status_code=503, detail="Elasticsearch temporarily unavailable")
             raise
+
+        # Check for Elasticsearch errors in response
+        if response.status_code != 200:
+            try:
+                error_data = json.loads(response.content)
+                if "error" in error_data:
+                    error_msg = error_data["error"].get("reason", "Unknown error")
+                    error_type = error_data["error"].get("type", "unknown_error")
+                    logger.error("kibana_proxy",
+                        action="elasticsearch_error",
+                        error_type=error_type,
+                        error_reason=error_msg,
+                        status_code=response.status_code
+                    )
+            except:
+                pass  # Ignore parsing errors, return response as-is
 
         return Response(
             content=response.content,

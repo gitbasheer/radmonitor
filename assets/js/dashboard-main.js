@@ -53,7 +53,7 @@ export const Dashboard = (() => {
 
         // Start monitoring and auto-refresh
         startSystemMonitoring();
-        
+
         // Check and update connection status based on auth state
         setTimeout(async () => {
             const hasCookie = localStorage.getItem('elasticCookie');
@@ -87,6 +87,41 @@ export const Dashboard = (() => {
 
         // CRITICAL: Perform initial data fetch after a brief delay to ensure everything is ready
         setTimeout(() => {
+            // Check if we're on GitHub Pages and already have pre-generated data
+            const isGitHubPages = window.location.hostname.includes('github.io');
+            const tableBody = document.getElementById('tableBody');
+            const hasPreGeneratedData = tableBody && tableBody.children.length > 0;
+
+            if (isGitHubPages && hasPreGeneratedData) {
+                console.log('📊 Using pre-generated data from GitHub Actions');
+                // Update the UI to show we're using static data
+                UIUpdater.hideLoading('📊 Using pre-generated data (updated every 45 minutes via GitHub Actions)');
+                UIUpdater.updateTimestamp();
+
+                // Update connection status
+                if (window.updateConnectionStatus) {
+                    window.updateConnectionStatus(true, 'Static Data Mode');
+                }
+
+                // Count the data for summary cards
+                const rows = Array.from(tableBody.querySelectorAll('tr'));
+                const stats = { critical: 0, warning: 0, normal: 0, increased: 0, total: rows.length };
+
+                rows.forEach(row => {
+                    const statusBadge = row.querySelector('.badge');
+                    if (statusBadge) {
+                        const status = statusBadge.textContent.toUpperCase();
+                        if (stats[status.toLowerCase()] !== undefined) {
+                            stats[status.toLowerCase()]++;
+                        }
+                    }
+                });
+
+                UIUpdater.updateSummaryCards(stats);
+                return;
+            }
+
+            // Otherwise, try to fetch fresh data
             refresh().catch(() => {
                 // Silent fail for initial load - status will be shown in UI
             });
@@ -316,7 +351,7 @@ export const Dashboard = (() => {
             UIUpdater.updateDataTable(transformedData);
             UIUpdater.updateTimestamp();
             UIUpdater.hideLoading('✅ Updated with real-time data!');
-            
+
             // Update connection status since we successfully loaded data
             if (window.updateConnectionStatus) {
                 window.updateConnectionStatus(true, 'Connected');
@@ -357,7 +392,7 @@ export const Dashboard = (() => {
         } catch (error) {
             // Dashboard UI update failed - error handling through UI
             UIUpdater.hideLoading('❌ Update failed - data processing error');
-            
+
             // Show fallback refresh option
             showFallbackRefresh();
         }
@@ -378,15 +413,43 @@ export const Dashboard = (() => {
     async function refresh() {
         const refreshId = `refresh_${Date.now()}`;
 
+        // Check if we're on GitHub Pages with pre-generated data
+        const isGitHubPages = window.location.hostname.includes('github.io');
+        const tableBody = document.getElementById('tableBody');
+        const hasPreGeneratedData = tableBody && tableBody.children.length > 0;
+
+        if (isGitHubPages && hasPreGeneratedData && !localStorage.getItem('elasticCookie')) {
+            // Show message about pre-generated data
+            UIUpdater.hideLoading('📊 Using pre-generated data (updated every 45 minutes via GitHub Actions)');
+
+            const status = document.getElementById('refreshStatus');
+            if (status) {
+                status.innerHTML = `
+                    <div style="text-align: center; padding: 10px;">
+                        <strong>Static Data Mode</strong><br>
+                        <small>For live data, either:</small><br>
+                        <a href="#" onclick="Dashboard.setCookieForRealtime(); return false;" style="color: #2196F3;">
+                            Enable Live Updates
+                        </a> |
+                        <a href="https://github.com/balkhalil/rad_monitor/actions" target="_blank" style="color: #666;">
+                            View Update Schedule
+                        </a>
+                    </div>
+                `;
+                status.style.color = '#666';
+            }
+            return;
+        }
+
         // Check for cookie in priority order: localStorage -> environment -> prompt user
         let hasCookie = localStorage.getItem('elasticCookie');
-        
+
         // Try environment cookie if no localStorage cookie
         if (!hasCookie && window.ELASTIC_COOKIE) {
             localStorage.setItem('elasticCookie', window.ELASTIC_COOKIE);
             hasCookie = window.ELASTIC_COOKIE;
         }
-        
+
         if (!hasCookie) {
             UIUpdater.hideLoading('🍪 Cookie required for data access');
             showAuthenticationRequired();
@@ -396,7 +459,7 @@ export const Dashboard = (() => {
         try {
             // Get current configuration
             const config = ConfigManager.getCurrentConfig();
-            
+
             // Update connection status since we have a cookie and are starting to load
             if (window.updateConnectionStatus) {
                 window.updateConnectionStatus(true, 'Loading data...');
@@ -428,10 +491,10 @@ export const Dashboard = (() => {
                 params: config
             });
             const queryTime = Date.now() - startTime;
-            
+
             // Progress tracking handled through DataLayer logging
             // Event count and stats are calculated in handleTrafficDataUpdate
-            
+
             // Log performance warning only if significantly slow
             if (queryTime > 10000) {
                 console.warn(`⚠️ Slow query detected: ${(queryTime/1000).toFixed(1)}s`);
@@ -554,7 +617,7 @@ export const Dashboard = (() => {
     async function setCookieForRealtime() {
         // 🚀 NEW: Try environment cookie first before prompting user
         let cookie = null;
-        
+
         if (window.ELASTIC_COOKIE && !localStorage.getItem('elasticCookie')) {
             console.log('🔄 TRYING ENVIRONMENT COOKIE: Testing server-provided cookie first...');
             cookie = window.ELASTIC_COOKIE;
@@ -563,42 +626,42 @@ export const Dashboard = (() => {
             console.log('🔄 PROMPTING USER: Environment cookie not available or already tried');
             cookie = await ApiClient.promptForCookie('real-time updates');
         }
-        
+
         if (cookie) {
             console.log('✅ COOKIE ENTERED: Now validating...');
-            
+
             // Show validating status
             UIUpdater.hideLoading('🔄 Validating cookie...');
-            
+
             // Test the cookie immediately
             try {
                 const testResult = await ApiClient.testAuthentication();
-                
+
                 if (testResult.success) {
                     console.log('✅ COOKIE VALID: Authentication successful');
                     console.log('🔄 UPDATING STATUS: Cookie validation passed');
-                    
+
                     // Clear authentication error flag so status can update
                     const statusEl = document.getElementById('refreshStatus');
                     if (statusEl) {
                         delete statusEl.dataset.authRequired;
                     }
-                    
+
                     UIUpdater.hideLoading('✅ Cookie validated! Now fetching data...');
                     UIUpdater.updateApiStatus();
-                    
+
                     // 🚀 CRITICAL FIX: Trigger data fetch after successful authentication
                     console.log('🚀 TRIGGERING DATA FETCH: Authentication successful, now fetching data...');
                     setTimeout(() => refresh(), 100); // Small delay to let UI update
                 } else {
                     console.log('❌ COOKIE INVALID:', testResult.error);
                     console.log('🔄 PROMPTING USER: Cookie validation failed');
-                    
+
                     // Remove the invalid cookie
                     localStorage.removeItem('elasticCookie');
-                    
+
                     UIUpdater.hideLoading('❌ Invalid cookie - please try again');
-                    
+
                     // Show error message with option to try again
                     const statusEl = document.getElementById('refreshStatus');
                     if (statusEl) {
@@ -617,9 +680,9 @@ export const Dashboard = (() => {
             } catch (error) {
                 // Remove the potentially problematic cookie
                 localStorage.removeItem('elasticCookie');
-                
+
                 UIUpdater.hideLoading('❌ Cookie test failed - please try again');
-                
+
                 // Show error message
                 const statusEl = document.getElementById('refreshStatus');
                 if (statusEl) {
@@ -764,42 +827,42 @@ Current Status:
      */
     function classifyError(error) {
         const errorStr = error.toString().toLowerCase();
-        
+
         if (errorStr.includes('authentication') || errorStr.includes('cookie') || errorStr.includes('unauthorized')) {
             return {
                 short: 'Authentication required',
                 detailed: 'Cookie expired or invalid | <a href="#" onclick="Dashboard.setCookieForRealtime(); return false;" style="color: #d32f2f;">Update Cookie</a> | <a href="#" onclick="Dashboard.showApiSetupInstructions(); return false;" style="color: #666;">Help</a>'
             };
         }
-        
+
         if (errorStr.includes('cors') || errorStr.includes('proxy')) {
             return {
                 short: 'CORS proxy needed',
                 detailed: 'CORS proxy required for localhost | <a href="#" onclick="Dashboard.showApiSetupInstructions(); return false;" style="color: #d32f2f;">Setup Instructions</a>'
             };
         }
-        
+
         if (errorStr.includes('network') || errorStr.includes('fetch') || errorStr.includes('connection')) {
             return {
                 short: 'Network connection failed',
                 detailed: 'Network error - check connection | <a href="#" onclick="location.reload(); return false;" style="color: #d32f2f;">Reload Page</a> | <a href="#" onclick="Dashboard.testApiConnection(); return false;" style="color: #666;">Test API</a>'
             };
         }
-        
+
         if (errorStr.includes('timeout') || errorStr.includes('slow')) {
             return {
                 short: 'Request timed out',
                 detailed: 'Server response too slow | <a href="#" onclick="Dashboard.refresh(); return false;" style="color: #d32f2f;">Try Again</a> | <a href="#" onclick="Dashboard.showApiSetupInstructions(); return false;" style="color: #666;">Help</a>'
             };
         }
-        
+
         if (errorStr.includes('query') || errorStr.includes('elasticsearch')) {
             return {
                 short: 'Query execution failed',
                 detailed: 'Data query failed | <a href="#" onclick="Dashboard.refresh(); return false;" style="color: #d32f2f;">Retry</a> | <a href="#" onclick="ConfigManager.loadConfig(); return false;" style="color: #666;">Check Config</a>'
             };
         }
-        
+
         // Generic error
         return {
             short: 'Request failed',
@@ -812,11 +875,11 @@ Current Status:
      */
     function calculateRefreshStats(transformedData) {
         const stats = { total: 0, critical: 0, warning: 0, normal: 0, increased: 0 };
-        
+
         if (!Array.isArray(transformedData)) {
             return stats;
         }
-        
+
         transformedData.forEach(item => {
             stats.total++;
             const status = (item.status || 'NORMAL').toLowerCase();
@@ -825,7 +888,7 @@ Current Status:
             else if (status === 'increased') stats.increased++;
             else stats.normal++;
         });
-        
+
         return stats;
     }
 

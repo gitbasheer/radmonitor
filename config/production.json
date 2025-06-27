@@ -1,0 +1,23 @@
+{
+  "environment": "production",
+  "corsProxy": {
+    "enabled": true,
+    "url": "https://rad-monitor-demo-it8q3h3mc-basheers-projects-d3b7a207.vercel.app/api/proxy"
+  },
+  "elasticsearch": {
+    "url": "https://usieventho-prod-usw2.kb.us-west-2.aws.found.io:9243",
+    "path": "/elasticsearch/usi*/_search",
+    "directConnection": false,
+    "corsRequired": false
+  },
+  "features": {
+    "fastapi": false,
+    "localServer": false,
+    "corsProxy": true
+  },
+  "dashboard": {
+    "autoLoadCookie": true,
+    "skipCookiePrompt": false,
+    "refreshInterval": 300
+  }
+}

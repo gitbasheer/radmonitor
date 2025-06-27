@@ -426,7 +426,10 @@ export class UnifiedAPIClient {
             // Development mode: use unified server
             result = await this.request(`${this.apiV1}/kibana/proxy`, {
                 method: 'POST',
-                body: JSON.stringify(query),
+                body: JSON.stringify({
+                    query: query,  // Wrap the query as expected by server
+                    force_refresh: forceRefresh
+                }),
                 headers: {
                     'Content-Type': 'application/json',
                     'X-Elastic-Cookie': auth.cookie

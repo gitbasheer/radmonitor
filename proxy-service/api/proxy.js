@@ -2,20 +2,43 @@
 // Deploy to Vercel, Netlify Functions, or any serverless platform
 
 export default async function handler(req, res) {
-    // Enable CORS for your GitHub Pages domain
-    res.setHeader('Access-Control-Allow-Origin', 'https://balkhalil-godaddy.github.io');
+    // Get the origin from the request
+    const origin = req.headers.origin;
+
+    // List of allowed origins
+    const allowedOrigins = [
+        'https://balkhalil.github.io',
+        'https://balkhalil-godaddy.github.io',
+        'http://localhost:8000',
+        'http://localhost:8001',
+        'http://localhost:3000',
+        'http://127.0.0.1:8000',
+        'http://127.0.0.1:8001'
+    ];
+
+    // Allow the origin if it's in our list
+    if (allowedOrigins.includes(origin)) {
+        res.setHeader('Access-Control-Allow-Origin', origin);
+    } else {
+        // For any GitHub Pages domain (more flexible)
+        if (origin && origin.includes('.github.io')) {
+            res.setHeader('Access-Control-Allow-Origin', origin);
+        }
+    }
+
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, Cookie, X-Elastic-Cookie');
-    
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+
     // Handle preflight requests
     if (req.method === 'OPTIONS') {
         res.status(200).end();
         return;
     }
-    
+
     try {
         let esUrl, esPath, cookie, query;
-        
+
         // Support both query params (legacy) and request body (preferred)
         if (req.query.esUrl) {
             // Legacy query param method (less secure but fallback)
@@ -31,13 +54,13 @@ export default async function handler(req, res) {
             cookie = requestData.cookie || req.headers['x-elastic-cookie'];
             query = requestData.query;
         }
-        
+
         if (!cookie) {
             return res.status(400).json({ error: 'No authentication cookie provided' });
         }
-        
+
         const fullUrl = `${esUrl}${esPath}`;
-        
+
         // Forward the request to Elasticsearch
         const response = await fetch(fullUrl, {
             method: req.method === 'GET' ? 'GET' : 'POST',
@@ -48,17 +71,17 @@ export default async function handler(req, res) {
             },
             body: query ? JSON.stringify(query) : undefined
         });
-        
+
         const data = await response.json();
-        
+
         // Forward the response
         res.status(response.status).json(data);
-        
+
     } catch (error) {
         console.error('Proxy error:', error);
-        res.status(500).json({ 
+        res.status(500).json({
             error: error.message,
             timestamp: new Date().toISOString()
         });
     }
-} 
+}
