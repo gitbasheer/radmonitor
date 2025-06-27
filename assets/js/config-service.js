@@ -392,7 +392,7 @@ export const ConfigService = (() => {
                     environment: 'production',
                     corsProxy: {
                         enabled: true,
-                        url: "https://warm-sunshine-d0b061.netlify.app/.netlify/functions/proxy"
+                        url: "https://regal-youtiao-09c777.netlify.app/.netlify/functions/proxy"
                     },
                     features: {
                         fastapi: false,
