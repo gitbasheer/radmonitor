@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Authentication Flow</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 16px;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        button.secondary {
+            background: #2196F3;
+        }
+        button.secondary:hover {
+            background: #1976D2;
+        }
+        button.danger {
+            background: #f44336;
+        }
+        button.danger:hover {
+            background: #d32f2f;
+        }
+        .status {
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 4px;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+        .status.success {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+        .status.error {
+            background: #ffebee;
+            color: #c62828;
+        }
+        .status.info {
+            background: #e3f2fd;
+            color: #1565c0;
+        }
+        /* Modal styles for testing */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        .modal-header h2 {
+            margin: 0 0 20px 0;
+            color: #333;
+        }
+        .control-button {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .control-button.secondary {
+            background: #e0e0e0;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔐 Authentication Flow Test</h1>
+
+        <p>Use this page to test the authentication flow without the full dashboard.</p>
+
+        <div style="margin: 20px 0;">
+            <button onclick="testAuth()">Test Authentication Status</button>
+            <button onclick="showCookieModal()" class="secondary">Show Cookie Modal</button>
+            <button onclick="clearAuth()" class="danger">Clear Authentication</button>
+        </div>
+
+        <div id="status" class="status info">Ready to test...</div>
+
+        <h3>Test Results:</h3>
+        <div id="results"></div>
+    </div>
+
+    <!-- Load the authentication modules -->
+    <script src="assets/js/centralized-auth.js"></script>
+    <script src="assets/js/cookie-modal.js"></script>
+
+    <script>
+        // Initialize CentralizedAuth
+        window.addEventListener('DOMContentLoaded', async () => {
+            if (window.CentralizedAuth) {
+                await window.CentralizedAuth.init();
+                updateStatus('CentralizedAuth initialized', 'success');
+            }
+
+            if (window.CookieModal) {
+                window.CookieModal.init();
+                updateStatus('CookieModal initialized', 'success');
+            }
+        });
+
+        function updateStatus(message, type = 'info') {
+            const status = document.getElementById('status');
+            status.textContent = message;
+            status.className = `status ${type}`;
+
+            // Also log to results
+            const results = document.getElementById('results');
+            const entry = document.createElement('div');
+            entry.className = `status ${type}`;
+            entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            results.appendChild(entry);
+        }
+
+        async function testAuth() {
+            updateStatus('Testing authentication...', 'info');
+
+            try {
+                if (!window.CentralizedAuth) {
+                    throw new Error('CentralizedAuth not loaded');
+                }
+
+                const cookie = await window.CentralizedAuth.getCookie();
+                if (cookie) {
+                    updateStatus(`✅ Authenticated! Cookie found (length: ${cookie.length})`, 'success');
+
+                    // Test validation
+                    const isValid = await window.CentralizedAuth.validateCookie();
+                    if (isValid) {
+                        updateStatus('✅ Cookie is valid and working', 'success');
+                    } else {
+                        updateStatus('⚠️ Cookie exists but validation failed', 'error');
+                    }
+                } else {
+                    updateStatus('❌ Not authenticated - no cookie found', 'error');
+                }
+            } catch (error) {
+                updateStatus(`❌ Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function showCookieModal() {
+            updateStatus('Opening cookie modal...', 'info');
+
+            try {
+                if (!window.CookieModal) {
+                    throw new Error('CookieModal not loaded');
+                }
+
+                const cookie = await window.CookieModal.show();
+                if (cookie) {
+                    updateStatus('✅ Cookie saved successfully!', 'success');
+                    // Test the new auth
+                    await testAuth();
+                } else {
+                    updateStatus('Cookie entry cancelled', 'info');
+                }
+            } catch (error) {
+                updateStatus(`❌ Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function clearAuth() {
+            updateStatus('Clearing authentication...', 'info');
+
+            try {
+                if (window.CentralizedAuth) {
+                    await window.CentralizedAuth.clearCookie();
+                }
+                updateStatus('✅ Authentication cleared', 'success');
+            } catch (error) {
+                updateStatus(`❌ Error: ${error.message}`, 'error');
+            }
+        }
+    </script>
+</body>
+</html>

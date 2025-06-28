@@ -337,6 +337,13 @@ export const ConfigService = (() => {
                     color: '#4CAF50',
                     description: 'Venture recommendations feed'
                 },
+                venture_metrics: {
+                    pattern: 'pandc.vnext.recommendations.metricsevolved*',
+                    display_name: 'Venture Metrics',
+                    enabled: true,
+                    color: '#9C27B0',
+                    description: 'Venture metrics evolved events'
+                },
                 cart_recommendations: {
                     pattern: 'pandc.vnext.recommendations.cart*',
                     display_name: 'Cart Recommendations',

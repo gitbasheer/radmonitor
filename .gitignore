@@ -19,6 +19,7 @@ temp/
 # Sensitive data
 .env
 secrets/
+config/shared-cookie.json
 
 # Node modules
 node_modules/
@@ -47,3 +48,6 @@ venv/
 
 # Local Netlify folder
 .netlify
+
+# Documentation archive
+archive/

@@ -1,12 +1,15 @@
 {
-  "name": "rad-monitor-proxy",
-  "version": "1.0.0",
-  "description": "CORS proxy for RAD Monitor Elasticsearch access",
-  "main": "index.js",
+  "name": "rad-monitor-dashboard",
+  "version": "2.0.0",
+  "description": "RAD Monitor Dashboard - Simplified Architecture",
+  "main": "index.html",
   "type": "module",
   "scripts": {
-    "start": "node render-web-service.js",
-    "dev": "node render-web-service.js"
+    "start": "python3 bin/server.py",
+    "dev": "python3 bin/dev_server_unified.py",
+    "dev:direct": "python3 bin/server.py",
+    "test": "echo 'Open http://localhost:8000 and run TestSuite.run() in console'",
+    "cleanup": "./cleanup-legacy.sh"
   },
   "engines": {
     "node": ">=16"

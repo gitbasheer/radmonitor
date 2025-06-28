@@ -59,7 +59,7 @@ export const SearchFilter = (() => {
      */
     function updateActiveRadTypes() {
         activeRadTypes.clear();
-        
+
         const radButtons = document.querySelectorAll('.rad-filter-btn.active');
         radButtons.forEach(btn => {
             const radType = btn.dataset.radType;
@@ -106,26 +106,9 @@ export const SearchFilter = (() => {
 
             // Apply RAD type filter
             if (shouldShow && !activeRadTypes.has('all')) {
-                const radTypeCell = row.querySelector('.rad-type-badge');
-                if (radTypeCell) {
-                    // Find the matching RAD type key from the display name
-                    const displayName = radTypeCell.textContent;
-                    const config = ConfigService.getConfig();
-                    let radTypeKey = 'unknown';
-                    
-                    if (config.rad_types) {
-                        for (const [key, radConfig] of Object.entries(config.rad_types)) {
-                            if (radConfig.display_name === displayName) {
-                                radTypeKey = key;
-                                break;
-                            }
-                        }
-                    }
-                    
-                    shouldShow = activeRadTypes.has(radTypeKey);
-                } else {
-                    shouldShow = false;
-                }
+                // Use the data attribute from the row for efficient filtering
+                const rowRadType = row.dataset.radType || 'unknown';
+                shouldShow = activeRadTypes.has(rowRadType);
             }
 
             // Apply search filter
@@ -157,11 +140,11 @@ export const SearchFilter = (() => {
         if (resultsInfo) {
             const total = visible + hidden;
             let message = `Showing ${visible} of ${total} events`;
-            
+
             if (currentSearchTerm) {
                 message += ` matching "${currentSearchTerm}"`;
             }
-            
+
             if (currentFilter !== 'all') {
                 message += ` (${currentFilter} only)`;
             }
@@ -173,7 +156,7 @@ export const SearchFilter = (() => {
                     .join(', ');
                 message += ` [${radTypeNames}]`;
             }
-            
+
             resultsInfo.textContent = message;
         }
     }
@@ -186,13 +169,13 @@ export const SearchFilter = (() => {
         currentSearchTerm = '';
         activeRadTypes.clear();
         activeRadTypes.add('all');
-        
+
         // Reset UI
         const searchInput = document.getElementById('searchInput');
         if (searchInput) {
             searchInput.value = '';
         }
-        
+
         // Reset status filter buttons
         document.querySelectorAll('.filter-btn:not(.rad-filter-btn)').forEach(btn => {
             btn.classList.remove('active');
@@ -205,7 +188,7 @@ export const SearchFilter = (() => {
         document.querySelectorAll('.rad-filter-btn').forEach(btn => {
             btn.classList.add('active');
         });
-        
+
         applyFilters();
     }
 
@@ -233,7 +216,7 @@ export default SearchFilter;
 // Make available globally
 if (typeof window !== 'undefined') {
     window.SearchFilter = SearchFilter;
-    
+
     // Auto-initialize when DOM is ready
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', SearchFilter.initialize);

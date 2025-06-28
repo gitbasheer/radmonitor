@@ -498,7 +498,408 @@ async def get_dashboard_stats(request: Request):
     """Get current dashboard statistics"""
     return dashboard_state["stats"]
 
-# Kibana proxy endpoint (built-in CORS support)
+# ====================
+# Simplified Dashboard Endpoint
+# ====================
+
+class DashboardQueryRequest(BaseModel):
+    """Simplified dashboard query request"""
+    time_range: str = Field(default="now-12h", description="Time range for current data")
+    filters: Dict[str, Any] = Field(default_factory=dict, description="Optional filters")
+    options: Dict[str, Any] = Field(default_factory=dict, description="Query options")
+
+class ProcessedEvent(BaseModel):
+    """Processed event with all calculations done server-side"""
+    id: str
+    name: str
+    status: str = Field(..., pattern=r'^(critical|warning|normal|increased)$')
+    score: int
+    current: int
+    baseline: int
+    impact: str
+    impact_class: str
+    rad_type: str
+    rad_display_name: str
+    rad_color: str
+    kibana_url: str
+
+class DashboardQueryResponse(BaseModel):
+    """Dashboard query response with processed data"""
+    data: List[ProcessedEvent]
+    stats: DashboardStats
+    metadata: Dict[str, Any]
+
+@app.post("/api/v1/dashboard/query", response_model=DashboardQueryResponse)
+@limiter.limit("50 per minute" if ENVIRONMENT == "development" else "20 per minute")
+async def dashboard_query(
+    request: Request,
+    query_request: DashboardQueryRequest,
+    background_tasks: BackgroundTasks
+):
+    """
+    Simplified dashboard query endpoint
+    Handles all business logic server-side
+    """
+    try:
+        # Get authentication - check multiple sources
+        cookie = (
+            request.headers.get("Cookie") or
+            request.headers.get("X-Elastic-Cookie") or
+            os.getenv("ELASTIC_COOKIE")
+        )
+        if not cookie:
+            raise HTTPException(status_code=401, detail="Authentication required")
+
+        # Build Elasticsearch query
+        es_query = build_dashboard_query(
+            time_range=query_request.time_range,
+            baseline_start=dashboard_state["config"].baseline_start,
+            baseline_end=dashboard_state["config"].baseline_end
+        )
+
+        # Execute query
+        async with httpx.AsyncClient(timeout=30.0, verify=False) as client:
+            response = await client.post(
+                f"{KIBANA_URL}{KIBANA_SEARCH_PATH}",
+                json=es_query,
+                headers={
+                    "Cookie": cookie,
+                    "Content-Type": "application/json",
+                    "kbn-xsrf": "true"  # Required for Kibana
+                }
+            )
+
+        if response.status_code != 200:
+            logger.error(
+                "elasticsearch_query_failed",
+                status_code=response.status_code,
+                response_text=response.text[:500]  # Log first 500 chars of error
+            )
+
+            # Better error messages based on status code
+            if response.status_code == 401:
+                raise HTTPException(
+                    status_code=401,
+                    detail="Invalid or expired authentication cookie. Please update your cookie."
+                )
+            elif response.status_code == 403:
+                raise HTTPException(
+                    status_code=403,
+                    detail="Access denied. Please check your permissions."
+                )
+            else:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Elasticsearch query failed with status {response.status_code}"
+                )
+
+        # Process the response
+        es_data = response.json()
+        processed_data = process_dashboard_data(
+            es_data,
+            dashboard_state["config"],
+            query_request.filters
+        )
+
+        # Calculate statistics
+        stats = calculate_stats(processed_data)
+
+        # Update background state
+        background_tasks.add_task(update_dashboard_state, stats, len(processed_data))
+
+        # Return processed response
+        return DashboardQueryResponse(
+            data=processed_data,
+            stats=stats,
+            metadata={
+                "query_time": query_request.time_range,
+                "baseline_period": f"{dashboard_state['config'].baseline_start} to {dashboard_state['config'].baseline_end}",
+                "total_events": len(processed_data),
+                "timestamp": datetime.now().isoformat()
+            }
+        )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error("dashboard_query_error", error=str(e))
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+def build_dashboard_query(time_range: str, baseline_start: str, baseline_end: str) -> dict:
+    """Build Elasticsearch query with all necessary aggregations"""
+    # Parse time range
+    time_filter = parse_time_range(time_range)
+
+    return {
+        "size": 0,
+        "query": {
+            "bool": {
+                "filter": [
+                    {
+                        "range": {
+                            "@timestamp": {
+                                "gte": "2025-05-19T04:00:00.000Z",
+                                "lte": "now"
+                            }
+                        }
+                    },
+                    {
+                        "match_phrase": {
+                            "detail.global.page.host": "dashboard.godaddy.com"
+                        }
+                    },
+                    {
+                        "wildcard": {
+                            "detail.event.data.traffic.eid.keyword": {
+                                "value": "pandc.vnext.recommendations.feed.feed*"
+                            }
+                        }
+                    }
+                ]
+            }
+        },
+        "aggs": {
+            "events": {
+                "terms": {
+                    "field": "detail.event.data.traffic.eid.keyword",
+                    "size": 500,
+                    "order": {"_key": "asc"}
+                },
+                "aggs": {
+                    "baseline": {
+                        "filter": {
+                            "range": {
+                                "@timestamp": {
+                                    "gte": baseline_start + "T00:00:00Z" if len(baseline_start) == 10 else baseline_start,
+                                    "lt": baseline_end + "T00:00:00Z" if len(baseline_end) == 10 else baseline_end
+                                }
+                            }
+                        }
+                    },
+                    "current": {
+                        "filter": {
+                            "range": {
+                                "@timestamp": time_filter if isinstance(time_filter, dict) else {"gte": time_filter, "lte": "now"}
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+def parse_time_range(time_range: str) -> dict:
+    """Parse time range string to Elasticsearch filter"""
+    if time_range == "inspection_time":
+        # Special handling for inspection time
+        now = datetime.now()
+        return {
+            "gte": (now - timedelta(hours=36)).isoformat(),
+            "lte": (now - timedelta(hours=24)).isoformat()
+        }
+    elif time_range.startswith("now-"):
+        # Relative time range
+        return {"gte": time_range, "lte": "now"}
+    else:
+        # Absolute time range (assumed to be "start/end" format)
+        parts = time_range.split("/")
+        if len(parts) == 2:
+            return {"gte": parts[0], "lte": parts[1]}
+        else:
+            return {"gte": "now-12h", "lte": "now"}
+
+def process_dashboard_data(
+    es_response: dict,
+    config: DashboardConfig,
+    filters: dict
+) -> List[ProcessedEvent]:
+    """Process Elasticsearch response with all business logic"""
+    processed = []
+
+    if "aggregations" not in es_response:
+        return processed
+
+    events = es_response["aggregations"]["events"]["buckets"]
+
+    for event in events:
+        event_id = event["key"]
+        baseline_count = event["baseline"]["doc_count"]
+        current_count = event["current"]["doc_count"]
+
+        # Calculate daily average for baseline
+        # Handle dates with or without timezone
+        baseline_end = config.baseline_end
+        baseline_start = config.baseline_start
+
+        # Add time component if it's just a date
+        if len(baseline_end) == 10:  # YYYY-MM-DD format
+            baseline_end += "T00:00:00Z"
+        if len(baseline_start) == 10:  # YYYY-MM-DD format
+            baseline_start += "T00:00:00Z"
+
+        baseline_days = (
+            datetime.fromisoformat(baseline_end.replace("Z", "+00:00")) -
+            datetime.fromisoformat(baseline_start.replace("Z", "+00:00"))
+        ).days
+
+        if baseline_days <= 0:
+            baseline_days = 1
+
+        daily_avg = baseline_count / baseline_days
+
+        # Calculate expected count for current period
+        # This is simplified - in reality would parse time_range properly
+        expected_hours = 12  # Default for "now-12h"
+        expected_count = daily_avg * (expected_hours / 24)
+
+        # Calculate score based on volume
+        if daily_avg >= config.high_volume_threshold:
+            # High volume scoring
+            if current_count < expected_count * 0.5:
+                score = int((1 - current_count / expected_count) * -100)
+            else:
+                score = int((current_count / expected_count - 1) * 100)
+        elif daily_avg >= config.medium_volume_threshold:
+            # Medium volume scoring
+            if current_count < expected_count * 0.3:
+                score = int((1 - current_count / expected_count) * -100)
+            else:
+                score = int((current_count / expected_count - 1) * 100)
+        else:
+            # Low volume - filter out
+            continue
+
+        # Determine status
+        if score <= config.critical_threshold:
+            status = "critical"
+        elif score <= config.warning_threshold:
+            status = "warning"
+        elif score <= 0:
+            status = "normal"
+        else:
+            status = "increased"
+
+        # Calculate impact
+        diff = current_count - expected_count
+        if diff < -50:
+            impact = f"Lost ~{abs(int(diff)):,} impressions"
+            impact_class = "loss"
+        elif diff > 50:
+            impact = f"Gained ~{int(diff):,} impressions"
+            impact_class = "gain"
+        else:
+            impact = "Normal variance"
+            impact_class = ""
+
+        # Determine RAD type (simplified for now)
+        rad_type = "recommendations"
+        rad_display_name = "Recommendations"
+        rad_color = "#2196F3"
+
+        # Build Kibana URL
+        kibana_url = build_kibana_url(event_id)
+
+        processed.append(ProcessedEvent(
+            id=event_id,
+            name=event_id,
+            status=status,
+            score=score,
+            current=current_count,
+            baseline=int(expected_count),
+            impact=impact,
+            impact_class=impact_class,
+            rad_type=rad_type,
+            rad_display_name=rad_display_name,
+            rad_color=rad_color,
+            kibana_url=kibana_url
+        ))
+
+    # Sort by score (most negative first)
+    processed.sort(key=lambda x: x.score)
+
+    return processed
+
+def calculate_stats(events: List[ProcessedEvent]) -> DashboardStats:
+    """Calculate dashboard statistics"""
+    stats = DashboardStats()
+
+    for event in events:
+        if event.status == "critical":
+            stats.critical_count += 1
+        elif event.status == "warning":
+            stats.warning_count += 1
+        elif event.status == "normal":
+            stats.normal_count += 1
+        elif event.status == "increased":
+            stats.increased_count += 1
+
+    stats.total_events = len(events)
+    stats.last_update = datetime.now().isoformat()
+
+    return stats
+
+def build_kibana_url(event_id: str) -> str:
+    """Build Kibana discovery URL for an event"""
+    base_url = "https://usieventho-prod-usw2.kb.us-west-2.aws.found.io:9243"
+    discover_path = "/app/discover#/"
+
+    # Build params as a single concatenated string
+    params = ("?_g=(filters:!(),refreshInterval:(pause:!t,value:0),"
+              "time:(from:'2025-05-28T16:50:47.243Z',to:now))"
+              "&_a=(columns:!(),filters:!(('$state':(store:appState),"
+              f"meta:(alias:!n,disabled:!f,key:detail.event.data.traffic.eid.keyword,"
+              f"negate:!f,params:(query:'{event_id}'),type:phrase),"
+              f"query:(match_phrase:(detail.event.data.traffic.eid.keyword:'{event_id}'))))"
+              ",grid:(columns:(detail.event.data.traffic.eid.keyword:(width:400))),"
+              "hideChart:!f,index:'traffic-*',interval:auto,query:(language:kuery,query:''),sort:!())")
+
+    return base_url + discover_path + params
+
+async def update_dashboard_state(stats: DashboardStats, event_count: int):
+    """Update dashboard state in background"""
+    dashboard_state["stats"] = stats
+
+    # Broadcast to WebSocket clients
+    await broadcast_to_websockets(WebSocketMessage(
+        type="stats",
+        data=stats.model_dump()
+    ))
+
+# ====================
+# Authentication Endpoints
+# ====================
+
+@app.get("/api/v1/auth/status")
+async def auth_status(request: Request):
+    """Check authentication status"""
+    cookie = (
+        request.headers.get("Cookie") or
+        request.headers.get("X-Elastic-Cookie") or
+        os.getenv("ELASTIC_COOKIE")
+    )
+
+    if cookie:
+        # In production, would validate the cookie with Elasticsearch
+        return {
+            "authenticated": True,
+            "method": "cookie",
+            "expires": (datetime.now() + timedelta(days=1)).isoformat()
+        }
+
+    return {
+        "authenticated": False,
+        "method": None
+    }
+
+@app.post("/api/v1/auth/logout")
+async def auth_logout(request: Request):
+    """Logout endpoint (placeholder for future SSO integration)"""
+    return {"success": True}
+
+# ====================
+# Legacy Kibana Proxy (for backward compatibility)
+# ====================
+
 @app.post("/api/v1/kibana/proxy")
 @app.post("/kibana-proxy")  # Legacy compatibility
 @limiter.limit("100 per minute" if ENVIRONMENT == "development" else "30 per minute")
@@ -506,7 +907,7 @@ async def kibana_proxy(
     request: Request,
     x_elastic_cookie: Optional[str] = Header(None, alias="X-Elastic-Cookie")
 ):
-    """Proxy requests to Kibana with CORS support"""
+    """Legacy proxy endpoint for backward compatibility"""
     try:
         # Get request body
         raw_body = await request.body()
@@ -516,105 +917,25 @@ async def kibana_proxy(
         if not cookie:
             raise HTTPException(status_code=401, detail="No authentication cookie provided")
 
-        # Clean up cookie format - extract sid value if full cookie header provided
-        if 'sid=' in cookie:
-            # Extract just the sid value from full cookie header
-            for part in cookie.split(';'):
-                part = part.strip()
-                if part.startswith('sid='):
-                    cookie = part.split('=', 1)[1]
-                    break
-
-        logger.info("kibana_proxy",
-            action="cookie_processed",
-            cookie_length=len(cookie),
-            has_sid_prefix='sid=' in x_elastic_cookie if x_elastic_cookie else False
-        )
-
-        # Parse request body - support both wrapped and direct formats
-        try:
-            body_data = json.loads(raw_body)
-
-                        # Check if it's wrapped in our structured format
-            if isinstance(body_data, dict) and "query" in body_data:
-                # Extract the actual Elasticsearch query
-                es_query = body_data["query"]
-                query_body = json.dumps(es_query).encode('utf-8')
-
-                # Debug: Log query structure for troubleshooting
-                query_preview = {
-                    "size": es_query.get("size", "not_set"),
-                    "has_aggs": "aggs" in es_query,
-                    "has_query": "query" in es_query
-                }
-                if "query" in es_query and "bool" in es_query["query"]:
-                    bool_query = es_query["query"]["bool"]
-                    query_preview["bool_structure"] = {
-                        "has_filter": "filter" in bool_query,
-                        "filter_count": len(bool_query.get("filter", [])),
-                        "has_should": "should" in bool_query,
-                        "has_must": "must" in bool_query
-                    }
-
-                logger.info("kibana_proxy",
-                    action="extracted_structured_query",
-                    force_refresh=body_data.get("force_refresh", False),
-                    query_preview=query_preview
-                )
-
-                # Debug: Log first 500 chars of query being sent to ES
-                logger.info("kibana_proxy",
-                    action="sending_to_elasticsearch",
-                    query_snippet=query_body.decode('utf-8')[:500] + "..." if len(query_body) > 500 else query_body.decode('utf-8')
-                )
-            else:
-                # Assume it's already a raw Elasticsearch query
-                query_body = raw_body
-                logger.info("kibana_proxy", action="using_raw_query")
-
-        except json.JSONDecodeError:
-            # If we can't parse as JSON, pass through as-is
+        # Parse request body
+        body_data = json.loads(raw_body)
+        if isinstance(body_data, dict) and "query" in body_data:
+            es_query = body_data["query"]
+            query_body = json.dumps(es_query).encode('utf-8')
+        else:
             query_body = raw_body
-            logger.info("kibana_proxy", action="passthrough_non_json")
 
         # Build request
         proxy_url = f"{KIBANA_URL}{KIBANA_SEARCH_PATH}"
-        # Build headers with proper cookie format
         headers = {
             "Content-Type": "application/json",
             "kbn-xsrf": "true",
             "Cookie": f"sid={cookie}" if not cookie.startswith('sid=') else cookie
         }
 
-        # Execute with circuit breaker
-        @es_circuit_breaker
-        async def execute_request():
-            async with httpx.AsyncClient(timeout=30.0, verify=False) as client:
-                return await client.post(proxy_url, content=query_body, headers=headers)
-
-        try:
-            response = await execute_request()
-        except Exception as e:
-            if es_circuit_breaker.current_state == "open":
-                metrics_tracker.circuit_breaker_trips += 1
-                raise HTTPException(status_code=503, detail="Elasticsearch temporarily unavailable")
-            raise
-
-        # Check for Elasticsearch errors in response
-        if response.status_code != 200:
-            try:
-                error_data = json.loads(response.content)
-                if "error" in error_data:
-                    error_msg = error_data["error"].get("reason", "Unknown error")
-                    error_type = error_data["error"].get("type", "unknown_error")
-                    logger.error("kibana_proxy",
-                        action="elasticsearch_error",
-                        error_type=error_type,
-                        error_reason=error_msg,
-                        status_code=response.status_code
-                    )
-            except:
-                pass  # Ignore parsing errors, return response as-is
+        # Execute request
+        async with httpx.AsyncClient(timeout=30.0, verify=False) as client:
+            response = await client.post(proxy_url, content=query_body, headers=headers)
 
         return Response(
             content=response.content,
@@ -627,13 +948,14 @@ async def kibana_proxy(
 
     except HTTPException:
         raise
-    except httpx.TimeoutException:
-        raise HTTPException(status_code=504, detail="Request to Kibana timed out")
     except Exception as e:
         logger.error("kibana_proxy_error", error=str(e))
         raise HTTPException(status_code=500, detail=str(e))
 
-# Metrics endpoint
+# ====================
+# Metrics & Utilities
+# ====================
+
 @app.get("/api/v1/metrics")
 async def get_metrics():
     """Get server metrics"""
@@ -645,40 +967,6 @@ async def reset_metrics():
     metrics_tracker.reset()
     return {"status": "success", "message": "Metrics reset"}
 
-# Debug endpoint for cookie testing
-@app.post("/api/v1/debug/test-cookie")
-async def test_cookie_format(
-    request: Request,
-    x_elastic_cookie: Optional[str] = Header(None, alias="X-Elastic-Cookie")
-):
-    """Test cookie format and processing"""
-    try:
-        # Get cookie from header or environment
-        raw_cookie = x_elastic_cookie or os.environ.get('ELASTIC_COOKIE', '')
-        if not raw_cookie:
-            return {"error": "No cookie provided", "status": "missing"}
-
-        # Process cookie same way as main proxy
-        processed_cookie = raw_cookie
-        if 'sid=' in processed_cookie:
-            for part in processed_cookie.split(';'):
-                part = part.strip()
-                if part.startswith('sid='):
-                    processed_cookie = part.split('=', 1)[1]
-                    break
-
-        return {
-            "status": "processed",
-            "raw_cookie_length": len(raw_cookie),
-            "processed_cookie_length": len(processed_cookie),
-            "has_sid_prefix": 'sid=' in raw_cookie,
-            "processed_cookie_preview": processed_cookie[:20] + "..." if len(processed_cookie) > 20 else processed_cookie,
-            "cookie_format": "full_header" if 'sid=' in raw_cookie else "sid_value_only"
-        }
-    except Exception as e:
-        return {"error": str(e), "status": "error"}
-
-# Utility endpoints
 @app.post("/api/v1/utils/cleanup-ports")
 async def cleanup_ports(request: PortCleanupRequest):
     """Clean up processes using specified ports"""

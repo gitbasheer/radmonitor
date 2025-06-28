@@ -226,14 +226,14 @@ class Settings(BaseSettings):
         default="INFO",
         description="Logging level"
     )
-    
+
     # Nested settings
     elasticsearch: ElasticsearchSettings = Field(default_factory=ElasticsearchSettings)
     kibana: KibanaSettings = Field(default_factory=KibanaSettings)
     processing: ProcessingSettings = Field(default_factory=ProcessingSettings)
     dashboard: DashboardSettings = Field(default_factory=DashboardSettings)
     cors_proxy: CorsProxySettings = Field(default_factory=CorsProxySettings)
-    
+
     # RAD types configuration property
     @property
     def rad_types(self) -> Dict[str, Any]:
@@ -245,7 +245,7 @@ class Settings(BaseSettings):
                     return data.get('rad_types', {})
             except Exception as e:
                 logger.warning(f"Error loading rad_types from settings file: {e}")
-        
+
         # Default RAD types configuration
         return {
             "venture_feed": {
@@ -254,6 +254,13 @@ class Settings(BaseSettings):
                 "enabled": True,
                 "color": "#4CAF50",
                 "description": "Venture recommendations feed"
+            },
+            "venture_metrics": {
+                "pattern": "pandc.vnext.recommendations.metricsevolved*",
+                "display_name": "Venture Metrics",
+                "enabled": True,
+                "color": "#9C27B0",
+                "description": "Venture metrics evolved events"
             },
             "cart_recommendations": {
                 "pattern": "pandc.vnext.recommendations.cart*",
@@ -270,7 +277,7 @@ class Settings(BaseSettings):
                 "description": "Product page recommendations"
             }
         }
-    
+
     # Calculated properties
     @property
     def baseline_days(self) -> int:
@@ -281,17 +288,17 @@ class Settings(BaseSettings):
             return (end - start).days
         except:
             return 7  # Default to 7 days
-    
+
     def save_to_file(self, filepath: Optional[Path] = None) -> None:
         """Save current settings to JSON file"""
         filepath = filepath or CONFIG_FILE
-        
+
         # Ensure directory exists
         filepath.parent.mkdir(parents=True, exist_ok=True)
-        
+
         # Convert to dict and save
         settings_dict = self.model_dump()
-        
+
         # Convert HttpUrl objects to strings
         def convert_urls(obj):
             if isinstance(obj, dict):
@@ -299,27 +306,27 @@ class Settings(BaseSettings):
             elif hasattr(obj, '__str__') and 'HttpUrl' in str(type(obj)):
                 return str(obj)
             return obj
-        
+
         settings_dict = convert_urls(settings_dict)
-        
+
         with open(filepath, 'w') as f:
             json.dump(settings_dict, f, indent=2, default=str)
-        
+
         logger.info(f"Settings saved to {filepath}")
-    
+
     @classmethod
     def load_from_file(cls, filepath: Optional[Path] = None) -> 'Settings':
         """Load settings from JSON file"""
         filepath = filepath or CONFIG_FILE
-        
+
         if not filepath.exists():
             logger.warning(f"Settings file {filepath} not found, using defaults")
             return cls()
-        
+
         try:
             with open(filepath, 'r') as f:
                 data = json.load(f)
-            
+
             # Create settings instance from loaded data
             settings = cls(**data)
             logger.info(f"Settings loaded from {filepath}")
@@ -327,11 +334,11 @@ class Settings(BaseSettings):
         except Exception as e:
             logger.error(f"Error loading settings from {filepath}: {e}")
             return cls()
-    
+
     def merge_with_dict(self, updates: Dict[str, Any]) -> 'Settings':
         """Merge current settings with updates from a dictionary"""
         current = self.model_dump()
-        
+
         # Deep merge the dictionaries
         def deep_merge(base: dict, updates: dict) -> dict:
             result = base.copy()
@@ -341,21 +348,21 @@ class Settings(BaseSettings):
                 else:
                     result[key] = value
             return result
-        
+
         merged = deep_merge(current, updates)
-        
+
         # For partial updates to processing settings, ensure all fields are present
         if 'processing' in updates and isinstance(updates['processing'], dict):
             # Make sure all processing fields from current are preserved
             if 'processing' in merged:
-                for field in ['baseline_start', 'baseline_end', 'current_time_range', 
+                for field in ['baseline_start', 'baseline_end', 'current_time_range',
                              'high_volume_threshold', 'medium_volume_threshold',
                              'critical_threshold', 'warning_threshold', 'min_daily_volume']:
                     if field not in merged['processing'] and field in current.get('processing', {}):
                         merged['processing'][field] = current['processing'][field]
-        
+
         return Settings(**merged)
-    
+
     def to_frontend_config(self) -> Dict[str, Any]:
         """Convert settings to frontend-compatible format"""
         return {
@@ -376,7 +383,7 @@ class Settings(BaseSettings):
             "corsProxyUrl": f"http://localhost:{self.cors_proxy.port}",
             "environment": "production" if not self.debug else "development"
         }
-    
+
     def update_from_frontend(self, config: Dict[str, Any]) -> 'Settings':
         """Update settings from frontend configuration format"""
         updates = {
@@ -397,9 +404,9 @@ class Settings(BaseSettings):
                 "max_events_display": config.get("maxEventsDisplay", self.dashboard.max_events_display)
             }
         }
-        
+
         return self.merge_with_dict(updates)
-    
+
     class Config:
         # env_file = ".env"  # Commented out to avoid file not found error
         env_file_encoding = "utf-8"
@@ -415,7 +422,7 @@ _settings: Optional[Settings] = None
 def get_settings() -> Settings:
     """Get cached settings instance"""
     global _settings
-    
+
     if _settings is None:
         # Try to load from file first
         if CONFIG_FILE.exists():
@@ -425,7 +432,7 @@ def get_settings() -> Settings:
             _settings = Settings()
             # Save defaults to file
             _settings.save_to_file()
-    
+
     return _settings
 
 
@@ -440,13 +447,13 @@ def reload_settings() -> Settings:
 def update_settings(updates: Dict[str, Any], save: bool = True) -> Settings:
     """Update settings with new values"""
     global _settings
-    
+
     current = get_settings()
     _settings = current.merge_with_dict(updates)
-    
+
     if save:
         _settings.save_to_file()
-    
+
     get_settings.cache_clear()
     return _settings
 
@@ -454,13 +461,13 @@ def update_settings(updates: Dict[str, Any], save: bool = True) -> Settings:
 def update_from_frontend(config: Dict[str, Any], save: bool = True) -> Settings:
     """Update settings from frontend configuration"""
     global _settings
-    
+
     current = get_settings()
     _settings = current.update_from_frontend(config)
-    
+
     if save:
         _settings.save_to_file()
-    
+
     get_settings.cache_clear()
     return _settings
 

@@ -1,6 +1,6 @@
 # RAD Monitor Dashboard
 
-A real-time traffic monitoring dashboard for RAD (Recommendations and Discovery) events. Shows you when traffic drops so you can catch issues fast.
+A real-time traffic monitoring dashboard for RAD events. Shows you when traffic drops so you can catch issues fast.
 
 ## Live Dashboard
 
@@ -29,12 +29,13 @@ The dashboard queries Elasticsearch for RAD events, compares current traffic to 
 ### For Monitoring (No Setup)
 
 1. Go to https://balkhalil-godaddy.github.io/vh-rad-traffic-monitor/
-2. Get your Kibana cookie:
-   - Open Kibana
+2. When prompted, enter your Kibana cookie:
+   - A clean modal will appear with instructions
+   - Open Kibana in another tab
    - F12 → Network tab → Refresh page
    - Find any request → Copy the Cookie header value
    - Look for the `sid=Fe26.2**...` part
-3. Paste cookie in dashboard when prompted
+3. Paste cookie in the modal and click "Save Cookie"
 4. Watch your traffic
 
 ### For Development
@@ -44,13 +45,32 @@ Clone and install:
 git clone https://github.com/balkhalil-godaddy/vh-rad-traffic-monitor.git
 cd vh-rad-traffic-monitor
 npm install
-pip install -r requirements-enhanced.txt
 ```
 
-Run locally:
+#### First Time Setup (Python Environment)
 ```bash
-npm run dev  # Starts everything you need on http://localhost:8000
+# Create and activate Python virtual environment
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+
+# Install Python dependencies
+pip install -r requirements-minimal.txt
 ```
+
+#### Daily Development
+```bash
+# After initial setup, just run:
+npm run dev
+
+# This starts the FastAPI server at http://localhost:8000
+# It's the same as running: python bin/server.py
+# But npm run dev also cleans up ports and shows a nice startup message
+```
+
+**Quick Reference:**
+- `npm run dev` = Runs `python bin/dev_server_unified.py` → Which runs `bin/server.py`
+- `npm run dev:direct` = Runs `python bin/server.py` directly
+- Both start the same server! Use `npm run dev` for convenience.
 
 ## Key Files & URLs
 
@@ -93,6 +113,9 @@ graph TB
 
 # Test the proxy
 curl https://regal-youtiao-09c777.netlify.app/.netlify/functions/proxy
+
+# Test authentication flow
+open test-auth-flow.html    # Test auth system independently
 
 # Redeploy proxy (if you change proxy.js)
 cd proxy-service && npx netlify deploy --prod
@@ -141,14 +164,16 @@ npx netlify deploy --prod
 ## Authentication
 
 The dashboard needs a Kibana session cookie. The cookie:
-- Expires after 24 hours
+- Expires after 24 hours (auto-cleared)
 - Can be entered as `Fe26.2**...` or `sid=Fe26.2**...` (proxy handles both)
-- Gets stored in localStorage
+- Gets stored in localStorage with automatic expiry
+- Shows a clean modal UI for entry (no browser prompts)
+- Only prompts once per session (no authentication loops)
 
 ## Common Issues
 
 **"Invalid cookie header"**
-- Your cookie expired. Get a fresh one from Kibana.
+- Your cookie expired. Click "Set Cookie" button to enter a fresh one from Kibana.
 
 **No data showing**
 - Check the browser console
@@ -162,6 +187,22 @@ The dashboard needs a Kibana session cookie. The cookie:
 **Wrong index pattern errors**
 - Run `./scripts/verify-config.sh` to check configuration
 - Make sure all configs use `traffic-*` not `usi*`
+
+## Troubleshooting
+
+### Common Errors
+
+1. **Module syntax errors** (`Unexpected token 'export'`)
+   - Fixed: Removed duplicate script loading in index.html
+
+2. **API 404 errors** (`POST /api/v1/query 404`)
+   - Fixed: Updated to correct endpoint `/api/v1/dashboard/query`
+
+3. **Authentication issues**
+   - The cookie modal now validates cookies before saving
+   - Invalid cookies show error messages instead of loops
+
+For more details, see [README_detailed.md](README_detailed.md#known-issues--solutions).
 
 ## What This Monitors
 

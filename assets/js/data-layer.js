@@ -606,6 +606,9 @@ export const DataLayer = (() => {
                 else if (score <= -50) status = 'WARNING';
                 else if (score > 0) status = 'INCREASED';
 
+                // Determine RAD type
+                const radType = DataProcessor.determineRadType(bucket.key, config.rad_types || {});
+
                 return {
                     event_id: bucket.key,
                     displayName: bucket.key.replace('pandc.vnext.recommendations.feed.', ''),
@@ -615,7 +618,8 @@ export const DataLayer = (() => {
                     baseline_count: baseline,
                     score,
                     status,
-                    dailyAvg: Math.round(daily_avg)
+                    dailyAvg: Math.round(daily_avg),
+                    rad_type: radType
                 };
             }).filter(item => item !== null);
         }

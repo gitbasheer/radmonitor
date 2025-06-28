@@ -64,11 +64,13 @@ export const UIUpdater = (() => {
             const radColor = radConfig.color || '#666';
 
             const row = document.createElement('tr');
+            // Store rad_type as data attribute for easier filtering
+            row.dataset.radType = radType;
             row.innerHTML = `
                 <td><a href="${kibanaUrl}" target="_blank" class="event-link">
-                    <span class="event-name">${item.displayName || eventId}</span>
+                    <span class="event-name">${eventId}</span>
                 </a></td>
-                <td><span class="rad-type-badge" style="background: ${radColor}; color: white; padding: 2px 8px; border-radius: 3px; font-size: 11px; font-weight: 600;">${radDisplayName}</span></td>
+                <td><span class="rad-type-badge" data-rad-type="${radType}" style="background: ${radColor}; color: white; padding: 2px 8px; border-radius: 3px; font-size: 11px; font-weight: 600;">${radDisplayName}</span></td>
                 <td><span class="badge ${(item.status || 'normal').toLowerCase()}">${item.status || 'NORMAL'}</span></td>
                 <td class="number"><span class="score ${score_class}">${score_text}</span></td>
                 <td class="number">${current.toLocaleString()}</td>
@@ -129,7 +131,7 @@ export const UIUpdater = (() => {
         if (statusEl && statusEl.dataset.authRequired === 'true') {
             const authErrorTime = statusEl.dataset.authErrorTime;
             const now = Date.now();
-            
+
             // If auth error has been showing for more than 30 seconds, clear it
             if (authErrorTime && (now - parseInt(authErrorTime)) > 30000) {
                 delete statusEl.dataset.authRequired;
@@ -181,13 +183,13 @@ export const UIUpdater = (() => {
                     } else {
                         // Test legacy auth with timeout
                         statusEl.innerHTML = `Testing authentication... | <a href="#" onclick="Dashboard.setCookieForRealtime(); return false;" style="color: #333;">Update Cookie</a>`;
-                        
+
                         // Add timeout to auth test to prevent hanging
                         const authTestPromise = ApiClient.testAuthentication();
                         const timeoutPromise = new Promise((resolve) => {
                             setTimeout(() => resolve({ success: false, error: 'Authentication test timed out' }), 5000);
                         });
-                        
+
                         try {
                             const testResult = await Promise.race([authTestPromise, timeoutPromise]);
                             if (testResult.success) {
@@ -222,13 +224,13 @@ export const UIUpdater = (() => {
                     } else {
                         // Test legacy auth with timeout
                         statusEl.innerHTML = `Testing authentication... | <a href="#" onclick="Dashboard.setCookieForRealtime(); return false;" style="color: #333;">Update Cookie</a>`;
-                        
+
                         // Add timeout to auth test to prevent hanging
                         const authTestPromise = ApiClient.testAuthentication();
                         const timeoutPromise = new Promise((resolve) => {
                             setTimeout(() => resolve({ success: false, error: 'Authentication test timed out' }), 5000);
                         });
-                        
+
                         try {
                             const testResult = await Promise.race([authTestPromise, timeoutPromise]);
                             if (testResult.success) {
@@ -287,7 +289,7 @@ export const UIUpdater = (() => {
         if (status) {
             status.textContent = message;
         }
-        
+
         // Show the visual loading indicator
         if (loadingIndicator) {
             loadingIndicator.style.display = 'flex';
@@ -314,7 +316,7 @@ export const UIUpdater = (() => {
         if (status) {
             status.textContent = message;
         }
-        
+
         // Hide the visual loading indicator
         if (loadingIndicator) {
             loadingIndicator.style.display = 'none';
@@ -542,7 +544,7 @@ export const UIUpdater = (() => {
             // Toggle all selection
             const radButtons = document.querySelectorAll('.rad-filter-btn');
             const isActive = this.classList.contains('active');
-            
+
             if (!isActive) {
                 // Activate all
                 radButtons.forEach(btn => btn.classList.add('active'));
@@ -552,7 +554,7 @@ export const UIUpdater = (() => {
                     if (btn !== this) btn.classList.remove('active');
                 });
             }
-            
+
             // Trigger filter update
             if (typeof SearchFilter !== 'undefined' && SearchFilter.applyRadTypeFilter) {
                 SearchFilter.applyRadTypeFilter();
@@ -571,7 +573,7 @@ export const UIUpdater = (() => {
                     position: relative;
                     padding-left: 20px;
                 `;
-                
+
                 // Add color indicator
                 const colorDot = document.createElement('span');
                 colorDot.style.cssText = `
@@ -585,11 +587,11 @@ export const UIUpdater = (() => {
                     background: ${radConfig.color};
                 `;
                 btn.appendChild(colorDot);
-                
+
                 btn.onclick = function() {
                     // Toggle this button
                     this.classList.toggle('active');
-                    
+
                     // Update "All" button state
                     const allActive = Array.from(document.querySelectorAll('.rad-filter-btn:not([data-rad-type="all"])')).every(b => b.classList.contains('active'));
                     const allBtn = document.querySelector('.rad-filter-btn[data-rad-type="all"]');
@@ -600,19 +602,19 @@ export const UIUpdater = (() => {
                             allBtn.classList.remove('active');
                         }
                     }
-                    
+
                     // Ensure at least one is selected
                     const anyActive = Array.from(document.querySelectorAll('.rad-filter-btn')).some(b => b.classList.contains('active'));
                     if (!anyActive) {
                         this.classList.add('active');
                     }
-                    
+
                     // Trigger filter update
                     if (typeof SearchFilter !== 'undefined' && SearchFilter.applyRadTypeFilter) {
                         SearchFilter.applyRadTypeFilter();
                     }
                 };
-                
+
                 container.appendChild(btn);
             }
         });
