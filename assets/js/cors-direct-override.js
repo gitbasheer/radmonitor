@@ -45,7 +45,7 @@
                 }
 
                 // Direct Elasticsearch connection
-                const esUrl = 'https://usieventho-prod-usw2.kb.us-west-2.aws.found.io:9243';
+                const esUrl = window.ELASTICSEARCH_URL || 'https://usieventho-prod-usw2.kb.us-west-2.aws.found.io:9243';
                 const esPath = '/elasticsearch/usi*/_search';
 
                 try {

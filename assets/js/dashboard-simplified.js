@@ -432,12 +432,12 @@ export class SimplifiedDashboard {
                 } else {
                     console.log('(✗) API connection failed');
                     this.updateConnectionStatus(false, 'Connection test failed - but data may still load');
-                    
+
                     // Don't show an alert - just log it
                     window.dispatchEvent(new CustomEvent('connection:failed', {
                         detail: { message: 'Connection test failed' }
                     }));
-                    
+
                     return false;
                 }
         } catch (error) {
@@ -544,6 +544,45 @@ Data Status:
         console.log(stats);
         alert(stats);
     }
+
+    /**
+     * Clean up all resources and event listeners
+     */
+    destroy() {
+        console.log('🧹 Dashboard: Cleaning up resources...');
+
+        // Clear refresh interval
+        if (this.refreshInterval) {
+            clearInterval(this.refreshInterval);
+            this.refreshInterval = null;
+        }
+
+        // Use ResourceManager if available
+        if (window.resourceManager) {
+            window.resourceManager.clearInterval(this.refreshInterval);
+        }
+
+        // Destroy components
+        if (this.components.table) {
+            this.components.table.destroy();
+            this.components.table = null;
+        }
+
+        if (this.components.filters) {
+            // Remove event listeners from FilterControls
+            this.components.filters.removeAllListeners();
+        }
+
+        // Clear event handlers
+        this.eventHandlers = {
+            auth: null,
+            data: null,
+            error: null
+        };
+
+        this.isInitialized = false;
+        console.log('✅ Dashboard: All resources cleaned up');
+    }
 }
 
 /**
@@ -638,6 +677,11 @@ class DashboardTable {
         if (this.renderFrame) {
             cancelAnimationFrame(this.renderFrame);
             this.renderFrame = null;
+        }
+
+        // Use ResourceManager if available
+        if (window.resourceManager) {
+            window.resourceManager.cancelAnimationFrame(this.renderFrame);
         }
     }
 }

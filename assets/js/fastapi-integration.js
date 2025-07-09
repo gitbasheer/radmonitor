@@ -35,7 +35,7 @@ export const FastAPIIntegration = {
 
     // Central configuration
     config: {
-        apiUrl: window.FASTAPI_URL || 'http://localhost:8000',
+        apiUrl: window.FASTAPI_URL || window.API_URL || 'http://localhost:8000',
         wsUrl: window.FASTAPI_WS_URL || 'ws://localhost:8000/ws',
         reconnectInterval: 5000, // Deprecated - using exponential backoff
         maxReconnectAttempts: 10, // Increased for exponential backoff

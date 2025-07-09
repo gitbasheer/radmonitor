@@ -91,7 +91,7 @@ export function updateDataTable(results) {
  * Build Kibana URL for event
  */
 export function buildKibanaUrl(event_id) {
-    const base_url = "https://usieventho-prod-usw2.kb.us-west-2.aws.found.io:9243";
+    const base_url = window.KIBANA_URL || "https://usieventho-prod-usw2.kb.us-west-2.aws.found.io:9243";
     const discover_path = "/app/discover#/";
 
     const params =

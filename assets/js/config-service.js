@@ -10,6 +10,9 @@ let syncTimer = null;
 let isInitialized = false;
 let environment = detectEnvironment();
 
+// Resource cleanup tracking
+let cleanupFunctions = [];
+
 // Environment detection
 function detectEnvironment() {
     const hostname = window.location.hostname;
@@ -45,10 +48,10 @@ const ENDPOINTS = {
 function getBaseUrl() {
     // Check if FastAPI is available
     if (window.FastAPIIntegration?.state?.serverAvailable) {
-        return window.FASTAPI_URL || 'http://localhost:8000';
+        return window.FASTAPI_URL || window.API_URL || 'http://localhost:8000';
     }
     // Fallback to CORS proxy
-    return 'http://localhost:8000';
+    return window.API_URL || 'http://localhost:8000';
 }
 
 /**
@@ -132,7 +135,7 @@ async function loadProductionConfig() {
             if (config.server?.url === '${API_URL}') {
                 config.server.url = window.PRODUCTION_API_URL || window.location.origin;
             }
-            
+
             // Handle pre-configured cookie
             if (productionConfig.elasticsearch?.preConfiguredCookie &&
                 productionConfig.dashboard?.autoLoadCookie) {
@@ -157,9 +160,9 @@ async function loadProductionConfig() {
             url: window.PRODUCTION_API_URL || window.location.origin
         },
         corsProxy: { enabled: false },
-        features: { 
-            fastapi: true, 
-            localServer: false, 
+        features: {
+            fastapi: true,
+            localServer: false,
             corsProxy: false,
             websocket: true,
             formulaBuilder: true,
@@ -167,8 +170,8 @@ async function loadProductionConfig() {
         },
         elasticsearch: {
             directConnection: false,
-            url: 'https://usieventho-prod-usw2.es.us-west-2.aws.found.io:9243',
-            kibanaUrl: 'https://usieventho-prod-usw2.kb.us-west-2.aws.found.io:9243',
+            url: window.ELASTICSEARCH_URL || 'https://usieventho-prod-usw2.es.us-west-2.aws.found.io:9243',
+            kibanaUrl: window.KIBANA_URL || 'https://usieventho-prod-usw2.kb.us-west-2.aws.found.io:9243',
             path: '/api/console/proxy?path=traffic-*/_search&method=POST',
             corsRequired: false
         }
@@ -334,8 +337,8 @@ function getDefaultConfig() {
         theme: 'light',
         maxEventsDisplay: 200,
         elasticCookie: null,
-        kibanaUrl: 'https://usieventho-prod-usw2.kb.us-west-2.aws.found.io:9243',
-        elasticsearchUrl: 'https://usieventho-prod-usw2.es.us-west-2.aws.found.io:9243',
+        kibanaUrl: window.KIBANA_URL || 'https://usieventho-prod-usw2.kb.us-west-2.aws.found.io:9243',
+        elasticsearchUrl: window.ELASTICSEARCH_URL || 'https://usieventho-prod-usw2.es.us-west-2.aws.found.io:9243',
         elasticsearchPath: '/traffic-*/_search',
         corsProxyPort: 8000,
         debug: false,
@@ -414,7 +417,7 @@ function getConfig() {
                 environment: 'production',
                 corsProxy: {
                     enabled: true,
-                    url: "https://regal-youtiao-09c777.netlify.app/.netlify/functions/proxy"
+                    url: window.NETLIFY_PROXY_URL || window.PROXY_URL || "https://regal-youtiao-09c777.netlify.app/.netlify/functions/proxy"
                 },
                 features: {
                     fastapi: false,
@@ -653,6 +656,36 @@ export function stopAutoSync() {
         clearInterval(syncTimer);
         syncTimer = null;
     }
+}
+
+/**
+ * Clean up all resources and listeners
+ */
+export function cleanup() {
+    // Stop auto-sync
+    stopAutoSync();
+
+    // Clear all listeners
+    listeners = [];
+
+    // Execute cleanup functions
+    cleanupFunctions.forEach(cleanupFn => {
+        try {
+            cleanupFn();
+        } catch (error) {
+            console.error('Error during config service cleanup:', error);
+        }
+    });
+    cleanupFunctions = [];
+
+    console.log('🧹 ConfigService: All resources cleaned up');
+}
+
+/**
+ * Add cleanup function to be called when service is destroyed
+ */
+export function addCleanupFunction(cleanupFn) {
+    cleanupFunctions.push(cleanupFn);
 }
 
 /**

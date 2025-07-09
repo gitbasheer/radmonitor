@@ -16,6 +16,7 @@ export class FormulaExperimentManager {
       defaultCohortSplit: 0.5,
       cookieName: 'formula_experiments',
       cookieExpiry: 30, // days
+      maxAssignments: 50, // Prevent unbounded Map growth
       ...config
     };
 
@@ -206,6 +207,13 @@ export class FormulaExperimentManager {
    */
   saveAssignment(experimentId, userId, cohort) {
     const key = `${experimentId}:${userId}`;
+
+    // Evict oldest assignment if at capacity
+    if (this.assignments.size >= this.config.maxAssignments) {
+      const firstKey = this.assignments.keys().next().value;
+      this.assignments.delete(firstKey);
+    }
+
     this.assignments.set(key, cohort);
 
     // Persist to cookie/storage
@@ -294,7 +302,21 @@ export class FormulaExperimentManager {
 
     try {
       const data = Object.fromEntries(this.assignments);
-      localStorage.setItem(this.config.cookieName, JSON.stringify(data));
+      const dataStr = JSON.stringify(data);
+
+      // Check localStorage size limit (5MB is typical browser limit)
+      const maxSize = 4 * 1024 * 1024; // 4MB to be safe
+      if (dataStr.length > maxSize) {
+        console.warn('Experiment assignments too large, clearing old entries');
+        // Clear half of the assignments to make room
+        const entries = Array.from(this.assignments.entries());
+        const toKeep = entries.slice(-Math.floor(entries.length / 2));
+        this.assignments = new Map(toKeep);
+        const reducedData = Object.fromEntries(this.assignments);
+        localStorage.setItem(this.config.cookieName, JSON.stringify(reducedData));
+      } else {
+        localStorage.setItem(this.config.cookieName, dataStr);
+      }
     } catch (error) {
       console.error('Error persisting experiment assignments:', error);
     }

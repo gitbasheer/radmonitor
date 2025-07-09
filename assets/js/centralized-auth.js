@@ -147,7 +147,8 @@ export const CentralizedAuth = (() => {
 
             if (isLocalhost) {
                 // Use auth status endpoint for validation - simpler and more appropriate
-                response = await fetch('http://localhost:8000/api/v1/auth/status', {
+                const apiUrl = window.API_URL || window.FASTAPI_URL || 'http://localhost:8000';
+                response = await fetch(`${apiUrl}/api/v1/auth/status`, {
                     method: 'GET',
                     headers: {
                         'X-Elastic-Cookie': cookie.startsWith('sid=') ? cookie : `sid=${cookie}`
@@ -155,7 +156,7 @@ export const CentralizedAuth = (() => {
                 });
             } else {
                 // For production, use the proxy's validation
-                const proxyUrl = window.PROXY_URL || 'https://regal-youtiao-09c777.netlify.app/.netlify/functions/proxy';
+                const proxyUrl = window.PROXY_URL || window.NETLIFY_PROXY_URL || 'https://regal-youtiao-09c777.netlify.app/.netlify/functions/proxy';
                 response = await fetch(proxyUrl, {
                     method: 'POST',
                     headers: {

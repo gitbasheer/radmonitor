@@ -24,6 +24,24 @@ The environment validation system:
 | `BASELINE_START` | Yes | Baseline start date (ISO) | `2024-01-01T00:00:00` |
 | `BASELINE_END` | Yes | Baseline end date (ISO) | `2024-01-07T00:00:00` |
 
+### API Configuration
+
+| Variable | Required | Description | Example |
+|----------|----------|-------------|---------|
+| `API_URL` | No | Base URL for the API server | `http://localhost:8000` |
+| `PRODUCTION_API_URL` | No | Production API server URL | `https://api.example.com` |
+| `FASTAPI_URL` | No | FastAPI server URL (alias) | `http://localhost:8000` |
+| `FASTAPI_WS_URL` | No | FastAPI WebSocket URL | `ws://localhost:8000/ws` |
+
+### Proxy Configuration
+
+| Variable | Required | Description | Example |
+|----------|----------|-------------|---------|
+| `PROXY_URL` | No | CORS proxy URL | `https://proxy.example.com` |
+| `NETLIFY_PROXY_URL` | No | Netlify proxy URL | `https://regal-youtiao-09c777.netlify.app/.netlify/functions/proxy` |
+| `CORS_PROXY_PORT` | No | CORS proxy port | `8000` |
+| `TEST_API_PORT` | No | API port for testing | `8000` |
+
 ### Production Requirements
 
 When `ENVIRONMENT=production`, these additional variables are required:

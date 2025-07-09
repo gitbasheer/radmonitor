@@ -360,7 +360,7 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # CORS Middleware
 # Configure allowed origins from environment for security
-ALLOWED_ORIGINS = validated_env.get("ALLOWED_ORIGINS", ["http://localhost:8001", "http://localhost:3000"])
+ALLOWED_ORIGINS = validated_env.get("ALLOWED_ORIGINS", ["http://localhost:8000", "http://localhost:3000"])
 ALLOWED_ORIGINS = [origin.strip() for origin in ALLOWED_ORIGINS if origin.strip()]  # Clean whitespace
 
 # Add production origin if running in production

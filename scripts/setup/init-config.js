@@ -21,13 +21,13 @@ const DEFAULT_CONFIG = {
     "debug": false,
     "log_level": "INFO",
     "elasticsearch": {
-        "url": "https://usieventho-prod-usw2.es.us-west-2.aws.found.io:9243",
+        "url": process.env.ELASTICSEARCH_URL || "https://usieventho-prod-usw2.es.us-west-2.aws.found.io:9243",
         "cookie": null,
         "index_pattern": "traffic-*",
         "timeout": 30
     },
     "kibana": {
-        "url": "https://usieventho-prod-usw2.kb.us-west-2.aws.found.io:9243",
+        "url": process.env.KIBANA_URL || "https://usieventho-prod-usw2.kb.us-west-2.aws.found.io:9243",
         "discover_path": "/app/discover#/",
         "search_path": "/api/console/proxy?path=traffic-*/_search&method=POST"
     },

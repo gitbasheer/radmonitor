@@ -204,7 +204,7 @@ export class SimplifiedAPIClient {
             // Build Elasticsearch query matching backend expectations
             const timeRange = params.timeRange || 'now-12h';
             const filters = params.filters || {};
-            
+
             // Construct Elasticsearch query
             const esQuery = {
                 size: 0,
@@ -258,7 +258,7 @@ export class SimplifiedAPIClient {
                     }
                 }
             };
-            
+
             // Send request in expected format
             const response = await this.post('/dashboard/query', {
                 query: esQuery,
@@ -336,11 +336,11 @@ export class SimplifiedAPIClient {
 
             // Simple health check instead of full query
             // Note: health endpoint is at root, not under /api/v1
-            const baseUrl = window.location.hostname === 'localhost' 
-                ? 'http://localhost:8000'
+            const baseUrl = window.location.hostname === 'localhost'
+                ? (window.API_URL || window.FASTAPI_URL || 'http://localhost:8000')
                 : '';
             const url = `${baseUrl}/health`;
-            
+
             const response = await fetch(url, {
                 credentials: 'include',
                 headers: {
@@ -355,7 +355,7 @@ export class SimplifiedAPIClient {
 
             const data = await response.json();
             const success = data.status === 'healthy' || data.status === 'degraded';
-            
+
             if (success) {
                 console.log('(✓)API connection successful:', data.message);
                 if (data.elasticsearch_status === 'disconnected') {
@@ -364,7 +364,7 @@ export class SimplifiedAPIClient {
             } else {
                 console.log('(✗) API connection failed:', data.message);
             }
-            
+
             return success;
         } catch (error) {
             console.error('(✗) Connection test error:', error);

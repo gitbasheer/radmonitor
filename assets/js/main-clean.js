@@ -246,9 +246,12 @@ class DashboardIntegration {
   }
 
   destroy() {
+    console.log('🧹 DashboardIntegration: Cleaning up store subscription...');
     if (this.unsubscribe) {
       this.unsubscribe();
+      this.unsubscribe = null;
     }
+    console.log('✅ DashboardIntegration: Store subscription cleaned up');
   }
 }
 

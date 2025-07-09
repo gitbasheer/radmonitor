@@ -80,8 +80,9 @@ const originalLocation = dom.window.location;
 
 // Helper to safely change location for tests
 global.setLocationForTest = (hostname = 'localhost', pathname = '/', search = '') => {
+  const port = process.env.TEST_API_PORT || '8000';
   const url = hostname === 'localhost' || hostname === '127.0.0.1'
-    ? `http://${hostname}:8000${pathname}${search}`
+    ? `http://${hostname}:${port}${pathname}${search}`
     : `https://${hostname}${pathname}${search}`;
 
   // Use vi.stubGlobal to safely mock location without triggering navigation
@@ -100,14 +101,15 @@ global.setLocationForTest = (hostname = 'localhost', pathname = '/', search = ''
 
 // Helper to create a mock location object for tests that need to override location
 global.createMockLocation = (options = {}) => {
+  const port = process.env.TEST_API_PORT || '8000';
   return {
     hostname: options.hostname || 'localhost',
-    href: options.href || 'http://localhost:8000',
+    href: options.href || `http://localhost:${port}`,
     pathname: options.pathname || '/',
     search: options.search || '',
     protocol: options.protocol || 'http:',
-    port: options.port || '8000',
-    origin: options.origin || 'http://localhost:8000'
+    port: options.port || port,
+    origin: options.origin || `http://localhost:${port}`
   };
 };
 

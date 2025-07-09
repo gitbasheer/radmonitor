@@ -17,12 +17,12 @@ export class UnifiedAPIClient {
         // Environment detection
         this.isLocalDev = window.location.hostname === 'localhost' ||
                          window.location.hostname === '127.0.0.1';
-        this.isProduction = window.location.hostname.includes('github.io') || 
+        this.isProduction = window.location.hostname.includes('github.io') ||
                            window.location.hostname.includes('github.com');
 
         // Get configuration
         const config = window.ConfigService?.getConfig() || {};
-        
+
         // Base URLs - check for production API URL
         if (this.isProduction && config.server?.url) {
             // Use configured production server URL
@@ -32,21 +32,21 @@ export class UnifiedAPIClient {
             this.baseUrl = window.PRODUCTION_API_URL;
         } else if (this.isLocalDev) {
             // Local development
-            this.baseUrl = 'http://localhost:8000';
+            this.baseUrl = window.API_URL || window.FASTAPI_URL || 'http://localhost:8000';
         } else {
             // Default to same origin
             this.baseUrl = window.location.origin;
         }
 
         this.apiV1 = `${this.baseUrl}/api/v1`;
-        
+
         // WebSocket URL
         if (config.features?.websocket && this.baseUrl) {
             const wsProtocol = this.baseUrl.startsWith('https') ? 'wss' : 'ws';
             const wsHost = this.baseUrl.replace(/^https?:\/\//, '');
             this.wsUrl = `${wsProtocol}://${wsHost}/ws`;
         } else {
-            this.wsUrl = this.isLocalDev ? 'ws://localhost:8000/ws' : null;
+            this.wsUrl = this.isLocalDev ? (window.FASTAPI_WS_URL || 'ws://localhost:8000/ws') : null;
         }
 
         // Production mode now uses FastAPI server
@@ -58,9 +58,10 @@ export class UnifiedAPIClient {
         this.wsReconnectInterval = null;
         this.wsState = 'disconnected';
 
-        // Cache
+        // Cache with size limits to prevent memory leaks
         this.cache = new Map();
         this.CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+        this.MAX_CACHE_SIZE = 50; // Prevent unbounded growth
 
         // Performance tracking
         this.metrics = {
@@ -419,7 +420,7 @@ export class UnifiedAPIClient {
             }
 
             // Send everything securely in request body
-            const esUrl = config.elasticsearch?.url || 'https://usieventho-prod-usw2.kb.us-west-2.aws.found.io:9243';
+            const esUrl = config.elasticsearch?.url || window.ELASTICSEARCH_URL || 'https://usieventho-prod-usw2.kb.us-west-2.aws.found.io:9243';
             const esPath = config.elasticsearch?.path || '/api/console/proxy?path=traffic-*/_search&method=POST';
 
             const requestBody = {
@@ -482,8 +483,14 @@ export class UnifiedAPIClient {
             });
         }
 
-        // Cache successful results
+        // Cache successful results with LRU eviction
         if (result.success) {
+            // Evict oldest entry if cache is full
+            if (this.cache.size >= this.MAX_CACHE_SIZE) {
+                const firstKey = this.cache.keys().next().value;
+                this.cache.delete(firstKey);
+            }
+
             this.cache.set(cacheKey, {
                 data: result.data,
                 timestamp: Date.now()
@@ -782,9 +789,25 @@ export class UnifiedAPIClient {
      * Cleanup resources
      */
     cleanup() {
+        console.log('🧹 UnifiedAPIClient: Cleaning up resources...');
+
+        // Disconnect WebSocket
         this.disconnectWebSocket();
+
+        // Clear cache
         this.clearCache();
-        console.log('🧹 API Client cleaned up');
+
+        // Clear all WebSocket handlers
+        this.wsHandlers.clear();
+
+        // Clear metrics
+        this.metrics = {
+            requests: 0,
+            errors: 0,
+            totalTime: 0
+        };
+
+        console.log('✅ UnifiedAPIClient: All resources cleaned up');
     }
 }
 

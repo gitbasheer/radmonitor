@@ -5,7 +5,7 @@
 
 export class DirectElasticsearchClient {
     constructor() {
-        this.elasticsearchUrl = 'https://usieventho-prod-usw2.kb.us-west-2.aws.found.io:9243';
+        this.elasticsearchUrl = window.ELASTICSEARCH_URL || 'https://usieventho-prod-usw2.kb.us-west-2.aws.found.io:9243';
         this.indexPath = '/elasticsearch/usi*/_search';
     }
 

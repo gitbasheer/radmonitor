@@ -233,6 +233,71 @@ class EnvironmentValidator:
                 example="https://your-kibana-instance.aws.found.io:9243"
             ),
 
+            # === API Configuration ===
+            EnvVar(
+                name="API_URL",
+                description="Base URL for the API server",
+                level=ValidationLevel.OPTIONAL,
+                default="http://localhost:8000",
+                validator=self.validate_url,
+                example="http://localhost:8000"
+            ),
+            EnvVar(
+                name="PRODUCTION_API_URL",
+                description="Production API server URL",
+                level=ValidationLevel.OPTIONAL,
+                validator=self.validate_url,
+                example="https://api.example.com"
+            ),
+            EnvVar(
+                name="FASTAPI_URL",
+                description="FastAPI server URL (alias for API_URL)",
+                level=ValidationLevel.OPTIONAL,
+                validator=self.validate_url,
+                example="http://localhost:8000"
+            ),
+            EnvVar(
+                name="FASTAPI_WS_URL",
+                description="FastAPI WebSocket URL",
+                level=ValidationLevel.OPTIONAL,
+                validator=self.validate_url,
+                example="ws://localhost:8000/ws"
+            ),
+
+            # === Proxy Configuration ===
+            EnvVar(
+                name="PROXY_URL",
+                description="CORS proxy URL",
+                level=ValidationLevel.OPTIONAL,
+                validator=self.validate_url,
+                example="https://proxy.example.com"
+            ),
+            EnvVar(
+                name="NETLIFY_PROXY_URL",
+                description="Netlify proxy URL",
+                level=ValidationLevel.OPTIONAL,
+                validator=self.validate_url,
+                example="https://regal-youtiao-09c777.netlify.app/.netlify/functions/proxy"
+            ),
+            EnvVar(
+                name="CORS_PROXY_PORT",
+                description="CORS proxy port",
+                level=ValidationLevel.OPTIONAL,
+                default="8000",
+                validator=self.validate_port,
+                transformer=self.to_int,
+                example="8000"
+            ),
+            EnvVar(
+                name="TEST_API_PORT",
+                description="API port for testing",
+                level=ValidationLevel.OPTIONAL,
+                default="8000",
+                validator=self.validate_port,
+                transformer=self.to_int,
+                example="8000"
+            ),
+
             # === Dashboard Configuration ===
             EnvVar(
                 name="BASELINE_START",
@@ -352,7 +417,7 @@ class EnvironmentValidator:
 
         return variables
 
-        def validate(self) -> Dict[str, Any]:
+    def validate(self) -> Dict[str, Any]:
         """Validate all environment variables"""
         print(f"\n{'='*60}")
         print(f"RAD Monitor Environment Validation")

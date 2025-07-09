@@ -12,20 +12,38 @@ let currentSearchTerm = '';
 let activeRadTypes = new Set(['all']);
 
 /**
+// Store event listeners for cleanup
+let eventListeners = new Map();
+
+/**
  * Initialize search and filter functionality
  */
 export function initialize() {
     // Set up search input listener
     const searchInput = document.getElementById('searchInput');
     if (searchInput) {
-        searchInput.addEventListener('input', handleSearch);
-        searchInput.addEventListener('keyup', handleSearch);
+        const inputHandler = (event) => handleSearch(event);
+        searchInput.addEventListener('input', inputHandler);
+        searchInput.addEventListener('keyup', inputHandler);
+
+        // Store for cleanup
+        eventListeners.set(searchInput, [
+            { event: 'input', handler: inputHandler },
+            { event: 'keyup', handler: inputHandler }
+        ]);
     }
 
     // Set up filter button listeners
     const filterButtons = document.querySelectorAll('.filter-btn:not(.rad-filter-btn)');
     filterButtons.forEach(button => {
-        button.addEventListener('click', handleFilterClick);
+        const clickHandler = (event) => handleFilterClick(event);
+        button.addEventListener('click', clickHandler);
+
+        // Store for cleanup
+        if (!eventListeners.has(button)) {
+            eventListeners.set(button, []);
+        }
+        eventListeners.get(button).push({ event: 'click', handler: clickHandler });
     });
 
     // Initial state
@@ -309,6 +327,31 @@ export function applyPreferences(preferences) {
 }
 
 /**
+ * Clean up all event listeners
+ */
+export function cleanup() {
+    console.log('🧹 SearchFilter: Cleaning up event listeners...');
+
+    // Remove all stored event listeners
+    eventListeners.forEach((listeners, element) => {
+        listeners.forEach(({ event, handler }) => {
+            element.removeEventListener(event, handler);
+        });
+    });
+
+    // Clear the listeners map
+    eventListeners.clear();
+
+    // Reset state
+    currentFilter = 'all';
+    currentSearchTerm = '';
+    activeRadTypes.clear();
+    activeRadTypes.add('all');
+
+    console.log('✅ SearchFilter: All event listeners cleaned up');
+}
+
+/**
  * Config object for backward compatibility
  */
 export const config = {
@@ -335,6 +378,7 @@ const SearchFilter = {
     savePreferences,
     loadPreferences,
     applyPreferences,
+    cleanup,
     config
 };
 

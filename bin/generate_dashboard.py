@@ -584,7 +584,7 @@ def generate_html_dashboard(events: List[Dict[str, Any]], stats: Dict[str, int],
 
 def build_kibana_url(event_id: str) -> str:
     """Build Kibana URL for event"""
-    base_url = "https://usieventho-prod-usw2.kb.us-west-2.aws.found.io:9243"
+    base_url = os.environ.get('KIBANA_URL', "https://usieventho-prod-usw2.kb.us-west-2.aws.found.io:9243")
     discover_path = "/app/discover#/"
 
     params = (

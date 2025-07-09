@@ -59,17 +59,24 @@ export class ConnectionStatusManager {
     }
 
     setupEventListeners() {
-        // Listen for various status events
-        window.addEventListener('api:connected', (e) => this.updateAPIStatus(true, e.detail?.message));
-        window.addEventListener('api:disconnected', (e) => this.updateAPIStatus(false, e.detail?.message));
-        window.addEventListener('auth:success', (e) => this.updateAuthStatus(true, e.detail?.message));
-        window.addEventListener('auth:failed', (e) => this.updateAuthStatus(false, e.detail?.message));
-        window.addEventListener('data:loaded', (e) => this.updateDataStatus(true, e.detail?.message));
-        window.addEventListener('data:error', (e) => this.updateDataStatus(false, e.detail?.message));
-        window.addEventListener('websocket:connected', () => this.updateWebSocketStatus(true));
-        window.addEventListener('websocket:disconnected', () => this.updateWebSocketStatus(false));
-        window.addEventListener('formula:initialized', () => this.updateFormulaStatus(true));
-        window.addEventListener('formula:error', (e) => this.updateFormulaStatus(false, e.detail?.message));
+        // Store event handlers for cleanup
+        this.eventHandlers = {
+            'api:connected': (e) => this.updateAPIStatus(true, e.detail?.message),
+            'api:disconnected': (e) => this.updateAPIStatus(false, e.detail?.message),
+            'auth:success': (e) => this.updateAuthStatus(true, e.detail?.message),
+            'auth:failed': (e) => this.updateAuthStatus(false, e.detail?.message),
+            'data:loaded': (e) => this.updateDataStatus(true, e.detail?.message),
+            'data:error': (e) => this.updateDataStatus(false, e.detail?.message),
+            'websocket:connected': () => this.updateWebSocketStatus(true),
+            'websocket:disconnected': () => this.updateWebSocketStatus(false),
+            'formula:initialized': () => this.updateFormulaStatus(true),
+            'formula:error': (e) => this.updateFormulaStatus(false, e.detail?.message)
+        };
+
+        // Add event listeners
+        Object.entries(this.eventHandlers).forEach(([event, handler]) => {
+            window.addEventListener(event, handler);
+        });
     }
 
     /**
@@ -401,6 +408,26 @@ export class ConnectionStatusManager {
             console.error('Connection test error:', error);
             return this.statuses;
         }
+    }
+
+    /**
+     * Clean up all event listeners and resources
+     */
+    cleanup() {
+        console.log('🧹 ConnectionStatusManager: Cleaning up event listeners...');
+
+        // Remove all event listeners
+        if (this.eventHandlers) {
+            Object.entries(this.eventHandlers).forEach(([event, handler]) => {
+                window.removeEventListener(event, handler);
+            });
+            this.eventHandlers = {};
+        }
+
+        // Clear DOM references
+        this.elements = {};
+
+        console.log('✅ ConnectionStatusManager: All event listeners cleaned up');
     }
 }
 

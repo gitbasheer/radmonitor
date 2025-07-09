@@ -23,6 +23,21 @@ export const DataLayer = (() => {
         lastProcessedResults: null
     };
 
+    // Cache size limits to prevent memory leaks
+    const CACHE_LIMITS = {
+        responseCache: 50,
+        parsedCache: 50,
+        activeQueries: 20
+    };
+
+    // LRU eviction function
+    function evictOldest(cache, maxSize) {
+        if (cache.size >= maxSize) {
+            const firstKey = cache.keys().next().value;
+            cache.delete(firstKey);
+        }
+    }
+
     // Performance metrics state
     const performanceMetrics = {
         queryDurations: [], // Rolling array of last N query durations
@@ -721,7 +736,8 @@ export const DataLayer = (() => {
                     dataSize: processedResults.dataSize
                 });
 
-                // Cache response
+                // Cache response with LRU eviction
+                evictOldest(queryState.responseCache, CACHE_LIMITS.responseCache);
                 queryState.responseCache.set(cacheKey, {
                     data: response,
                     timestamp: Date.now()
@@ -1072,8 +1088,9 @@ export const DataLayer = (() => {
                 throw new Error(`Data transformation failed: ${transformError.message}`);
             }
 
-            // 5. Cache parsed and transformed data
+            // 5. Cache parsed and transformed data with LRU eviction
             const cacheKey = QueryExecutor.getCacheKey(queryId, query);
+            evictOldest(queryState.parsedCache, CACHE_LIMITS.parsedCache);
             queryState.parsedCache.set(cacheKey, {
                 parsed,
                 transformed,
