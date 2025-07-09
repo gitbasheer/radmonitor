@@ -14,7 +14,7 @@ if [ "$1" != "--force" ]; then
     read -p "Continue? (y/N) " -n 1 -r
     echo ""
     if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-        echo "❌ Cleanup cancelled"
+        echo "(✗) Cleanup cancelled"
         exit 1
     fi
 fi
@@ -72,7 +72,7 @@ echo "🗑️  Removing legacy JavaScript files..."
 for file in "${LEGACY_FILES[@]}"; do
     if [ -f "$file" ]; then
         rm -f "$file"
-        echo "   ✅ Removed: $file"
+        echo "   (✓)Removed: $file"
         ((REMOVED++))
     else
         echo "   ⏭️  Not found: $file"
@@ -85,7 +85,7 @@ echo "🗑️  Removing test/demo files..."
 for file in "${TEST_FILES[@]}"; do
     if [ -f "$file" ]; then
         rm -f "$file"
-        echo "   ✅ Removed: $file"
+        echo "   (✓)Removed: $file"
         ((REMOVED++))
     else
         echo "   ⏭️  Not found: $file"
@@ -94,7 +94,7 @@ for file in "${TEST_FILES[@]}"; do
 done
 
 echo ""
-echo "✅ Cleanup complete!"
+echo "(✓)Cleanup complete!"
 echo "   📊 Files removed: $REMOVED"
 echo "   📊 Files not found: $NOT_FOUND"
 echo ""

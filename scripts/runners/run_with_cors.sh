@@ -28,9 +28,9 @@ fi
 # Generate fresh dashboard
 echo "Generating dashboard..."
 if ./scripts/generate_dashboard_refactored.sh; then
-    echo "✓ Dashboard generated"
+    echo "(✓) Dashboard generated"
 else
-    echo "✗ Dashboard generation failed"
+    echo "(✗)Dashboard generation failed"
     exit 1
 fi
 
@@ -71,7 +71,7 @@ sleep 1
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
-echo "✅ RAD Monitor is running!"
+echo "(✓)RAD Monitor is running!"
 echo ""
 echo "🌐 Dashboard URL: http://localhost:8888"
 echo "🔌 CORS Proxy: http://localhost:8889"

@@ -1,0 +1,24 @@
+{
+  "name": "mcp-team-quokka",
+  "version": "1.0.0",
+  "description": "Team Quokka specialized MCP for RAD monitoring, experiment management, and DOP operations",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node index.js",
+    "test": "node test.js"
+  },
+  "keywords": [
+    "mcp",
+    "team-quokka",
+    "rad-monitoring",
+    "experiment-management",
+    "dop",
+    "silent-failure-prevention"
+  ],
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.13.2",
+    "zod": "^3.22.4",
+    "zod-to-json-schema": "^3.22.4"
+  }
+}

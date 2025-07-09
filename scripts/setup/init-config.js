@@ -50,7 +50,7 @@ const DEFAULT_CONFIG = {
         "console_top_results": 20
     },
     "cors_proxy": {
-        "port": 8889,
+                    "port": 8000,
         "allowed_origins": "*",
         "proxy_timeout": 30
     }
@@ -69,16 +69,16 @@ if (!fs.existsSync(CONFIG_FILE)) {
     console.log('Default configuration created successfully!');
 } else {
     console.log(`Configuration file already exists: ${CONFIG_FILE}`);
-    
+
     // Validate existing config
     try {
         const existingConfig = JSON.parse(fs.readFileSync(CONFIG_FILE, 'utf8'));
         console.log('Existing configuration is valid JSON');
-        
+
         // Check for missing keys and merge with defaults
         let updated = false;
         const mergedConfig = mergeConfigs(DEFAULT_CONFIG, existingConfig);
-        
+
         if (JSON.stringify(mergedConfig) !== JSON.stringify(existingConfig)) {
             console.log('Updating configuration with missing default values...');
             fs.writeFileSync(CONFIG_FILE, JSON.stringify(mergedConfig, null, 2));
@@ -87,12 +87,12 @@ if (!fs.existsSync(CONFIG_FILE)) {
     } catch (error) {
         console.error('Error reading existing configuration:', error.message);
         console.log('Creating backup and generating new configuration...');
-        
+
         // Backup corrupted file
         const backupFile = `${CONFIG_FILE}.backup.${Date.now()}`;
         fs.copyFileSync(CONFIG_FILE, backupFile);
         console.log(`Backup created: ${backupFile}`);
-        
+
         // Create new config
         fs.writeFileSync(CONFIG_FILE, JSON.stringify(DEFAULT_CONFIG, null, 2));
         console.log('New configuration created successfully!');
@@ -102,7 +102,7 @@ if (!fs.existsSync(CONFIG_FILE)) {
 // Helper function to deep merge configurations
 function mergeConfigs(defaultObj, userObj) {
     const result = { ...defaultObj };
-    
+
     for (const key in userObj) {
         if (userObj.hasOwnProperty(key)) {
             if (typeof userObj[key] === 'object' && userObj[key] !== null && !Array.isArray(userObj[key])) {
@@ -112,7 +112,7 @@ function mergeConfigs(defaultObj, userObj) {
             }
         }
     }
-    
+
     return result;
 }
 
@@ -125,4 +125,4 @@ console.log('\nEnvironment variable format:');
 console.log('- ES_COOKIE=your_cookie');
 console.log('- BASELINE_START=2025-06-01');
 console.log('- DASHBOARD_THEME=dark');
-console.log('- etc.'); 
+console.log('- etc.');

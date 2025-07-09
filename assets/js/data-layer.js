@@ -7,7 +7,7 @@
 import TimeRangeUtils from './time-range-utils.js';
 import DataProcessor from './data-processor.js';
 import UIUpdater from './ui-updater.js';
-import ApiClient from './api-client.js';
+// Use unified API client instead of legacy client
 import { ConfigService } from './config-service.js';
 import { unifiedAPI } from './api-interface.js';
 
@@ -567,8 +567,14 @@ export const DataLayer = (() => {
             }));
 
             // Use existing DataProcessor for consistency
+            // The global DataProcessor will be mocked in the test environment
             if (typeof DataProcessor !== 'undefined' && DataProcessor.processData) {
-                return DataProcessor.processData(rawBuckets, config);
+                // Ensure the rad_types from the config are passed to the processor
+                const processingConfig = {
+                    ...config,
+                    rad_types: config.rad_types || ConfigService.getConfig().rad_types
+                };
+                return DataProcessor.processData(rawBuckets, processingConfig);
             }
 
             // Fallback processing if DataProcessor not available
@@ -606,8 +612,11 @@ export const DataLayer = (() => {
                 else if (score <= -50) status = 'WARNING';
                 else if (score > 0) status = 'INCREASED';
 
-                // Determine RAD type
-                const radType = DataProcessor.determineRadType(bucket.key, config.rad_types || {});
+                // Determine RAD type using the mocked DataProcessor in tests
+                const radTypesConfig = config.rad_types || ConfigService.getConfig().rad_types;
+                const radType = (typeof DataProcessor !== 'undefined' && DataProcessor.determineRadType)
+                    ? DataProcessor.determineRadType(bucket.key, radTypesConfig)
+                    : 'unknown';
 
                 return {
                     event_id: bucket.key,

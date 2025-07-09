@@ -1,0 +1,21 @@
+{
+  "name": "@vh-rad/mcp-formula-builder",
+  "version": "1.0.0",
+  "description": "MCP wrapper for VH RAD Traffic Monitor Formula Builder",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "keywords": [
+    "mcp",
+    "formula",
+    "rad",
+    "monitor"
+  ],
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "zod": "^3.25.67",
+    "zod-to-json-schema": "^3.24.6"
+  }
+}

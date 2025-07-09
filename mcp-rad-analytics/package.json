@@ -1,0 +1,23 @@
+{
+  "name": "@vh-rad/mcp-rad-analytics",
+  "version": "1.0.0",
+  "description": "MCP for RAD traffic analysis and insights",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node index.js",
+    "test": "node test.js"
+  },
+  "keywords": [
+    "mcp",
+    "rad",
+    "analytics",
+    "analysis",
+    "insights"
+  ],
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "zod": "^3.25.67",
+    "zod-to-json-schema": "^3.24.6"
+  }
+}

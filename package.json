@@ -6,17 +6,47 @@
   "type": "module",
   "scripts": {
     "start": "python3 bin/server.py",
-    "dev": "python3 bin/dev_server_unified.py",
+    "dev": "python3 bin/server.py",
     "dev:direct": "python3 bin/server.py",
-    "test": "echo 'Open http://localhost:8000 and run TestSuite.run() in console'",
+    "start:simple": "python3 bin/simple-server.py",
+    "start:production": "python3 bin/server_production.py",
+    "test": "vitest",
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest --coverage",
     "cleanup": "./cleanup-legacy.sh"
   },
   "engines": {
     "node": ">=16"
   },
   "dependencies": {
-    "express": "^4.18.2",
+    "@modelcontextprotocol/sdk": "^1.13.2",
+    "@modelcontextprotocol/server-everything": "^2025.5.12",
+    "@ux-dri/universal-ad-widget": "^2.0.8",
+    "@ux/alert": "^2400.16.0",
+    "@ux/box": "^2400.16.0",
+    "@ux/button": "^2400.16.0",
+    "@ux/card": "^2400.16.0",
+    "@ux/chip": "^2400.16.0",
+    "@ux/growl": "^2400.16.0",
+    "@ux/icon": "^2400.14.2",
+    "@ux/modal": "^2400.16.0",
+    "@ux/popover": "^10.2.3",
+    "@ux/space": "^2400.14.1",
+    "@ux/spinner": "^2400.13.1",
+    "@ux/text": "^2400.13.1",
+    "@ux/text-input": "^2400.16.0",
+    "@ux/text-lockup": "^2400.16.0",
+    "@ux/tooltip": "^2400.16.0",
     "cors": "^2.8.5",
-    "node-fetch": "^3.3.2"
+    "express": "^4.18.2",
+    "node-fetch": "^3.3.2",
+    "zod": "^3.25.67",
+    "zod-to-json-schema": "^3.24.6",
+    "zustand": "^5.0.6"
+  },
+  "devDependencies": {
+    "@vitest/ui": "^3.2.4",
+    "jsdom": "^26.1.0",
+    "vitest": "^3.2.4"
   }
 }

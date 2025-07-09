@@ -4,12 +4,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RAD Monitor - Traffic Health Dashboard</title>
+    <link rel="icon" href="/favicon.ico" type="image/x-icon">
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
 
-    <!-- Dashboard CSS with sidebar layout -->
-    <link rel="stylesheet" href="assets/css/dashboard.css">
+    <!-- Antares Design System CSS -->
+    <link rel="stylesheet" href="assets/css/antares-theme.css">
+    <!-- UXCore Bundle CSS for vanilla JS usage -->
+    <link rel="stylesheet" href="assets/css/uxcore-bundle.css">
+    <!-- Dashboard CSS with Antares implementation -->
+    <link rel="stylesheet" href="assets/css/dashboard-antares.css">
+    <!-- Formula Builder with Antares implementation -->
+    <link rel="stylesheet" href="assets/css/formula-builder-antares.css">
 
     <!-- CORS Direct Override (must load FIRST to override API client) -->
     <!-- <script src="assets/js/cors-direct-override.js"></script> -->
@@ -18,14 +25,18 @@
     <!-- <script src="assets/js/production-helper.js"></script> -->
 
     <!-- JavaScript Entry Point -->
-    <script type="module" src="assets/js/main-simplified.js?v=2.0"></script>
+    <script type="module" src="assets/js/main-clean.js?v=3.1"></script>
 </head>
 <body>
-    <!-- Hidden input for server-side cookie -->
-    <input type="hidden" id="elasticCookie" value="">
+    <!-- Loading Overlay will be created dynamically by LoadingOverlay component -->
 
-    <!-- Sidebar Control Panel -->
-    <div class="control-panel">
+    <!-- Main App Content (hidden until authenticated) -->
+    <div id="mainAppContent" class="main-app-content" style="display: none;">
+        <!-- Hidden input for server-side cookie -->
+        <input type="hidden" id="elasticCookie" value="">
+
+        <!-- Sidebar Control Panel -->
+        <div class="control-panel">
         <div class="control-header">
             CONTROL PANEL
         </div>
@@ -33,41 +44,93 @@
         <div class="control-content">
             <!-- Connection Status -->
             <div class="control-section">
-                <label class="control-label">Connection Status</label>
-                <div id="connectionStatus" style="font-size: 12px; padding: 5px; background: #f0f0f0; text-align: center; border-radius: 3px;">
-                    <span class="status-dot" style="display: inline-block; width: 8px; height: 8px; background: #ccc; border-radius: 50%; margin-right: 5px;"></span>
-                    <span class="status-text">Connecting...</span>
+                <label class="control-label">System Status</label>
+                <div id="connectionStatus" class="connection-status-panel">
+                    <div class="main-status">
+                        <span class="status-dot"></span>
+                        <span class="status-text">Initializing...</span>
+                    </div>
+                    <div class="status-details">
+                        <div class="status-item">
+                            <span class="status-label">API:</span>
+                            <span id="apiStatus" class="status-value">Checking...</span>
+                        </div>
+                        <div class="status-item" id="websocketStatusItem" style="display: none;">
+                            <span class="status-label">WebSocket:</span>
+                            <span id="websocketStatus" class="status-value">Not connected</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-label">Data:</span>
+                            <span id="dataStatus" class="status-value">Ready</span>
+                        </div>
+                    </div>
                 </div>
                 <div style="margin-top: 10px;">
-                    <button onclick="Dashboard.testApiConnection()" class="control-button secondary">Test Connection</button>
+                    <button onclick="Dashboard.testApiConnection()" class="ux-button ux-button--secondary" style="width: 100%;">Test All Connections</button>
                 </div>
             </div>
 
             <!-- Quick Actions -->
             <div class="control-section">
                 <label class="control-label">Quick Actions</label>
-                <button onclick="Dashboard.refresh()" class="control-button" style="background: #2196F3; width: 100%; margin-bottom: 8px;">
-                    <span style="font-size: 16px;">🔄</span> REFRESH DATA
+                <button onclick="Dashboard.refresh()" class="ux-button ux-button--primary" style="width: 100%; margin-bottom: 8px;" disabled>
+                    REFRESH DATA
                 </button>
-                <button onclick="showAdvancedEditor()" class="control-button" style="background: #4CAF50; width: 100%;">
-                    <span style="font-size: 16px;">⚙️</span> CONFIGURATION
+                <button onclick="showAdvancedEditor()" class="ux-button ux-button--secondary" style="width: 100%;" disabled>
+                    CONFIGURATION
                 </button>
-                <div class="refresh-status" id="refreshStatus" style="margin-top: 8px;">Ready</div>
+                <div class="refresh-status" id="refreshStatus" style="margin-top: 8px; text-align: center; font-size: 12px; color: #666;">Ready</div>
             </div>
 
             <!-- Additional Options -->
             <div class="control-section">
                 <label class="control-label">Tools</label>
-                <button onclick="ConfigManager.exportConfiguration()" class="control-button secondary" style="width: 100%; margin-bottom: 5px;">Export Config</button>
-                <button onclick="Dashboard.showApiSetupInstructions()" class="control-button secondary" style="width: 100%;">Help</button>
+                <button onclick="ConfigManager.exportConfiguration()" class="ux-button ux-button--secondary" style="width: 100%; margin-bottom: 5px;">Export Config</button>
+                <button onclick="Dashboard.showApiSetupInstructions()" class="ux-button ux-button--secondary" style="width: 100%;">Help</button>
             </div>
 
-            <!-- Quick Stats -->
+            <!-- Custom Formulas -->
             <div class="control-section">
-                <label class="control-label">Current Settings</label>
-                <div style="font-size: 11px; color: #666; line-height: 1.6;">
-                    <div><strong>Time Range:</strong> <span id="quickTimeRange">now-12h</span></div>
-                    <div><strong>Baseline:</strong> <span id="quickBaseline">Loading...</span></div>
+                <label class="control-label">Custom Formulas</label>
+                <div id="formulaEditorContainer" style="margin-top: 10px;">
+                    <!-- Formula editor will be inserted here -->
+                    <enhanced-formula-editor id="formulaEditor"></enhanced-formula-editor>
+
+                    <!-- Validation messages -->
+                    <div id="formulaValidation" style="margin-top: 8px; font-size: 12px; min-height: 20px;">
+                        <span id="formulaStatus" class="formula-status">Formula builder ready</span>
+                    </div>
+
+                    <!-- Test button -->
+                    <button id="testFormulaBtn" onclick="testFormula()" class="ux-button ux-button--primary" style="width: 100%; margin-top: 8px;" disabled>
+                        Test Formula
+                    </button>
+
+                    <!-- Results preview -->
+                    <div id="formulaResults" style="margin-top: 8px; max-height: 150px; overflow-y: auto; display: none;">
+                        <div style="font-size: 11px; background: #f8f8f8; padding: 8px; border-radius: 4px; border: 1px solid #e0e0e0;">
+                            <div id="formulaResultsContent"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Current Configuration -->
+            <div class="control-section">
+                <label class="control-label">Active Configuration</label>
+                <div class="config-summary">
+                    <div class="config-item">
+                        <span class="config-label">Time Range:</span>
+                        <span id="quickTimeRange" class="config-value">now-12h</span>
+                    </div>
+                    <div class="config-item">
+                        <span class="config-label">Baseline:</span>
+                        <span id="quickBaseline" class="config-value">Auto-detected</span>
+                    </div>
+                    <div class="config-item">
+                        <span class="config-label">Environment:</span>
+                        <span id="quickEnvironment" class="config-value">Production</span>
+                    </div>
                 </div>
             </div>
         </div>
@@ -80,7 +143,7 @@
             <div class="header">
                 <h1>RAD Traffic Health Monitor</h1>
                 <div class="header-controls">
-                    <button id="howItWorksBtn" class="info-button" onclick="showHowItWorksModal()">📖 How It Works</button>
+                    <button id="howItWorksBtn" class="ux-button ux-button--tertiary" onclick="showHowItWorksModal()">How It Works</button>
                     <div class="timestamp">Last updated: <span id="lastUpdate">Never</span></div>
                 </div>
             </div>
@@ -162,8 +225,6 @@
 
     <!-- Hidden elements for compatibility -->
     <div style="display: none;">
-        <!-- API Status -->
-        <span id="apiStatus"></span>
 
         <!-- Hidden form elements for ConfigEditor compatibility -->
         <button id="testApiBtn">Test API</button>
@@ -173,7 +234,7 @@
     <div id="howItWorksModal" class="modal" style="display: none;">
         <div class="modal-content">
             <div class="modal-header">
-                <h2>📖 How RAD Monitor Works</h2>
+                <h2>How RAD Monitor Works</h2>
                 <span class="close" onclick="closeHowItWorksModal()">&times;</span>
             </div>
             <div class="modal-body" id="howItWorksContent">
@@ -186,7 +247,7 @@
     <div id="advancedEditorModal" class="modal" style="display: none;">
         <div class="modal-content" style="max-width: 900px; max-height: 90vh; overflow-y: auto;">
             <div class="modal-header">
-                <h2>⚙️ Configuration Settings</h2>
+                <h2>Configuration Settings</h2>
                 <span class="close" onclick="closeAdvancedEditor()">&times;</span>
             </div>
             <div class="modal-body" style="padding: 20px;">
@@ -195,16 +256,16 @@
                 </div>
                 <div id="configEditorStatus" style="margin: 15px 0 10px 0; font-size: 13px; color: #666; text-align: center;"></div>
                 <div style="margin-top: 15px; display: flex; gap: 10px; justify-content: center;">
-                    <button onclick="ConfigEditor.saveConfig()" class="control-button" style="background: #4CAF50; padding: 8px 20px;">Apply Changes</button>
-                    <button onclick="ConfigEditor.resetToDefaults()" class="control-button secondary" style="padding: 8px 20px;">Reset to Defaults</button>
-                    <button onclick="closeAdvancedEditor()" class="control-button secondary" style="padding: 8px 20px;">Cancel</button>
+                    <button onclick="ConfigEditor.saveConfig()" class="ux-button ux-button--primary">Apply Changes</button>
+                    <button onclick="ConfigEditor.resetToDefaults()" class="ux-button ux-button--secondary">Reset to Defaults</button>
+                    <button onclick="closeAdvancedEditor()" class="ux-button ux-button--secondary">Cancel</button>
                 </div>
             </div>
         </div>
     </div>
 
     <style>
-        /* Header controls styling */
+        /* Clean, simple styling using GoDaddy colors */
         .container .header {
             display: flex !important;
             justify-content: space-between !important;
@@ -218,23 +279,7 @@
             gap: 20px;
         }
 
-        .info-button {
-            background: #2196F3;
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: 500;
-            transition: background 0.2s;
-        }
-
-        .info-button:hover {
-            background: #1976D2;
-        }
-
-        /* Modal styling */
+        /* Use ux-modal classes from uxcore-bundle.css */
         .modal {
             position: fixed;
             z-index: 1000;
@@ -244,93 +289,117 @@
             height: 100%;
             background-color: rgba(0,0,0,0.5);
             backdrop-filter: blur(2px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .modal-content {
             background-color: white;
-            margin: 2% auto;
-            padding: 0;
-            border-radius: 12px;
+            border-radius: 0.5rem;
             width: 90%;
             max-width: 900px;
             max-height: 85vh;
             overflow-y: auto;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
         }
 
         .modal-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 20px 30px;
-            border-bottom: 1px solid #eee;
-            background: #f8f9fa;
-            border-radius: 12px 12px 0 0;
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--gd-color-border-secondary, #e8e8e8);
         }
 
         .modal-header h2 {
             margin: 0;
-            color: #333;
-            font-size: 24px;
+            color: var(--gd-color-text-primary, #111);
+            font-size: 1.5rem;
+            font-weight: 600;
         }
 
         .close {
-            color: #666;
-            font-size: 28px;
+            color: var(--gd-color-text-secondary, #666);
+            font-size: 1.5rem;
             font-weight: bold;
             cursor: pointer;
-            padding: 5px;
-            border-radius: 50%;
-            transition: background 0.2s;
+            padding: 0.25rem;
+            line-height: 1;
+            border: none;
+            background: none;
+            transition: opacity 0.2s;
         }
 
         .close:hover {
-            background: #e0e0e0;
+            opacity: 0.7;
         }
 
         .modal-body {
-            padding: 20px 25px;
-            line-height: 1.5;
-            color: #333;
+            padding: 1.5rem;
+            color: var(--gd-color-text-primary, #111);
         }
 
+        /* Clean info sections */
         .math-section {
-            margin-bottom: 30px;
-            padding: 20px;
-            background: #f8f9fa;
-            border-radius: 8px;
-            border-left: 4px solid #2196F3;
+            margin-bottom: 1.5rem;
+            padding: 1rem;
+            background: var(--gd-color-background-secondary, #f5f5f5);
+            border-radius: 0.5rem;
+            border-left: 4px solid var(--gd-color-brand-primary, #ff6900);
         }
 
         .math-section h3 {
-            margin: 0 0 15px 0;
-            color: #1976D2;
-            font-size: 18px;
-        }
-
-        .math-section p {
-            margin: 10px 0;
+            margin: 0 0 0.75rem 0;
+            color: var(--gd-color-text-primary, #111);
+            font-size: 1.125rem;
+            font-weight: 600;
         }
 
         .formula {
-            background: #e3f2fd;
-            padding: 10px 15px;
-            border-radius: 6px;
-            font-family: 'Courier New', monospace;
-            margin: 10px 0;
-            border: 1px solid #bbdefb;
+            background: white;
+            padding: 0.75rem 1rem;
+            border-radius: 0.25rem;
+            font-family: monospace;
+            margin: 0.5rem 0;
+            border: 1px solid var(--gd-color-border-primary, #d4d4d4);
+            font-size: 0.875rem;
         }
 
         .example {
-            background: #fff3e0;
-            padding: 15px;
-            border-radius: 6px;
-            margin: 10px 0;
-            border: 1px solid #ffcc02;
+            background: var(--gd-color-warning-background, #fffbe6);
+            padding: 1rem;
+            border-radius: 0.25rem;
+            margin: 0.5rem 0;
+            font-size: 0.875rem;
         }
 
         .example strong {
-            color: #f57c00;
+            color: var(--gd-color-warning-text, #ffb900);
+        }
+
+        /* Clean button styling extension */
+        .ux-button {
+            width: 100%;
+        }
+
+        /* Simplify control panel */
+        .control-panel {
+            background: white;
+            border-right: 1px solid var(--gd-color-border-primary, #d4d4d4);
+        }
+
+        .control-header {
+            background: var(--gd-color-background-secondary, #f5f5f5);
+            border-bottom: 1px solid var(--gd-color-border-primary, #d4d4d4);
+            font-weight: 600;
+            color: var(--gd-color-text-primary, #111);
+        }
+
+        /* Clean timestamp styling */
+        .timestamp {
+            color: var(--gd-color-text-secondary, #666);
+            font-size: 0.875rem;
         }
     </style>
 
@@ -460,14 +529,18 @@
 
         // Initialize UI helpers
         document.addEventListener('DOMContentLoaded', function() {
-            // Update connection status
+            // Update connection status - now delegates to ConnectionStatusManager
             window.updateConnectionStatus = function(connected, message) {
-                const statusDot = document.querySelector('.status-dot');
-                const statusText = document.querySelector('.status-text');
-
-                if (statusDot && statusText) {
-                    statusDot.style.backgroundColor = connected ? '#4CAF50' : '#f44336';
-                    statusText.textContent = message || (connected ? 'Connected' : 'Disconnected');
+                if (window.ConnectionStatusManager) {
+                    window.ConnectionStatusManager.updateAPIStatus(connected, message);
+                } else {
+                    // Fallback for backward compatibility
+                    const statusDot = document.querySelector('.status-dot');
+                    const statusText = document.querySelector('.status-text');
+                    if (statusDot && statusText) {
+                        statusDot.style.backgroundColor = connected ? 'var(--gd-color-success)' : 'var(--gd-color-error)';
+                        statusText.textContent = message || (connected ? 'Connected' : 'Disconnected');
+                    }
                 }
             };
 
@@ -519,5 +592,17 @@
 
         });
     </script>
+    </div>
+    <!-- End of Main App Content -->
+
+    <!-- Include all our custom JavaScript modules -->
+    <script type="module" src="assets/js/dashboard.js"></script>
+    <script type="module" src="assets/js/ui-updater.js"></script>
+    <script type="module" src="assets/js/config-editor.js"></script>
+    <script type="module" src="assets/js/config-manager.js"></script>
+    <script type="module" src="assets/js/config-service.js"></script>
+    <script type="module" src="assets/js/connection-status-manager.js"></script>
+    <script type="module" src="assets/js/visual-formula-builder-integration.js"></script>
+    <script type="module" src="assets/js/dashboard-ux-migration.js"></script>
 </body>
 </html>

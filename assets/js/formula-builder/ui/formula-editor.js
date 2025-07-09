@@ -4,7 +4,6 @@
 
 import { FunctionCategories, getFunctionsByCategory } from '../core/formula-types.js';
 import { parseFormula } from '../core/formula-parser.js';
-import { buildQueryFromFormula } from '../translator/query-builder.js';
 
 export class FormulaEditor {
   constructor(container, options = {}) {

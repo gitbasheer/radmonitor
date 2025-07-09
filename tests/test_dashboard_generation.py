@@ -22,7 +22,7 @@ def test_dashboard_generator_cli():
     assert result.returncode == 0
     assert 'Generate RAD Monitor Dashboard' in result.stdout
     assert 'baseline_start' in result.stdout
-    print("✅ CLI help works")
+    print("(✓)CLI help works")
 
 
 def test_dashboard_generator_import():
@@ -33,9 +33,9 @@ def test_dashboard_generator_import():
         assert hasattr(generate_dashboard, 'main')
         assert hasattr(generate_dashboard, 'DashboardConfig')
         assert hasattr(generate_dashboard, 'fetch_kibana_data')
-        print("✅ Module imports correctly")
+        print("(✓)Module imports correctly")
     except ImportError as e:
-        print(f"❌ Import failed: {e}")
+        print(f"(✗) Import failed: {e}")
         return False
     return True
 
@@ -52,7 +52,7 @@ def test_configuration():
     assert config.high_volume_threshold == 1000
     assert config.critical_threshold == -80
     assert config.data_dir == "data"
-    print("✅ Configuration defaults are correct")
+    print("(✓)Configuration defaults are correct")
 
 
 def test_cookie_validation():
@@ -69,7 +69,7 @@ def test_cookie_validation():
     assert validate_cookie("Fe26.2**" + "x" * 100) == True
     assert validate_cookie("x" * 150) == True
 
-    print("✅ Cookie validation works correctly")
+    print("(✓)Cookie validation works correctly")
 
 
 def test_wrapper_script():
@@ -83,7 +83,7 @@ def test_wrapper_script():
                           capture_output=True, text=True)
     assert result.returncode == 0
     assert 'Generate RAD Monitor Dashboard' in result.stdout
-    print("✅ Wrapper script works correctly")
+    print("(✓)Wrapper script works correctly")
 
 
 def test_backward_compatibility():
@@ -96,7 +96,7 @@ def test_backward_compatibility():
                           capture_output=True, text=True)
     # Should still show help even with extra args
     assert 'Generate RAD Monitor Dashboard' in result.stdout
-    print("✅ Backward compatibility maintained")
+    print("(✓)Backward compatibility maintained")
 
 
 def main():
@@ -122,12 +122,12 @@ def main():
             test()
             passed += 1
         except Exception as e:
-            print(f"❌ {test.__name__} failed: {e}")
+            print(f"(✗) {test.__name__} failed: {e}")
             failed += 1
 
     print("\n" + "=" * 50)
-    print(f"✅ Passed: {passed}")
-    print(f"❌ Failed: {failed}")
+    print(f"(✓)Passed: {passed}")
+    print(f"(✗) Failed: {failed}")
 
     return failed == 0
 

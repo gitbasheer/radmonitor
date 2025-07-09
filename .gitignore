@@ -51,3 +51,115 @@ venv/
 
 # Documentation archive
 archive/
+.vscode/extensions.json
+
+# Personal/Team specific files
+*.personal
+*.team
+*-personal.*
+*-team.*
+
+# Confluence response files (may contain sensitive data)
+confluence_response.json
+*_response.json
+
+# MCP services and modules
+# mcp-elasticsearch/
+# mcp-formula-builder/
+# mcp-metrics-service/
+# mcp-query-engine/
+# mcp-rad-analytics/
+# mcp-rad-monitor/
+
+# MCP configuration files
+mcp-cursor-config*.json
+MCP_*.md
+mcp-settings.json
+.mcp/
+
+# MCP logs and temporary files
+mcp-logs/
+*.mcp.log
+.mcp-cache/
+# ~/mcp-servers/team-quokka/index.js
+# ~/mcp-servers/team-quokka/package.json
+# ~/mcp-servers/team-quokka/README.md
+# test-mcp.js
+
+# Temporary analysis and audit documentation (not needed in production)
+*_AUDIT_RESULTS.md
+*_SUMMARY.md
+*_STATUS.md
+POST_MORTEM_*.md
+CLEANUP_PROGRESS_SUMMARY.md
+CLEANUP_SUMMARY.md
+CODE_REVIEW_FINDINGS.md
+OUTSTANDING_CODE_REVIEW_ISSUES.md
+COHERENCE_*.md
+MIGRATION_STATUS.md
+UX_MIGRATION_STATUS.md
+# agent_collab.md
+# checklist.md
+# sprint_work.md
+
+# Radar/AI experiment files (experimental features)
+radar_*.py
+connect_radar_*.py
+radar_*.json
+radar_*.md
+letter_to_radar.md
+radar_quick_reconnect.sh
+test_simple_process.py
+
+# Test/demo files in root (should be in tests/ directory)
+test-*.html
+demo-antares-features.html
+enhanced-formula-builder-demo.html
+formula-builder-demo.html
+formula-editor-demo.html
+kibana-cookie-sync.html
+kibana-cookie-sync.js
+
+# Temporary files and backups
+distributed_ai_backup_*.tar.gz
+*-test-results.json
+test_results.json
+test-dataprocessing-results.json
+ui-test-results.json
+api-test-results.json
+*.pre-antares
+
+# Chrome extension (unless specifically required)
+chrome-extension/
+
+# GoDaddy/Antares specific files (may be temporary)
+GODADDY_*.md
+ANTARES_*.md
+
+# Deprecated/legacy files identified for removal
+assets/js/api-client-simplified.js
+assets/js/main.js
+assets/js/dashboard-main.js
+assets/js/config-loader.js
+assets/js/api-client.js
+assets/js/api-client-fastapi.js
+assets/js/main-simplified.js
+assets/js/streamlined-test.js
+assets/js/dashboard-main.js
+bin/dev_server_unified.py
+bin/simple-server.py
+requirements-enhanced.txt
+requirements-minimal.txt
+env.sample
+src/
+
+# Formula builder old/deprecated files (if confirmed unused)
+# FORMULA_BUILDER_ARCHITECTURE.md
+# FORMULA_BUILDER_QUICKSTART.md
+# FORMULA_BUILDER_README.md
+# formula-crafter-readme.md
+
+# Environment files that shouldn't be in production repo
+.env.local
+.env.development
+.env.test

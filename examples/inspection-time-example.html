@@ -88,7 +88,7 @@
     // Check for elastic cookie in localStorage
     const savedCookie = localStorage.getItem('elasticCookie');
     if (savedCookie) {
-        document.getElementById('status').innerHTML = '<p>✅ Using saved cookie</p>';
+        document.getElementById('status').innerHTML = '<p>(✓)Using saved cookie</p>';
     } else {
         document.getElementById('status').innerHTML = '<p>⚠️ No cookie set - <a href="#" id="setCookieLink">Set Cookie</a></p>';
     }
@@ -121,7 +121,7 @@
                 } else {
                     html += `</p>`;
                 }
-                
+
                 if (data.metadata) {
                     html += `<p>Total Events: ${data.metadata.total_events}</p>`;
                     html += `<p>Query Time: ${data.metadata.query_time}ms</p>`;
@@ -146,14 +146,14 @@
                 html += `</table>`;
 
                 output.innerHTML = html;
-                status.innerHTML = '<p>✅ Data fetched successfully</p>';
+                status.innerHTML = '<p>(✓)Data fetched successfully</p>';
             } else {
                 output.textContent = `Error: ${result.error ? result.error.message : 'Unknown error'}\n\nDetails: ${JSON.stringify(result.error, null, 2)}`;
-                status.innerHTML = '<p>❌ Failed to fetch data</p>';
+                status.innerHTML = '<p>(✗) Failed to fetch data</p>';
             }
         } catch (error) {
             output.textContent = `Error: ${error.message}`;
-            status.innerHTML = '<p>❌ An error occurred</p>';
+            status.innerHTML = '<p>(✗) An error occurred</p>';
         }
     }
 
@@ -165,7 +165,7 @@
                 expires: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
                 saved: new Date().toISOString()
             }));
-            document.getElementById('status').innerHTML = '<p>✅ Cookie set</p>';
+            document.getElementById('status').innerHTML = '<p>(✓)Cookie set</p>';
         }
     }
 

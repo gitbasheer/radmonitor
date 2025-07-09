@@ -1,0 +1,15 @@
+{
+  "name": "@vh-rad/mcp-elasticsearch",
+  "version": "1.0.0",
+  "description": "MCP wrapper for VH RAD Traffic Monitor Elasticsearch operations",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node index.js",
+    "test": "node test.js"
+  },
+  "keywords": ["mcp", "elasticsearch", "rad", "monitor", "kibana"],
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0"
+  }
+}

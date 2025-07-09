@@ -1,6 +1,11 @@
 #!/bin/bash
 # setup_and_run.sh - Setup configuration and run RAD Monitor
 
+# Get script directory and project root
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+cd "$PROJECT_ROOT"
+
 echo "🚀 RAD Monitor Setup & Run"
 echo "========================="
 
@@ -34,7 +39,7 @@ DASHBOARD_REFRESH_INTERVAL=300
 DASHBOARD_MAX_EVENTS_DISPLAY=200
 EOF
 
-    echo "✅ Created .env file"
+    echo "(✓)Created .env file"
     echo ""
     echo "⚠️  IMPORTANT: You need to update ES_COOKIE in .env"
     echo "   1. Open .env in an editor"
@@ -50,7 +55,7 @@ export $(cat .env | grep -v '^#' | xargs)
 
 # Validate critical configuration
 if [ "$ES_COOKIE" = "your_actual_cookie_here" ]; then
-    echo "❌ ERROR: You must update ES_COOKIE in .env file!"
+    echo "(✗) ERROR: You must update ES_COOKIE in .env file!"
     echo "   Edit .env and replace 'your_actual_cookie_here' with your actual cookie"
     exit 1
 fi
@@ -62,12 +67,13 @@ echo "🔍 Running validation..."
 
 if [ $? -ne 0 ]; then
     echo ""
-    echo "❌ Validation failed. Please fix the issues above."
+    echo "(✗) Validation failed. Please fix the issues above."
     exit 1
 fi
 
 # Start services
 echo ""
-echo "✅ All checks passed! Starting RAD Monitor..."
+echo "(✓)All checks passed! Starting RAD Monitor..."
 echo ""
-./run_enhanced_cors.sh
+# Use the main development server
+"$PROJECT_ROOT/scripts/runners/run_dev.sh"

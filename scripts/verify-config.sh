@@ -85,9 +85,9 @@ done
 
 echo ""
 if [ $errors -eq 0 ]; then
-    echo -e "${GREEN}✅ All configurations are consistent!${NC}"
+    echo -e "${GREEN}(✓)All configurations are consistent!${NC}"
     exit 0
 else
-    echo -e "${RED}❌ Found $errors configuration issues${NC}"
+    echo -e "${RED}(✗) Found $errors configuration issues${NC}"
     exit 1
 fi

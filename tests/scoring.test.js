@@ -1,7 +1,7 @@
 // tests/scoring.test.js - Score calculation and status tests
 
 import { describe, it, expect } from 'vitest';
-import { calculateScore, getStatus, calculateImpact } from '../src/dashboard.js';
+import { calculateScore, getStatus, calculateImpact } from '../assets/js/data-processor.js';
 
 describe('Score Calculation', () => {
   describe('calculateScore', () => {
@@ -227,4 +227,4 @@ describe('Score Calculation', () => {
       expect(impact.message).toBe('Normal variance');
     });
   });
-}); 
+});

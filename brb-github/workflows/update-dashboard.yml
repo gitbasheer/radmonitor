@@ -40,21 +40,21 @@ jobs:
       - name: Generate dashboard
         env:
           ELASTIC_COOKIE: ${{ secrets.ELASTIC_COOKIE }}
-          ES_COOKIE: ${{ secrets.ELASTIC_COOKIE }}  # Settings expects ES_COOKIE
+          ES_COOKIE: ${{ secrets.ELASTIC_COOKIE }} # Settings expects ES_COOKIE
         run: |
           set -e  # Exit on error
           echo "Starting dashboard generation..."
           echo "Cookie length: ${#ELASTIC_COOKIE}"
-          
+
           # Make script executable
           chmod +x scripts/generate_dashboard_refactored.sh
-          
+
           # Run with error handling
           if ./scripts/generate_dashboard_refactored.sh; then
-            echo "✅ Dashboard generated successfully"
+            echo "(✓)Dashboard generated successfully"
             ls -la index.html
           else
-            echo "❌ Dashboard generation failed"
+            echo "(✗) Dashboard generation failed"
             echo "Checking for error logs..."
             if [ -f data/raw_response.json ]; then
               echo "Raw response exists - showing first 100 chars:"

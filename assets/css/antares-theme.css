@@ -1,0 +1,603 @@
+/**
+ * Antares Theme Implementation for RAD Monitor
+ * Based on GoDaddy Design System (Antares) and UXCore 2400
+ *
+ * This file implements the official GoDaddy design tokens
+ * to ensure consistency with company-wide UX standards
+ */
+
+/* ============================================
+   1. Design Tokens - Core Variables
+   ============================================ */
+
+:root {
+    /* Primary Brand Colors */
+    --gd-color-black: #111111;
+    --gd-color-white: #ffffff;
+    --gd-color-orange-primary: #ff6900;
+    --gd-color-orange-hover: #e55a00;
+    --gd-color-orange-pressed: #cc4d00;
+    --gd-color-orange-light: #fff4ec;
+
+    /* Neutral Color Scale */
+    --gd-color-gray-100: #f8f8f8;
+    --gd-color-gray-200: #e8e8e8;
+    --gd-color-gray-300: #d8d8d8;
+    --gd-color-gray-400: #b8b8b8;
+    --gd-color-gray-500: #888888;
+    --gd-color-gray-600: #686868;
+    --gd-color-gray-700: #484848;
+    --gd-color-gray-800: #282828;
+    --gd-color-gray-900: #181818;
+
+    /* Semantic Colors */
+    --gd-color-success: #00a63f;
+    --gd-color-success-light: #e6f7ed;
+    --gd-color-warning: #ffb900;
+    --gd-color-warning-light: #fff8e6;
+    --gd-color-error: #d72c0d;
+    --gd-color-error-light: #fdeae7;
+    --gd-color-info: #0073cf;
+    --gd-color-info-light: #e6f3fc;
+
+    /* Typography - Font Families */
+    --gd-font-family-base: 'GD Sherpa', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+    --gd-font-family-primary: 'GD Sherpa', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+    --gd-font-family-mono: 'Monaco', 'Consolas', 'Courier New', monospace;
+
+    /* Typography - Font Sizes (Major Second Scale - 1.125) */
+    --gd-font-size-xs: 0.75rem;    /* 12px */
+    --gd-font-size-sm: 0.875rem;   /* 14px */
+    --gd-font-size-md: 1rem;       /* 16px - base */
+    --gd-font-size-lg: 1.125rem;   /* 18px */
+    --gd-font-size-xl: 1.266rem;   /* 20px */
+    --gd-font-size-2xl: 1.424rem;  /* 23px */
+    --gd-font-size-3xl: 1.602rem;  /* 26px */
+    --gd-font-size-4xl: 1.802rem;  /* 29px */
+    --gd-font-size-5xl: 2.027rem;  /* 32px */
+
+    /* Heading aliases for compatibility */
+    --gd-heading-4xl: 2.813rem;  /* 45px */
+    --gd-heading-3xl: 2.25rem;   /* 36px */
+    --gd-heading-2xl: 1.75rem;   /* 28px */
+    --gd-heading-xl: 1.375rem;   /* 22px */
+    --gd-heading-lg: 1.125rem;   /* 18px */
+
+    /* Typography - Line Heights */
+    --gd-line-height-title: 1.25;
+    --gd-line-height-paragraph: 1.5;
+    --gd-line-height-interface: 1.375;
+
+    /* Typography - Font Weights */
+    --gd-font-weight-normal: 400;
+    --gd-font-weight-medium: 500;
+    --gd-font-weight-bold: 700;
+
+    /* Spacing Scale (8px Grid) */
+    --gd-spacing-xxs: 0.25rem;  /* 4px */
+    --gd-spacing-xs: 0.5rem;    /* 8px */
+    --gd-spacing-sm: 0.75rem;   /* 12px */
+    --gd-spacing-md: 1rem;      /* 16px */
+    --gd-spacing-lg: 1.5rem;    /* 24px */
+    --gd-spacing-xl: 2rem;      /* 32px */
+    --gd-spacing-2xl: 3rem;     /* 48px */
+    --gd-spacing-3xl: 4rem;     /* 64px */
+
+    /* Border Radius */
+    --gd-radius-sm: 4px;
+    --gd-radius-md: 8px;
+    --gd-radius-lg: 12px;
+    --gd-radius-xl: 16px;
+    --gd-radius-round: 50%;
+
+    /* Shadows (Elevation System) */
+    --gd-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.12);
+    --gd-shadow-md: 0 4px 12px rgba(0, 0, 0, 0.15);
+    --gd-shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.18);
+    --gd-shadow-xl: 0 12px 48px rgba(0, 0, 0, 0.22);
+
+    /* Transitions */
+    --gd-transition-fast: 150ms ease-out;
+    --gd-transition-base: 250ms ease-out;
+    --gd-transition-slow: 350ms ease-out;
+
+    /* Z-Index Scale */
+    --gd-z-index-dropdown: 1000;
+    --gd-z-index-sticky: 1020;
+    --gd-z-index-fixed: 1030;
+    --gd-z-index-modal-backdrop: 1040;
+    --gd-z-index-modal: 1050;
+    --gd-z-index-popover: 1060;
+    --gd-z-index-tooltip: 1070;
+}
+
+/* Dark Theme Overrides */
+[data-theme="dark"] {
+    --gd-color-background: var(--gd-color-gray-900);
+    --gd-color-surface: var(--gd-color-gray-800);
+    --gd-color-surface-variant: var(--gd-color-gray-700);
+    --gd-color-text-primary: var(--gd-color-gray-100);
+    --gd-color-text-secondary: var(--gd-color-gray-300);
+    --gd-color-text-muted: var(--gd-color-gray-500);
+    --gd-color-border: var(--gd-color-gray-700);
+}
+
+/* Light Theme (Default) */
+[data-theme="light"],
+:root {
+    --gd-color-background: var(--gd-color-white);
+    --gd-color-surface: var(--gd-color-gray-100);
+    --gd-color-surface-variant: var(--gd-color-gray-200);
+    --gd-color-text-primary: var(--gd-color-gray-900);
+    --gd-color-text-secondary: var(--gd-color-gray-700);
+    --gd-color-text-muted: var(--gd-color-gray-500);
+    --gd-color-border: var(--gd-color-gray-300);
+}
+
+/* ============================================
+   2. Base Styles
+   ============================================ */
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: var(--gd-font-family-primary);
+    font-size: var(--gd-font-size-md);
+    line-height: var(--gd-line-height-paragraph);
+    color: var(--gd-color-text-primary);
+    background-color: var(--gd-color-background);
+    margin: 0;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* ============================================
+   3. Typography Classes
+   ============================================ */
+
+/* Headings */
+.gd-heading-1 {
+    font-size: var(--gd-font-size-5xl);
+    line-height: var(--gd-line-height-title);
+    font-weight: var(--gd-font-weight-bold);
+    margin-bottom: var(--gd-spacing-lg);
+    font-variation-settings: 'dspl' 1;
+}
+
+.gd-heading-2 {
+    font-size: var(--gd-font-size-4xl);
+    line-height: var(--gd-line-height-title);
+    font-weight: var(--gd-font-weight-bold);
+    margin-bottom: var(--gd-spacing-md);
+}
+
+.gd-heading-3 {
+    font-size: var(--gd-font-size-3xl);
+    line-height: var(--gd-line-height-title);
+    font-weight: var(--gd-font-weight-medium);
+    margin-bottom: var(--gd-spacing-md);
+}
+
+/* Body Text */
+.gd-text {
+    font-size: var(--gd-font-size-md);
+    line-height: var(--gd-line-height-paragraph);
+    color: var(--gd-color-text-primary);
+}
+
+.gd-text--small {
+    font-size: var(--gd-font-size-sm);
+}
+
+.gd-text--large {
+    font-size: var(--gd-font-size-lg);
+}
+
+.gd-text--muted {
+    color: var(--gd-color-text-muted);
+}
+
+/* ============================================
+   4. Button Components
+   ============================================ */
+
+.gd-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 52px;
+    padding: 0 var(--gd-spacing-lg);
+    font-family: var(--gd-font-family-primary);
+    font-size: var(--gd-font-size-md);
+    font-weight: var(--gd-font-weight-medium);
+    line-height: var(--gd-line-height-interface);
+    border: none;
+    border-radius: var(--gd-radius-md);
+    cursor: pointer;
+    transition: all var(--gd-transition-fast);
+    text-decoration: none;
+    white-space: nowrap;
+    gap: var(--gd-spacing-xs);
+}
+
+/* Primary Button */
+.gd-button--primary {
+    background-color: var(--gd-color-orange-primary);
+    color: var(--gd-color-white);
+}
+
+.gd-button--primary:hover {
+    background-color: var(--gd-color-orange-hover);
+    transform: translateY(-1px);
+    box-shadow: var(--gd-shadow-sm);
+}
+
+.gd-button--primary:active {
+    background-color: var(--gd-color-orange-pressed);
+    transform: translateY(0);
+}
+
+/* Secondary Button */
+.gd-button--secondary {
+    background-color: transparent;
+    color: var(--gd-color-text-primary);
+    border: 2px solid var(--gd-color-border);
+}
+
+.gd-button--secondary:hover {
+    background-color: var(--gd-color-surface);
+    border-color: var(--gd-color-gray-400);
+}
+
+/* Small Button Variant */
+.gd-button--small {
+    height: 52px;
+    padding: 0 var(--gd-spacing-md);
+    font-size: var(--gd-font-size-sm);
+}
+
+/* Alternative naming convention for compatibility */
+.gd-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 52px;
+    padding: 0 var(--gd-spacing-lg);
+    font-family: var(--gd-font-family-primary);
+    font-size: var(--gd-font-size-md);
+    font-weight: var(--gd-font-weight-medium);
+    line-height: var(--gd-line-height-interface);
+    border: none;
+    border-radius: var(--gd-radius-md);
+    cursor: pointer;
+    transition: all var(--gd-transition-fast);
+    text-decoration: none;
+    white-space: nowrap;
+    gap: var(--gd-spacing-xs);
+}
+
+.gd-button-primary {
+    background-color: var(--gd-color-orange-primary);
+    color: var(--gd-color-white);
+}
+
+.gd-button-primary:hover {
+    background-color: var(--gd-color-orange-hover);
+    transform: translateY(-1px);
+    box-shadow: var(--gd-shadow-sm);
+}
+
+.gd-button-primary:active {
+    background-color: var(--gd-color-orange-pressed);
+    transform: translateY(0);
+}
+
+.gd-button-secondary {
+    background-color: transparent;
+    color: var(--gd-color-text-primary);
+    border: 2px solid var(--gd-color-border);
+}
+
+.gd-button-secondary:hover {
+    background-color: var(--gd-color-surface);
+    border-color: var(--gd-color-gray-400);
+}
+
+.gd-button-small {
+    height: 52px;
+    padding: 0 var(--gd-spacing-md);
+    font-size: var(--gd-font-size-sm);
+}
+
+/* ============================================
+   5. Card Components
+   ============================================ */
+
+.gd-card {
+    background-color: var(--gd-color-surface);
+    border-radius: var(--gd-radius-lg);
+    overflow: hidden;
+    transition: all var(--gd-transition-base);
+}
+
+.gd-card[data-variant="elevated"] {
+    box-shadow: var(--gd-shadow-sm);
+}
+
+.gd-card[data-variant="elevated"]:hover {
+    box-shadow: var(--gd-shadow-md);
+    transform: translateY(-2px);
+}
+
+.gd-card[data-variant="outlined"] {
+    border: 1px solid var(--gd-color-border);
+}
+
+.gd-card__header {
+    padding: var(--gd-spacing-lg);
+    border-bottom: 1px solid var(--gd-color-border);
+}
+
+.gd-card__body {
+    padding: var(--gd-spacing-lg);
+}
+
+.gd-card__footer {
+    padding: var(--gd-spacing-lg);
+    border-top: 1px solid var(--gd-color-border);
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--gd-spacing-sm);
+}
+
+/* ============================================
+   6. Form Components
+   ============================================ */
+
+.gd-form-group {
+    margin-bottom: var(--gd-spacing-lg);
+}
+
+.gd-form-label {
+    display: block;
+    font-size: var(--gd-font-size-sm);
+    font-weight: var(--gd-font-weight-medium);
+    color: var(--gd-color-text-primary);
+    margin-bottom: var(--gd-spacing-xs);
+}
+
+.gd-form-input {
+    width: 100%;
+    height: 52px;
+    padding: 0 var(--gd-spacing-md);
+    font-family: var(--gd-font-family-primary);
+    font-size: var(--gd-font-size-md);
+    line-height: var(--gd-line-height-interface);
+    color: var(--gd-color-text-primary);
+    background-color: var(--gd-color-white);
+    border: 2px solid var(--gd-color-border);
+    border-radius: var(--gd-radius-md);
+    transition: all var(--gd-transition-fast);
+}
+
+.gd-form-input:hover {
+    border-color: var(--gd-color-gray-400);
+}
+
+.gd-form-input:focus {
+    outline: none;
+    border-color: var(--gd-color-orange-primary);
+    box-shadow: 0 0 0 3px var(--gd-color-orange-light);
+}
+
+/* Alternative naming for compatibility */
+.gd-input {
+    width: 100%;
+    height: 52px;
+    padding: 0 var(--gd-spacing-md);
+    font-family: var(--gd-font-family-primary);
+    font-size: var(--gd-font-size-md);
+    line-height: var(--gd-line-height-interface);
+    color: var(--gd-color-text-primary);
+    background-color: var(--gd-color-white);
+    border: 2px solid var(--gd-color-border);
+    border-radius: var(--gd-radius-md);
+    transition: all var(--gd-transition-fast);
+}
+
+.gd-input:hover {
+    border-color: var(--gd-color-gray-400);
+}
+
+.gd-input:focus {
+    outline: none;
+    border-color: var(--gd-color-orange-primary);
+    box-shadow: 0 0 0 3px var(--gd-color-orange-light);
+}
+
+/* Badge Components */
+.gd-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 8px;
+    font-size: var(--gd-font-size-xs);
+    font-weight: var(--gd-font-weight-medium);
+    line-height: 1.5;
+    border-radius: var(--gd-radius-sm);
+    background-color: var(--gd-color-gray-200);
+    color: var(--gd-color-text-primary);
+}
+
+.gd-badge-primary {
+    background-color: var(--gd-color-orange-light);
+    color: var(--gd-color-orange-primary);
+}
+
+.gd-badge-success {
+    background-color: var(--gd-color-success-light);
+    color: var(--gd-color-success);
+}
+
+.gd-badge-error {
+    background-color: var(--gd-color-error-light);
+    color: var(--gd-color-error);
+}
+
+.gd-badge-warning {
+    background-color: var(--gd-color-warning-light);
+    color: var(--gd-color-warning);
+}
+
+.gd-badge-info {
+    background-color: var(--gd-color-info-light);
+    color: var(--gd-color-info);
+}
+
+/* ============================================
+   7. Venture Dashboard Patterns
+   ============================================ */
+
+.venture-dashboard {
+    display: grid;
+    grid-template-columns: 1fr 320px;
+    gap: var(--gd-spacing-xl);
+    padding: var(--gd-spacing-xl);
+}
+
+/* Hero Card (Nascent/Emerging States) */
+.hero-card {
+    grid-column: 1 / -1;
+    background: linear-gradient(135deg, var(--gd-color-orange-primary), var(--gd-color-orange-hover));
+    color: var(--gd-color-white);
+    padding: var(--gd-spacing-2xl);
+    border-radius: var(--gd-radius-lg);
+    text-align: center;
+}
+
+.hero-card h2 {
+    font-size: var(--gd-font-size-4xl);
+    margin-bottom: var(--gd-spacing-lg);
+}
+
+/* Metrics Component */
+.metrics-component {
+    grid-column: 1;
+}
+
+.metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: var(--gd-spacing-lg);
+}
+
+.metric-card {
+    background-color: var(--gd-color-surface);
+    padding: var(--gd-spacing-lg);
+    border-radius: var(--gd-radius-lg);
+    border: 1px solid var(--gd-color-border);
+}
+
+.metric-value {
+    font-size: var(--gd-font-size-4xl);
+    font-weight: var(--gd-font-weight-bold);
+    color: var(--gd-color-text-primary);
+}
+
+.metric-label {
+    font-size: var(--gd-font-size-sm);
+    color: var(--gd-color-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+/* Right Rail */
+.right-rail {
+    grid-column: 2;
+}
+
+.setup-progress {
+    background-color: var(--gd-color-surface);
+    padding: var(--gd-spacing-lg);
+    border-radius: var(--gd-radius-lg);
+    margin-bottom: var(--gd-spacing-lg);
+}
+
+.quick-links {
+    background-color: var(--gd-color-surface);
+    padding: var(--gd-spacing-lg);
+    border-radius: var(--gd-radius-lg);
+}
+
+/* ============================================
+   8. Utility Classes
+   ============================================ */
+
+/* Text Alignment */
+.gd-text-left { text-align: left; }
+.gd-text-center { text-align: center; }
+.gd-text-right { text-align: right; }
+
+/* Display */
+.gd-d-none { display: none; }
+.gd-d-block { display: block; }
+.gd-d-inline-block { display: inline-block; }
+.gd-d-flex { display: flex; }
+.gd-d-grid { display: grid; }
+
+/* Flexbox */
+.gd-align-items-center { align-items: center; }
+.gd-justify-content-center { justify-content: center; }
+.gd-justify-content-between { justify-content: space-between; }
+
+/* Spacing */
+.gd-mt-0 { margin-top: 0; }
+.gd-mt-1 { margin-top: var(--gd-spacing-xs); }
+.gd-mt-2 { margin-top: var(--gd-spacing-sm); }
+.gd-mt-3 { margin-top: var(--gd-spacing-md); }
+.gd-mt-4 { margin-top: var(--gd-spacing-lg); }
+.gd-mt-5 { margin-top: var(--gd-spacing-xl); }
+
+/* Status Colors */
+.gd-status-success { color: var(--gd-color-success); }
+.gd-status-warning { color: var(--gd-color-warning); }
+.gd-status-error { color: var(--gd-color-error); }
+.gd-status-info { color: var(--gd-color-info); }
+
+/* ============================================
+   9. Animation Classes
+   ============================================ */
+
+@keyframes gd-fade-in {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.gd-animate-fade-in {
+    animation: gd-fade-in var(--gd-transition-base) ease-out;
+}
+
+/* ============================================
+   10. Responsive Utilities
+   ============================================ */
+
+@media (max-width: 768px) {
+    .venture-dashboard {
+        grid-template-columns: 1fr;
+    }
+
+    .right-rail {
+        grid-column: 1;
+    }
+
+    .metrics-grid {
+        grid-template-columns: 1fr;
+    }
+}

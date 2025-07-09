@@ -10,12 +10,12 @@ import {
   loadPreferences,
   applyPreferences,
   config
-} from '../src/dashboard.js';
+} from '../assets/js/search-filter.js';
 
 describe('Search Functionality', () => {
   const mockResults = [
     {
-      eventId: 'pandc.vnext.recommendations.feed.feed_domain',
+      event_id: 'pandc.vnext.recommendations.feed.feed_domain',
       displayName: 'feed_domain',
       status: 'CRITICAL',
       score: -85,
@@ -24,7 +24,7 @@ describe('Search Functionality', () => {
       dailyAvg: 2000
     },
     {
-      eventId: 'pandc.vnext.recommendations.feed.feed_creategmb',
+      event_id: 'pandc.vnext.recommendations.feed.feed_creategmb',
       displayName: 'feed_creategmb',
       status: 'WARNING',
       score: -60,
@@ -33,7 +33,7 @@ describe('Search Functionality', () => {
       dailyAvg: 2000
     },
     {
-      eventId: 'pandc.vnext.recommendations.feed.feed_startseo',
+      event_id: 'pandc.vnext.recommendations.feed.feed_startseo',
       displayName: 'feed_startseo',
       status: 'NORMAL',
       score: -10,
@@ -42,7 +42,7 @@ describe('Search Functionality', () => {
       dailyAvg: 2000
     },
     {
-      eventId: 'pandc.vnext.recommendations.feed.feed_ssl',
+      event_id: 'pandc.vnext.recommendations.feed.feed_ssl',
       displayName: 'feed_ssl',
       status: 'INCREASED',
       score: 50,
@@ -169,25 +169,25 @@ describe('Threshold Filter', () => {
 describe('Combined Filters', () => {
   const mockResults = [
     {
-      eventId: 'pandc.vnext.recommendations.feed.feed_domain',
+      event_id: 'pandc.vnext.recommendations.feed.feed_domain',
       displayName: 'feed_domain',
       status: 'CRITICAL',
       score: -85
     },
     {
-      eventId: 'pandc.vnext.recommendations.feed.feed_creategmb',
+      event_id: 'pandc.vnext.recommendations.feed.feed_creategmb',
       displayName: 'feed_creategmb',
       status: 'WARNING',
       score: -60
     },
     {
-      eventId: 'pandc.vnext.recommendations.feed.feed_domain_backup',
+      event_id: 'pandc.vnext.recommendations.feed.feed_domain_backup',
       displayName: 'feed_domain_backup',
       status: 'NORMAL',
       score: -10
     },
     {
-      eventId: 'pandc.vnext.recommendations.feed.feed_ssl',
+      event_id: 'pandc.vnext.recommendations.feed.feed_ssl',
       displayName: 'feed_ssl',
       status: 'INCREASED',
       score: 50
@@ -238,6 +238,11 @@ describe('Preference Management', () => {
   beforeEach(() => {
     // Clear localStorage
     localStorage.clear();
+
+    // Mock localStorage for tests
+    vi.spyOn(Storage.prototype, 'setItem');
+    vi.spyOn(Storage.prototype, 'getItem');
+    vi.spyOn(Storage.prototype, 'removeItem');
   });
 
   it('should save preferences to localStorage', () => {
@@ -280,7 +285,7 @@ describe('Preference Management', () => {
 
   it('should handle corrupted localStorage data', () => {
     localStorage.setItem('rad_monitor_preferences', 'invalid json');
-    
+
     const loaded = loadPreferences();
     expect(loaded).toBeNull();
   });
@@ -310,9 +315,9 @@ describe('Preference Management', () => {
 
   it('should handle null preferences gracefully', () => {
     const originalCritical = config.criticalThreshold;
-    
+
     applyPreferences(null);
-    
+
     expect(config.criticalThreshold).toBe(originalCritical);
   });
 });
@@ -369,8 +374,8 @@ describe('Search and Filter Edge Cases', () => {
 
   it('should handle special characters in search', () => {
     const mockResults = [
-      { displayName: 'feed_domain/index_1', eventId: 'test.feed_domain/index_1' },
-      { displayName: 'feed_domain_index_2', eventId: 'test.feed_domain_index_2' }
+      { displayName: 'feed_domain/index_1', event_id: 'test.feed_domain/index_1' },
+      { displayName: 'feed_domain_index_2', event_id: 'test.feed_domain_index_2' }
     ];
 
     const result = searchResults(mockResults, 'domain/index');
@@ -379,9 +384,9 @@ describe('Search and Filter Edge Cases', () => {
   });
 
   it('should handle very long search terms', () => {
-    const mockResults = [{ displayName: 'test', eventId: 'test' }];
+    const mockResults = [{ displayName: 'test', event_id: 'test' }];
     const longSearch = 'a'.repeat(1000);
-    
+
     const result = searchResults(mockResults, longSearch);
     expect(result).toHaveLength(0);
   });
@@ -397,4 +402,4 @@ describe('Search and Filter Edge Cases', () => {
     expect(result[0].displayName).toBe('a_domain');
     expect(result[1].displayName).toBe('c_domain');
   });
-}); 
+});

@@ -58,9 +58,9 @@ import sys
 sys.path.append('src')
 try:
     from data.processors import TrafficProcessor, ScoreCalculator, HTMLGenerator
-    print('✓ Python imports successful')
+    print('(✓) Python imports successful')
 except ImportError as e:
-    print(f'✗ Python import error: {e}')
+    print(f'(✗)Python import error: {e}')
     sys.exit(1)
 "
 

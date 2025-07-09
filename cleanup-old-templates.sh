@@ -30,11 +30,11 @@ echo "Files to be removed:"
 echo "-------------------"
 for file in "${OLD_FILES[@]}"; do
     if [ -f "$file" ]; then
-        echo "  ✓ $file"
+        echo "  (✓) $file"
         # Backup before removing
         cp "$file" "$BACKUP_DIR/"
     else
-        echo "  ✗ $file (not found)"
+        echo "  (✗)$file (not found)"
     fi
 done
 
@@ -43,7 +43,7 @@ echo "Files being preserved:"
 echo "--------------------"
 for file in "${KEEP_FILES[@]}"; do
     if [ -f "$file" ]; then
-        echo "  ✓ $file"
+        echo "  (✓) $file"
     fi
 done
 
@@ -60,9 +60,9 @@ if [[ $REPLY =~ ^[Yy]$ ]]; then
             echo "  Removed: $file"
         fi
     done
-    
+
     echo ""
-    echo "✅ Cleanup complete!"
+    echo "(✓)Cleanup complete!"
     echo "📁 Backups saved in: $BACKUP_DIR/"
     echo ""
     echo "Current structure:"

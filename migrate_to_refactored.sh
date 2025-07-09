@@ -113,7 +113,7 @@ done
 
 echo ""
 if [ "$ALL_PRESENT" = true ]; then
-    echo -e "${GREEN}✅ Migration complete!${NC}"
+    echo -e "${GREEN}(✓)Migration complete!${NC}"
     echo ""
     echo "Next steps:"
     echo "1. Test locally: ./test_locally.sh"
@@ -122,7 +122,7 @@ if [ "$ALL_PRESENT" = true ]; then
     echo ""
     echo "The original generate_dashboard.sh is still available as backup."
 else
-    echo -e "${RED}❌ Migration incomplete - some files are missing${NC}"
+    echo -e "${RED}(✗) Migration incomplete - some files are missing${NC}"
     echo "Run ./test_refactored.sh to check the setup"
     exit 1
 fi

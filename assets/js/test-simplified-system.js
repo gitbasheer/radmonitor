@@ -32,9 +32,9 @@ async function testSimplifiedSystem() {
     console.log(`\n${allPassed ? '🎉' : '⚠️'} Overall: ${passed}/${total} tests passed`);
 
     if (!allPassed) {
-        console.log('\n❌ Some tests failed. Check the results above.');
+        console.log('\n(✗) Some tests failed. Check the results above.');
     } else {
-        console.log('\n✅ All tests passed! System is ready for production.');
+        console.log('\n(✓)All tests passed! System is ready for production.');
     }
 
     return allPassed;
@@ -55,10 +55,10 @@ function testSystemLoaded() {
 
     if (!allLoaded) {
         console.error('Missing modules:', checks);
-        return '❌ Missing modules';
+        return '(✗) Missing modules';
     }
 
-    return '✅ Pass - All modules loaded';
+    return '(✓)Pass - All modules loaded';
 }
 
 async function testAuth() {
@@ -70,10 +70,10 @@ async function testAuth() {
             return '⚠️ Not authenticated (set cookie first)';
         }
 
-        return `✅ Pass - ${status.method} auth`;
+        return `(✓)Pass - ${status.method} auth`;
     } catch (e) {
         console.error('Auth test failed:', e);
-        return '❌ Error: ' + e.message;
+        return '(✗) Error: ' + e.message;
     }
 }
 
@@ -90,17 +90,17 @@ async function testDataLoad() {
         });
 
         if (!success) {
-            return '❌ Load failed';
+            return '(✗) Load failed';
         }
 
         if (state.data.length === 0) {
             return '⚠️ No data returned';
         }
 
-        return `✅ Pass - ${state.data.length} events loaded`;
+        return `(✓)Pass - ${state.data.length} events loaded`;
     } catch (e) {
         console.error('Data load test failed:', e);
-        return '❌ Error: ' + e.message;
+        return '(✗) Error: ' + e.message;
     }
 }
 
@@ -127,10 +127,10 @@ function testFiltering() {
             afterReset: resetData.length
         });
 
-        return '✅ Pass - Filters working';
+        return '(✓)Pass - Filters working';
     } catch (e) {
         console.error('Filter test failed:', e);
-        return '❌ Error: ' + e.message;
+        return '(✗) Error: ' + e.message;
     }
 }
 
@@ -148,10 +148,10 @@ function testSearch() {
         DataService.applyFilters({ search: '' });
 
         console.log('Search test results:', results);
-        return '✅ Pass - Search working';
+        return '(✓)Pass - Search working';
     } catch (e) {
         console.error('Search test failed:', e);
-        return '❌ Error: ' + e.message;
+        return '(✗) Error: ' + e.message;
     }
 }
 
@@ -169,10 +169,10 @@ async function testRefresh() {
             afterCount
         });
 
-        return success ? '✅ Pass - Refresh successful' : '❌ Refresh failed';
+        return success ? '(✓)Pass - Refresh successful' : '(✗) Refresh failed';
     } catch (e) {
         console.error('Refresh test failed:', e);
-        return '❌ Error: ' + e.message;
+        return '(✗) Error: ' + e.message;
     }
 }
 
@@ -188,13 +188,13 @@ function testPersistence() {
         console.log('Persisted state:', parsed);
 
         if (!parsed.filters || !parsed.timeRange) {
-            return '❌ Invalid saved state';
+            return '(✗) Invalid saved state';
         }
 
-        return '✅ Pass - State persisted';
+        return '(✓)Pass - State persisted';
     } catch (e) {
         console.error('Persistence test failed:', e);
-        return '❌ Error: ' + e.message;
+        return '(✗) Error: ' + e.message;
     }
 }
 
@@ -225,10 +225,10 @@ async function testErrorHandling() {
             hasData: state.data.length > 0
         });
 
-        return '✅ Pass - Errors handled gracefully';
+        return '(✓)Pass - Errors handled gracefully';
     } catch (e) {
         console.error('Error handling test failed:', e);
-        return '❌ Unhandled error: ' + e.message;
+        return '(✗) Unhandled error: ' + e.message;
     }
 }
 
@@ -243,10 +243,10 @@ async function testApiClient() {
 
         const successRate = ((metrics.requests - metrics.errors) / metrics.requests * 100).toFixed(1);
 
-        return `✅ Pass - ${successRate}% success rate`;
+        return `(✓)Pass - ${successRate}% success rate`;
     } catch (e) {
         console.error('API client test failed:', e);
-        return '❌ Error: ' + e.message;
+        return '(✗) Error: ' + e.message;
     }
 }
 
@@ -265,13 +265,13 @@ function testPerformance() {
         console.log('Performance metrics:', performance);
 
         if (metrics.cacheHitRate > 0) {
-            return `✅ Pass - ${metrics.cacheHitRate.toFixed(1)}% cache hit rate`;
+            return `(✓)Pass - ${metrics.cacheHitRate.toFixed(1)}% cache hit rate`;
         }
 
-        return '✅ Pass - Performance normal';
+        return '(✓)Pass - Performance normal';
     } catch (e) {
         console.error('Performance test failed:', e);
-        return '❌ Error: ' + e.message;
+        return '(✗) Error: ' + e.message;
     }
 }
 
@@ -294,12 +294,12 @@ window.TestSuite = {
     // Utility functions
     clearCache: () => {
         APIClient.clearCache();
-        console.log('✅ Cache cleared');
+        console.log('(✓)Cache cleared');
     },
 
     clearState: () => {
         DataService.clearPersistedState();
-        console.log('✅ Persisted state cleared');
+        console.log('(✓)Persisted state cleared');
     },
 
     showState: () => {

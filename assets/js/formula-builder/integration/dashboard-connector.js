@@ -3,7 +3,6 @@
  */
 
 import { createFormulaEditor } from '../ui/formula-editor.js';
-import { buildQueryFromFormula } from '../translator/query-builder.js';
 
 export class DashboardFormulaIntegration {
   constructor(apiClient, dataService) {

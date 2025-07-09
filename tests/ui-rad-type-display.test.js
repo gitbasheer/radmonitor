@@ -1,6 +1,17 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { JSDOM } from 'jsdom';
 import UIUpdater from '../assets/js/ui-updater.js';
+
+// Helper function to normalize color formats for comparison
+function normalizeColor(color) {
+    // Simple hex to rgb conversion for common colors
+    const colorMap = {
+        '#4CAF50': 'rgb(76, 175, 80)',   // Green
+        '#9C27B0': 'rgb(156, 39, 176)',  // Purple
+        '#666': 'rgb(102, 102, 102)'     // Gray
+    };
+    return colorMap[color] || color;
+}
 
 describe('UI RAD Type Display', () => {
     let dom;
@@ -85,7 +96,7 @@ describe('UI RAD Type Display', () => {
 
             const radBadge = document.querySelector('.rad-type-badge');
             expect(radBadge.textContent).toBe('Venture Feed');
-            expect(radBadge.style.background).toBe('#4CAF50');
+            expect(radBadge.style.background).toBe(normalizeColor('#4CAF50'));
             expect(radBadge.dataset.radType).toBe('venture_feed');
         });
 
@@ -103,7 +114,7 @@ describe('UI RAD Type Display', () => {
 
             const radBadge = document.querySelector('.rad-type-badge');
             expect(radBadge.textContent).toBe('Venture Metrics');
-            expect(radBadge.style.background).toBe('#9C27B0');
+            expect(radBadge.style.background).toBe(normalizeColor('#9C27B0'));
             expect(radBadge.dataset.radType).toBe('venture_metrics');
         });
 
@@ -137,7 +148,7 @@ describe('UI RAD Type Display', () => {
 
             const radBadge = document.querySelector('.rad-type-badge');
             expect(radBadge.textContent).toBe('Unknown');
-            expect(radBadge.style.background).toBe('#666');
+            expect(radBadge.style.background).toBe(normalizeColor('#666'));
 
             const row = document.querySelector('tbody tr');
             expect(row.dataset.radType).toBe('unknown');

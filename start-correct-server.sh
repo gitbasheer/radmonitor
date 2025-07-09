@@ -6,9 +6,9 @@ echo ""
 echo "Checking index.html has sidebar layout..."
 
 if grep -q "control-panel" index.html; then
-    echo "✅ index.html has the sidebar layout (control-panel class found)"
+    echo "(✓)index.html has the sidebar layout (control-panel class found)"
 else
-    echo "❌ ERROR: index.html does NOT have the sidebar layout!"
+    echo "(✗) ERROR: index.html does NOT have the sidebar layout!"
     echo "The file might have been overwritten. Check your deployment process."
     exit 1
 fi

@@ -14,13 +14,13 @@ def check_service(name, url, expected_status=200):
     try:
         response = requests.get(url, timeout=5)
         if response.status_code == expected_status:
-            return True, f"✅ {name}: OK"
+            return True, f"(✓){name}: OK"
         else:
-            return False, f"❌ {name}: Status {response.status_code}"
+            return False, f"(✗) {name}: Status {response.status_code}"
     except requests.exceptions.ConnectionError:
-        return False, f"❌ {name}: Not running"
+        return False, f"(✗) {name}: Not running"
     except Exception as e:
-        return False, f"❌ {name}: Error - {str(e)}"
+        return False, f"(✗) {name}: Error - {str(e)}"
 
 def check_api_health(base_url):
     """Check API health endpoints"""
@@ -37,7 +37,7 @@ def check_api_health(base_url):
             if 'elasticsearch_status' in data:
                 es_status = data['elasticsearch_status']
                 if es_status == 'connected':
-                    results.append((True, "✅ Elasticsearch: Connected"))
+                    results.append((True, "(✓)Elasticsearch: Connected"))
                 else:
                     results.append((False, f"⚠️  Elasticsearch: {es_status}"))
         except:
@@ -53,7 +53,7 @@ def check_api_health(base_url):
             data = response.json()
             status = data.get('status', 'unknown')
             if status == 'healthy':
-                results.append((True, "✅ Configuration: Healthy"))
+                results.append((True, "(✓)Configuration: Healthy"))
             else:
                 results.append((False, f"⚠️  Configuration: {status}"))
                 if 'warnings' in data:
@@ -101,7 +101,7 @@ def main():
     passed = sum(1 for success, _ in all_results if success)
 
     if passed == total:
-        print(f"✅ All {total} checks passed!")
+        print(f"(✓)All {total} checks passed!")
         print("🎉 RAD Monitor is healthy")
         return 0
     else:

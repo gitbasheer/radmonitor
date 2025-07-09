@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """
 Dashboard Generator for RAD Monitor
-Simple, readable Python replacement for generate_dashboard_refactored.sh
+Modern Python implementation for generating static dashboard HTML.
 
-This script completely replaces the bash implementation while maintaining
-100% backward compatibility through a wrapper script at scripts/generate_dashboard_refactored.sh
+This script generates a static HTML dashboard by fetching traffic data
+from Elasticsearch and processing it according to RAD monitoring patterns.
 
 Usage:
     python3 generate_dashboard.py [baseline_start] [baseline_end] [current_time]
@@ -18,19 +18,16 @@ import sys
 import json
 import logging
 import argparse
-from datetime import datetime
+import requests
+from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List
+import traceback
 
-# Add src to path for imports
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+# ====================
+# Configuration & Setup
+# ====================
 
-# Import our data processor
-from src.data.process_data import main as process_data_main
-from src.config.settings import Settings
-
-
-# Configure logging with colors
 class ColoredFormatter(logging.Formatter):
     """Custom formatter with colors for console output"""
 
@@ -65,11 +62,10 @@ def success(self, message, *args, **kwargs):
 logging.Logger.success = success
 
 
-# Set up logging
-def setup_logging():
+def setup_logging(verbose: bool = False):
     """Configure logging with colored output"""
     logger = logging.getLogger()
-    logger.setLevel(logging.INFO)
+    logger.setLevel(logging.DEBUG if verbose else logging.INFO)
 
     # Console handler with colors
     console = logging.StreamHandler()
@@ -82,40 +78,65 @@ def setup_logging():
     return logger
 
 
-# Configuration class to replace bash config
 class DashboardConfig:
-    """Dashboard configuration with defaults - now uses centralized config"""
+    """Dashboard configuration with defaults using current settings.json"""
 
     def __init__(self):
         # Load centralized settings
-        settings = Settings()
-        
-        # Kibana settings
-        self.kibana_url = settings.kibana.url
-        self.kibana_index = settings.elasticsearch.index_pattern
+        self.settings = self._load_settings()
+
+        # Elasticsearch settings
+        self.elasticsearch_url = self.settings.get('elasticsearch', {}).get('url',
+            'https://usieventho-prod-usw2.es.us-west-2.aws.found.io:9243')
+        self.kibana_url = self.settings.get('kibana', {}).get('url',
+            'https://usieventho-prod-usw2.kb.us-west-2.aws.found.io:9243')
+        self.kibana_index = self.settings.get('elasticsearch', {}).get('index_pattern', 'traffic-*')
 
         # Default time ranges
-        self.default_baseline_start = settings.processing.baseline_start
-        self.default_baseline_end = settings.processing.baseline_end
-        self.default_current_time = settings.processing.current_time_range
+        processing = self.settings.get('processing', {})
+        self.default_baseline_start = processing.get('baseline_start', '2025-06-01')
+        self.default_baseline_end = processing.get('baseline_end', '2025-06-09')
+        self.default_current_time = processing.get('current_time_range', 'now-12h')
 
         # Thresholds
-        self.high_volume_threshold = settings.processing.high_volume_threshold
-        self.medium_volume_threshold = settings.processing.medium_volume_threshold
-        self.critical_threshold = settings.processing.critical_threshold
-        self.warning_threshold = settings.processing.warning_threshold
+        self.high_volume_threshold = processing.get('high_volume_threshold', 1000)
+        self.medium_volume_threshold = processing.get('medium_volume_threshold', 100)
+        self.critical_threshold = processing.get('critical_threshold', -80)
+        self.warning_threshold = processing.get('warning_threshold', -50)
+        self.min_daily_volume = processing.get('min_daily_volume', 100)
+
+        # RAD types configuration
+        self.rad_types = self.settings.get('rad_types', {})
 
         # File paths
         self.data_dir = "data"
         self.raw_response_file = "data/raw_response.json"
         self.output_file = "index.html"
 
+    def _load_settings(self) -> Dict[str, Any]:
+        """Load settings from config/settings.json"""
+        config_path = Path(__file__).parent.parent / "config" / "settings.json"
 
-# Cookie handler functions
+        if not config_path.exists():
+            logging.warning(f"Settings file not found at {config_path}, using defaults")
+            return {}
+
+        try:
+            with open(config_path, 'r') as f:
+                return json.load(f)
+        except Exception as e:
+            logging.warning(f"Failed to load settings: {e}, using defaults")
+            return {}
+
+
+# ====================
+# Authentication
+# ====================
+
 def get_elastic_cookie() -> Optional[str]:
     """Get Elastic cookie from environment or local script"""
-    # Priority 1: Environment variable
-    cookie = os.environ.get('ELASTIC_COOKIE')
+    # Priority 1: Environment variable (for CI/CD)
+    cookie = os.environ.get('ELASTIC_COOKIE') or os.environ.get('ES_COOKIE')
     if cookie:
         return cookie
 
@@ -139,8 +160,10 @@ def validate_cookie(cookie: Optional[str]) -> bool:
     if not cookie:
         return False
 
-    # Basic validation
-    if cookie.startswith("Fe26.2**") or len(cookie) > 100:
+    # Basic validation - Kibana cookies typically start with specific patterns
+    if (cookie.startswith("Fe26.2**") or
+        cookie.startswith("sid=") or
+        len(cookie) > 100):
         return True
 
     return False
@@ -151,34 +174,28 @@ def setup_authentication(logger: logging.Logger) -> str:
     cookie = get_elastic_cookie()
 
     if not validate_cookie(cookie):
-        logger.error("❌ Invalid or missing Elastic cookie")
+        logger.error("(✗) Invalid or missing Elastic cookie")
         logger.error("Please set ELASTIC_COOKIE environment variable")
+        logger.error("Example: export ELASTIC_COOKIE='your_kibana_session_cookie'")
         sys.exit(1)
 
-    logger.info("✅ Authentication configured")
+    logger.info("(✓)Authentication configured")
     return cookie
 
 
-def ensure_directories(config: DashboardConfig, logger: logging.Logger):
-    """Ensure required directories exist"""
-    Path(config.data_dir).mkdir(parents=True, exist_ok=True)
-    logger.info(f"✅ Data directory ready: {config.data_dir}")
+# ====================
+# Data Processing
+# ====================
 
+def build_elasticsearch_query(config: DashboardConfig, baseline_start: str,
+                             baseline_end: str, current_time: str) -> Dict[str, Any]:
+    """Build Elasticsearch query for multi-RAD monitoring"""
 
-def fetch_kibana_data(cookie: str, config: DashboardConfig, args: argparse.Namespace,
-                     logger: logging.Logger) -> Dict[str, Any]:
-    """Fetch data from Kibana using our FastAPI endpoint"""
-    import requests
-
-    logger.info("📊 Fetching traffic data from Kibana...")
-
-    # Load RAD types from settings
-    settings = Settings()
-    rad_types = settings.rad_types
-    
     # Build wildcard filters for enabled RAD types
     wildcard_filters = []
-    for rad_key, rad_config in rad_types.items():
+    enabled_rad_types = []
+
+    for rad_key, rad_config in config.rad_types.items():
         if rad_config.get('enabled', False) and rad_config.get('pattern'):
             wildcard_filters.append({
                 "wildcard": {
@@ -187,10 +204,10 @@ def fetch_kibana_data(cookie: str, config: DashboardConfig, args: argparse.Names
                     }
                 }
             })
-    
-    # If no RAD types are enabled, fall back to default
+            enabled_rad_types.append(f"{rad_config['display_name']} ({rad_config['pattern']})")
+
+    # If no RAD types are enabled, fall back to default venture feed
     if not wildcard_filters:
-        logger.warning("No RAD types enabled, using default pattern")
         wildcard_filters = [{
             "wildcard": {
                 "detail.event.data.traffic.eid.keyword": {
@@ -198,12 +215,27 @@ def fetch_kibana_data(cookie: str, config: DashboardConfig, args: argparse.Names
                 }
             }
         }]
-    
-    # Log which patterns we're using
-    patterns = [f['wildcard']['detail.event.data.traffic.eid.keyword']['value'] for f in wildcard_filters]
-    logger.info(f"Using RAD patterns: {', '.join(patterns)}")
+        enabled_rad_types = ["Venture Feed (default)"]
 
-    # Build the Elasticsearch query with multiple patterns using OR logic
+    logging.info(f"Monitoring RAD types: {', '.join(enabled_rad_types)}")
+
+    # Convert time range to actual timestamp for current period
+    if current_time.startswith('now-'):
+        time_value = current_time[4:]  # Remove 'now-'
+        if time_value.endswith('h'):
+            hours = int(time_value[:-1])
+            current_start = datetime.utcnow() - timedelta(hours=hours)
+        elif time_value.endswith('d'):
+            days = int(time_value[:-1])
+            current_start = datetime.utcnow() - timedelta(days=days)
+        else:
+            current_start = datetime.utcnow() - timedelta(hours=12)  # default
+
+        current_start_str = current_start.isoformat() + "Z"
+    else:
+        current_start_str = current_time
+
+    # Build the complete Elasticsearch query
     query = {
         "size": 0,
         "query": {
@@ -223,7 +255,7 @@ def fetch_kibana_data(cookie: str, config: DashboardConfig, args: argparse.Names
                     {
                         "range": {
                             "@timestamp": {
-                                "gte": "2025-05-19T04:00:00.000Z",
+                                "gte": baseline_start,
                                 "lte": "now"
                             }
                         }
@@ -235,7 +267,7 @@ def fetch_kibana_data(cookie: str, config: DashboardConfig, args: argparse.Names
             "events": {
                 "terms": {
                     "field": "detail.event.data.traffic.eid.keyword",
-                    "order": {"_key": "asc"},
+                    "order": {"current": "desc"},
                     "size": 500
                 },
                 "aggs": {
@@ -243,8 +275,8 @@ def fetch_kibana_data(cookie: str, config: DashboardConfig, args: argparse.Names
                         "filter": {
                             "range": {
                                 "@timestamp": {
-                                    "gte": args.baseline_start,
-                                    "lt": args.baseline_end
+                                    "gte": baseline_start,
+                                    "lt": baseline_end
                                 }
                             }
                         }
@@ -253,7 +285,8 @@ def fetch_kibana_data(cookie: str, config: DashboardConfig, args: argparse.Names
                         "filter": {
                             "range": {
                                 "@timestamp": {
-                                    "gte": args.current_time
+                                    "gte": current_start_str,
+                                    "lte": "now"
                                 }
                             }
                         }
@@ -263,170 +296,404 @@ def fetch_kibana_data(cookie: str, config: DashboardConfig, args: argparse.Names
         }
     }
 
-    # Try FastAPI endpoint first (if dev server is running)
+    return query
+
+
+def fetch_kibana_data(cookie: str, config: DashboardConfig, baseline_start: str,
+                     baseline_end: str, current_time: str, logger: logging.Logger) -> Dict[str, Any]:
+    """Fetch data from Kibana/Elasticsearch"""
+
+    logger.info("📊 Fetching traffic data from Elasticsearch...")
+
+    # Build the query
+    query = build_elasticsearch_query(config, baseline_start, baseline_end, current_time)
+
+    # Prepare headers
+    headers = {
+        'Content-Type': 'application/json',
+        'kbn-xsrf': 'true',
+        'Cookie': cookie
+    }
+
+    # Make the request to Kibana
+    kibana_search_url = f"{config.kibana_url}/api/console/proxy?path=traffic-*/_search&method=POST"
+
     try:
         response = requests.post(
-            "http://localhost:8000/api/fetch-kibana-data",
-            json={"query": query, "force_refresh": False},
-            headers={"X-Elastic-Cookie": cookie},
-            timeout=30
-        )
-
-        if response.status_code == 200:
-            logger.info("✅ Data fetched via FastAPI endpoint")
-            return response.json()
-        else:
-            logger.warning(f"FastAPI endpoint returned {response.status_code}, falling back to CORS proxy")
-    except requests.exceptions.RequestException as e:
-        logger.warning(f"FastAPI endpoint not available, using CORS proxy: {e}")
-
-    # Fallback to CORS proxy
-    try:
-        response = requests.post(
-            "http://localhost:8889/kibana-proxy",
+            kibana_search_url,
+            headers=headers,
             json=query,
-            headers={"X-Elastic-Cookie": cookie},
             timeout=30
         )
 
         if response.status_code == 200:
-            logger.info("✅ Data fetched via CORS proxy")
-            return response.json()
+            data = response.json()
+            logger.success("(✓)Data fetched successfully")
+            return data
         else:
-            logger.error(f"❌ Failed to fetch data: HTTP {response.status_code}")
-            logger.error(response.text)
-            sys.exit(1)
+            logger.error(f"(✗) Kibana request failed: {response.status_code}")
+            logger.error(f"Response: {response.text}")
+            return {}
 
     except requests.exceptions.RequestException as e:
-        logger.error(f"❌ Failed to connect to CORS proxy: {e}")
-        logger.error("Make sure CORS proxy is running: npm run cors-proxy")
-        
-        # Direct API fallback for GitHub Actions
-        logger.info("🔄 Proxy servers unavailable, using direct Elasticsearch API")
-        headers = {
-            'Cookie': f'sid={cookie}',
-            'Content-Type': 'application/json',
-            'kbn-xsrf': 'true'
+        logger.error(f"(✗) Network error: {e}")
+        return {}
+
+
+def process_elasticsearch_data(data: Dict[str, Any], config: DashboardConfig,
+                              logger: logging.Logger) -> List[Dict[str, Any]]:
+    """Process Elasticsearch response data"""
+
+    if not data or 'aggregations' not in data:
+        logger.warning("No aggregations found in response")
+        return []
+
+    events_agg = data['aggregations'].get('events', {})
+    buckets = events_agg.get('buckets', [])
+
+    if not buckets:
+        logger.warning("No event buckets found")
+        return []
+
+    logger.info(f"Processing {len(buckets)} events...")
+
+    processed_events = []
+
+    for bucket in buckets:
+        event_id = bucket['key']
+
+        # Get counts
+        baseline_count = bucket.get('baseline', {}).get('doc_count', 0)
+        current_count = bucket.get('current', {}).get('doc_count', 0)
+
+        # Skip events below volume threshold
+        if baseline_count < config.min_daily_volume:
+            continue
+
+        # Calculate metrics
+        baseline_daily = baseline_count / 8  # 8-day baseline period
+
+        if baseline_daily > 0:
+            score = round(((current_count / baseline_daily) - 1) * 100)
+        else:
+            score = 0
+
+        # Determine status
+        if score <= config.critical_threshold:
+            status = "CRITICAL"
+        elif score <= config.warning_threshold:
+            status = "WARNING"
+        elif score >= 50:
+            status = "INCREASED"
+        else:
+            status = "NORMAL"
+
+        # Determine RAD type
+        rad_type = "unknown"
+        rad_display_name = "Unknown"
+        rad_color = "#666"
+
+        for rad_key, rad_config in config.rad_types.items():
+            pattern = rad_config.get('pattern', '')
+            if pattern and pattern.replace('*', '') in event_id:
+                rad_type = rad_key
+                rad_display_name = rad_config.get('display_name', rad_key)
+                rad_color = rad_config.get('color', '#666')
+                break
+
+        # Calculate impact
+        diff = current_count - baseline_daily
+        if diff < -50:
+            impact = f"Lost ~{abs(int(diff)):,} impressions"
+        elif diff > 50:
+            impact = f"Gained ~{int(diff):,} impressions"
+        else:
+            impact = "Normal variance"
+
+        # Create processed event
+        event = {
+            "event_id": event_id,
+            "display_name": event_id.split('.')[-1] if '.' in event_id else event_id,
+            "current": current_count,
+            "baseline_period": baseline_count,
+            "baseline_daily": round(baseline_daily),
+            "score": score,
+            "status": status,
+            "rad_type": rad_type,
+            "rad_display_name": rad_display_name,
+            "rad_color": rad_color,
+            "impact": impact
         }
-        es_url = "https://usieventho-prod-usw2.kb.us-west-2.aws.found.io:9243/api/console/proxy?path=traffic-*/_search&method=POST"
-        
-        try:
-            response = requests.post(es_url, json=query, headers=headers, timeout=30)
-            
-            if response.status_code == 200:
-                logger.info("✅ Data fetched via direct Elasticsearch API")
-                return response.json()
-            else:
-                logger.error(f"❌ Direct API failed: HTTP {response.status_code}")
-                logger.error(response.text)
-                sys.exit(1)
-                
-        except requests.exceptions.RequestException as direct_e:
-            logger.error(f"❌ Direct API connection failed: {direct_e}")
-            logger.error("All data fetch methods failed")
-            sys.exit(1)
+
+        processed_events.append(event)
+
+    # Sort by score (most critical first)
+    processed_events.sort(key=lambda x: x['score'])
+
+    logger.success(f"(✓)Processed {len(processed_events)} events")
+    return processed_events
 
 
-def save_raw_response(data: Dict[str, Any], config: DashboardConfig, logger: logging.Logger):
-    """Save raw response to file"""
-    with open(config.raw_response_file, 'w') as f:
-        json.dump(data, f, indent=2)
-    logger.info(f"💾 Raw response saved to {config.raw_response_file}")
+def calculate_summary_stats(events: List[Dict[str, Any]]) -> Dict[str, int]:
+    """Calculate summary statistics"""
+    stats = {
+        "critical": 0,
+        "warning": 0,
+        "normal": 0,
+        "increased": 0,
+        "total": len(events)
+    }
+
+    for event in events:
+        status = event['status'].lower()
+        if status in stats:
+            stats[status] += 1
+
+    return stats
 
 
-def generate_dashboard(config: DashboardConfig, args: argparse.Namespace,
-                      logger: logging.Logger):
-    """Process data and generate HTML dashboard"""
-    logger.info("🔨 Processing data and generating dashboard...")
+# ====================
+# HTML Generation
+# ====================
 
-    # Set environment variables for process_data.py
-    os.environ['BASELINE_START'] = args.baseline_start
-    os.environ['BASELINE_END'] = args.baseline_end
-    os.environ['CURRENT_TIME_RANGE'] = args.current_time
-    os.environ['HIGH_VOLUME_THRESHOLD'] = str(config.high_volume_threshold)
-    os.environ['MEDIUM_VOLUME_THRESHOLD'] = str(config.medium_volume_threshold)
-    os.environ['CRITICAL_THRESHOLD'] = str(config.critical_threshold)
-    os.environ['WARNING_THRESHOLD'] = str(config.warning_threshold)
+def generate_html_dashboard(events: List[Dict[str, Any]], stats: Dict[str, int],
+                          config: DashboardConfig, args: argparse.Namespace,
+                          logger: logging.Logger) -> str:
+    """Generate HTML dashboard"""
 
-    # Build arguments for process_data.py
-    old_argv = sys.argv.copy()  # Save current argv
-    sys.argv = [
-        'process_data.py',
-        '--response', config.raw_response_file,
-        '--output-template', config.output_file,
-        '--output', config.output_file
-    ]
+    # Generate timestamp
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S UTC")
 
-    try:
-        # Debug: Log what we're about to do
-        logger.info(f"Calling process_data with args: {sys.argv}")
-        
-        # Call process_data.py main function directly
-        process_data_main()
-        logger.success(f"✅ Dashboard generated successfully!")
-        logger.info(f"📄 Output: {config.output_file}")
-    except SystemExit as e:
-        if e.code != 0:
-            logger.error("❌ Failed to process data and generate HTML")
-            sys.exit(1)
-    except Exception as e:
-        logger.error(f"❌ Failed to generate dashboard: {e}")
-        import traceback
-        traceback.print_exc()
-        sys.exit(1)
-    finally:
-        sys.argv = old_argv  # Restore original argv
+    # Generate summary cards HTML
+    summary_html = f"""
+    <div class="summary">
+        <div class="card critical">
+            <div class="label">Critical</div>
+            <div class="value" id="criticalCount">{stats['critical']}</div>
+        </div>
+        <div class="card warning">
+            <div class="label">Warning</div>
+            <div class="value" id="warningCount">{stats['warning']}</div>
+        </div>
+        <div class="card normal">
+            <div class="label">Normal</div>
+            <div class="value" id="normalCount">{stats['normal']}</div>
+        </div>
+        <div class="card increased">
+            <div class="label">Increased</div>
+            <div class="value" id="increasedCount">{stats['increased']}</div>
+        </div>
+    </div>"""
 
+    # Generate table rows HTML
+    table_rows = ""
+    for event in events[:50]:  # Limit to top 50 for static dashboard
+        score_class = "negative" if event['score'] < 0 else "positive"
+        score_text = f"{'+' if event['score'] > 0 else ''}{event['score']}%"
+
+        kibana_url = build_kibana_url(event['event_id'])
+
+        table_rows += f"""
+        <tr data-rad-type="{event['rad_type']}">
+            <td>
+                <a href="{kibana_url}" target="_blank" class="event-link">
+                    <span class="event-name">{event['event_id']}</span>
+                </a>
+            </td>
+            <td>
+                <span class="rad-type-badge" style="background: {event['rad_color']}; color: white; padding: 2px 8px; border-radius: 3px; font-size: 11px; font-weight: 600;">
+                    {event['rad_display_name']}
+                </span>
+            </td>
+            <td><span class="badge {event['status'].lower()}">{event['status']}</span></td>
+            <td class="number"><span class="score {score_class}">{score_text}</span></td>
+            <td class="number">{event['current']:,}</td>
+            <td class="number">{event['baseline_daily']:,}</td>
+            <td><span class="impact">{event['impact']}</span></td>
+        </tr>"""
+
+    # Load base HTML template and replace placeholders
+    template_path = Path(__file__).parent.parent / "index.html"
+
+    if template_path.exists():
+        with open(template_path, 'r') as f:
+            html_content = f.read()
+
+        # Simple replacements for static generation
+        html_content = html_content.replace('Last Updated: <span id="lastUpdated">Loading...</span>',
+                                          f'Last Updated: {timestamp}')
+
+        # Find and replace the summary section
+        summary_start = html_content.find('<div class="summary">')
+        summary_end = html_content.find('</div>', summary_start) + 6
+        if summary_start != -1 and summary_end != -1:
+            html_content = (html_content[:summary_start] +
+                          summary_html +
+                          html_content[summary_end:])
+
+        # Find and replace the table body
+        tbody_start = html_content.find('<tbody>')
+        tbody_end = html_content.find('</tbody>') + 8
+        if tbody_start != -1 and tbody_end != -1:
+            html_content = (html_content[:tbody_start] +
+                          f'<tbody>{table_rows}</tbody>' +
+                          html_content[tbody_end:])
+    else:
+        # Fallback minimal HTML if template not found
+        html_content = f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>RAD Monitor Dashboard</title>
+            <style>
+                body {{ font-family: Arial, sans-serif; margin: 20px; }}
+                .summary {{ display: flex; gap: 20px; margin-bottom: 30px; }}
+                .card {{ padding: 20px; border-radius: 8px; text-align: center; }}
+                .critical {{ background: #ffebee; color: #c62828; }}
+                .warning {{ background: #fff3e0; color: #ef6c00; }}
+                .normal {{ background: #e8f5e8; color: #2e7d32; }}
+                .increased {{ background: #e3f2fd; color: #1565c0; }}
+                table {{ width: 100%; border-collapse: collapse; }}
+                th, td {{ padding: 10px; text-align: left; border-bottom: 1px solid #ddd; }}
+            </style>
+        </head>
+        <body>
+            <h1>RAD Monitor Dashboard</h1>
+            <p>Generated: {timestamp}</p>
+            {summary_html}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Event ID</th>
+                        <th>RAD Type</th>
+                        <th>Status</th>
+                        <th>Score</th>
+                        <th>Current</th>
+                        <th>Baseline</th>
+                        <th>Impact</th>
+                    </tr>
+                </thead>
+                <tbody>{table_rows}</tbody>
+            </table>
+        </body>
+        </html>"""
+
+    logger.success("(✓)HTML dashboard generated")
+    return html_content
+
+
+def build_kibana_url(event_id: str) -> str:
+    """Build Kibana URL for event"""
+    base_url = "https://usieventho-prod-usw2.kb.us-west-2.aws.found.io:9243"
+    discover_path = "/app/discover#/"
+
+    params = (
+        "?_g=(filters:!(),refreshInterval:(pause:!t,value:0),"
+        "time:(from:'2025-05-28T16:50:47.243Z',to:now))"
+        "&_a=(columns:!(),filters:!(('$state':(store:appState),"
+        f"meta:(alias:!n,disabled:!f,key:detail.event.data.traffic.eid.keyword,"
+        f"negate:!f,params:(query:'{event_id}'),type:phrase),"
+        f"query:(match_phrase:(detail.event.data.traffic.eid.keyword:'{event_id}')))),"
+        "grid:(columns:(detail.event.data.traffic.eid.keyword:(width:400))),"
+        "hideChart:!f,index:'traffic-*',interval:auto,query:(language:kuery,query:''),sort:!())"
+    )
+
+    return base_url + discover_path + params
+
+
+# ====================
+# Main Function
+# ====================
 
 def main():
-    """Main function - orchestrates dashboard generation"""
-    # Setup
-    logger = setup_logging()
-    config = DashboardConfig()
-
-    # Command line arguments
+    """Main function"""
     parser = argparse.ArgumentParser(description='Generate RAD Monitor Dashboard')
     parser.add_argument('baseline_start', nargs='?',
-                       default=config.default_baseline_start,
                        help='Baseline start date (YYYY-MM-DD)')
     parser.add_argument('baseline_end', nargs='?',
-                       default=config.default_baseline_end,
                        help='Baseline end date (YYYY-MM-DD)')
     parser.add_argument('current_time', nargs='?',
-                       default=config.default_current_time,
                        help='Current time range (e.g., now-12h)')
+    parser.add_argument('--output', '-o', default='index.html',
+                       help='Output file path')
+    parser.add_argument('--verbose', '-v', action='store_true',
+                       help='Verbose logging')
+    parser.add_argument('--dry-run', action='store_true',
+                       help='Show configuration without making requests')
 
     args = parser.parse_args()
 
-    # Start generation
-    logger.info("🚀 === Building RAD Dashboard ===")
-    logger.info(f"📅 Time: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-    logger.info(f"📊 Baseline: {args.baseline_start} to {args.baseline_end}")
-    logger.info(f"⏰ Current period: {args.current_time}")
+    # Setup logging
+    logger = setup_logging(args.verbose)
 
     try:
-        # Step 1: Setup directories
-        ensure_directories(config, logger)
+        logger.info("🚀 Starting RAD Monitor Dashboard generation...")
 
-        # Step 2: Setup authentication
+        # Load configuration
+        config = DashboardConfig()
+
+        # Use provided arguments or defaults
+        baseline_start = args.baseline_start or config.default_baseline_start
+        baseline_end = args.baseline_end or config.default_baseline_end
+        current_time = args.current_time or config.default_current_time
+
+        logger.info(f"Configuration:")
+        logger.info(f"  Baseline: {baseline_start} to {baseline_end}")
+        logger.info(f"  Current time: {current_time}")
+        logger.info(f"  Output file: {args.output}")
+
+        if args.dry_run:
+            logger.info("🏃 Dry run mode - configuration validated successfully")
+            return
+
+        # Setup authentication
         cookie = setup_authentication(logger)
 
-        # Step 3: Fetch data from Kibana
-        response_data = fetch_kibana_data(cookie, config, args, logger)
+        # Ensure directories exist
+        Path(config.data_dir).mkdir(parents=True, exist_ok=True)
+        logger.info(f"(✓)Data directory ready: {config.data_dir}")
 
-        # Step 4: Save raw response
-        save_raw_response(response_data, config, logger)
+        # Fetch data from Kibana
+        raw_data = fetch_kibana_data(cookie, config, baseline_start,
+                                   baseline_end, current_time, logger)
 
-        # Step 5: Generate dashboard HTML
-        generate_dashboard(config, args, logger)
+        if not raw_data:
+            logger.error("(✗) Failed to fetch data")
+            sys.exit(1)
 
-        logger.success("🎉 Dashboard generation complete!")
+        # Save raw response for debugging
+        with open(config.raw_response_file, 'w') as f:
+            json.dump(raw_data, f, indent=2)
+        logger.info(f"(✓)Raw response saved to {config.raw_response_file}")
+
+        # Process the data
+        events = process_elasticsearch_data(raw_data, config, logger)
+
+        if not events:
+            logger.warning("⚠️  No events found matching criteria")
+
+        # Calculate summary statistics
+        stats = calculate_summary_stats(events)
+        logger.info(f"📊 Summary: {stats['critical']} critical, {stats['warning']} warning, "
+                   f"{stats['normal']} normal, {stats['increased']} increased")
+
+        # Generate HTML dashboard
+        html_content = generate_html_dashboard(events, stats, config, args, logger)
+
+        # Write output file
+        with open(args.output, 'w') as f:
+            f.write(html_content)
+
+        logger.success(f"🎉 Dashboard generated successfully: {args.output}")
+        logger.info(f"Total events processed: {len(events)}")
 
     except KeyboardInterrupt:
-        logger.warning("\n⚠️  Dashboard generation interrupted")
-        sys.exit(1)
+        logger.warning("⚡ Interrupted by user")
+        sys.exit(130)
     except Exception as e:
-        logger.error(f"❌ Unexpected error: {e}")
+        logger.error(f"💥 Unexpected error: {e}")
+        if args.verbose:
+            logger.error(traceback.format_exc())
         sys.exit(1)
 
 

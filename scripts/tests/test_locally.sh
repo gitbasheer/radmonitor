@@ -26,9 +26,9 @@ chmod +x scripts/generate_dashboard_refactored.sh
 
 # Generate the dashboard
 if ./scripts/generate_dashboard_refactored.sh; then
-    echo -e "${GREEN}✓ Dashboard generated successfully${NC}"
+    echo -e "${GREEN}(✓) Dashboard generated successfully${NC}"
 else
-    echo -e "${RED}✗ Dashboard generation failed${NC}"
+    echo -e "${RED}(✗)Dashboard generation failed${NC}"
     exit 1
 fi
 

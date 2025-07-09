@@ -2,7 +2,7 @@
  * Formula Parser - Converts formula strings into Abstract Syntax Trees (AST)
  */
 
-import { ASTNodeTypes, FunctionMetadata, Operators } from './formula-types.js';
+import { ASTNodeTypes, Operators } from './formula-types.js';
 
 export class FormulaParser {
   constructor() {

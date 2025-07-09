@@ -14,7 +14,7 @@ log() {
 
 # Success message
 success() {
-    echo -e "${GREEN}✓ $1${NC}" >&2
+    echo -e "${GREEN}(✓) $1${NC}" >&2
 }
 
 # Warning message
@@ -24,7 +24,7 @@ warn() {
 
 # Error message and exit
 error() {
-    echo -e "${RED}✗ $1${NC}" >&2
+    echo -e "${RED}(✗)$1${NC}" >&2
     exit 1
 }
 

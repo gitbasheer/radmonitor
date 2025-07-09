@@ -1,24 +1,40 @@
 {
   "environment": "production",
-  "corsProxy": {
-    "enabled": true,
-    "url": "https://regal-youtiao-09c777.netlify.app/.netlify/functions/proxy"
+  "server": {
+    "type": "fastapi",
+    "url": "${API_URL}",
+    "port": "${SERVER_PORT}",
+    "workers": "${WORKERS}"
   },
-  "lastUpdated": "2025-06-27T17:58:00Z",
+  "corsProxy": {
+    "enabled": false,
+    "url": null
+  },
+  "lastUpdated": "2025-01-07T20:00:00Z",
   "elasticsearch": {
-    "url": "https://usieventho-prod-usw2.kb.us-west-2.aws.found.io:9243",
+    "url": "${ELASTICSEARCH_URL}",
+    "kibanaUrl": "${KIBANA_URL}",
     "path": "/api/console/proxy?path=traffic-*/_search&method=POST",
     "directConnection": false,
     "corsRequired": false
   },
   "features": {
-    "fastapi": false,
+    "fastapi": true,
     "localServer": false,
-    "corsProxy": true
+    "corsProxy": false,
+    "websocket": true,
+    "formulaBuilder": true,
+    "authentication": true
   },
   "dashboard": {
     "autoLoadCookie": true,
     "skipCookiePrompt": false,
     "refreshInterval": 300
+  },
+  "security": {
+    "allowedOrigins": "${ALLOWED_ORIGINS}",
+    "allowedHosts": "${ALLOWED_HOSTS}",
+    "enableDocs": false,
+    "requireAuth": true
   }
 }

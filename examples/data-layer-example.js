@@ -211,7 +211,7 @@ export const DataLayerExample = (() => {
                 console.log('Real data fetch skipped (no auth):', error.message);
             }
 
-            console.log('✅ All examples complete!');
+            console.log('(✓)All examples complete!');
         },
 
         // Individual examples

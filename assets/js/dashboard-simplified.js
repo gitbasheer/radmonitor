@@ -8,6 +8,8 @@ import { authService } from './auth-service.js';
 import { dataService } from './data-service.js';
 import { apiClient } from './api-client-simplified.js';
 import { EventEmitter } from './event-emitter.js';
+import { renderAuthPrompt } from './components/auth-prompt.js';
+import { connectionManager } from './connection-status-manager.js';
 import './types.js'; // Import type definitions
 
 export class SimplifiedDashboard {
@@ -54,7 +56,7 @@ export class SimplifiedDashboard {
         const statusText = document.querySelector('.status-text');
 
         if (statusDot && statusText) {
-            statusDot.style.backgroundColor = connected ? '#4CAF50' : '#f44336';
+            statusDot.style.backgroundColor = connected ? 'var(--gd-color-success)' : 'var(--gd-color-error)';
             statusText.textContent = message || (connected ? 'Connected' : 'Disconnected');
         }
     }
@@ -63,51 +65,121 @@ export class SimplifiedDashboard {
      * Initialize dashboard
      */
     async init() {
+        if (this.isInitialized) {
+            console.log('⚠️ Dashboard already initialized, skipping...');
+            return;
+        }
+
         try {
             console.log('🚀 Initializing RAD Monitor Dashboard...');
+
+            // Connection manager is already initialized in its constructor
+            // Just update API status
+            try {
+                connectionManager.updateAPIStatus(true, 'Connected');
+            } catch (error) {
+                console.error('Error updating API status:', error);
+                console.error('Stack trace:', error.stack);
+            }
 
             // Step 1: Check authentication (but don't force prompt)
             let authStatus;
             try {
                 authStatus = await authService.checkAuth();
                 if (authStatus.authenticated) {
-                    console.log('✅ Authentication:', authStatus.method);
+                    console.log('(✓)Authentication:', authStatus.method);
+                    connectionManager.updateAuthStatus(true, `Authenticated via ${authStatus.method}`);
+                    window.dispatchEvent(new CustomEvent('auth:success', {
+                        detail: { message: `Authenticated via ${authStatus.method}` }
+                    }));
                 } else {
                     console.log('⚠️ Not authenticated yet');
+                    connectionManager.updateAuthStatus(false, 'Not authenticated');
+                    window.dispatchEvent(new CustomEvent('auth:failed', {
+                        detail: { message: 'Not authenticated' }
+                    }));
                 }
             } catch (error) {
-                console.log('⚠️ Auth check failed:', error.message);
+                console.error('⚠️ Auth check failed:', error.message);
+                console.error('Stack trace:', error.stack);
                 authStatus = { authenticated: false };
+                connectionManager.updateAuthStatus(false, error.message);
+                window.dispatchEvent(new CustomEvent('auth:failed', {
+                    detail: { message: error.message }
+                }));
             }
 
             // Step 2: Initialize data service (will handle auth internally)
             try {
                 await dataService.initialize();
-                console.log('✅ Data service ready');
+                console.log('(✓)Data service ready');
+                connectionManager.updateDataStatus(true, 'Data service ready');
+                window.dispatchEvent(new CustomEvent('data:loaded', {
+                    detail: { message: 'Configuration and data service ready' }
+                }));
             } catch (error) {
+                console.error('Data service initialization error:', error);
+                console.error('Stack trace:', error.stack);
+
                 // If data initialization fails due to auth, show appropriate message
+                connectionManager.updateDataStatus(false, error.message);
+                window.dispatchEvent(new CustomEvent('data:error', {
+                    detail: { message: error.message }
+                }));
                 if (!authStatus.authenticated) {
                     console.log('💡 Set cookie to enable data loading');
-                    this.showError('Authentication required - use RADMonitor.setAuth("your-cookie")');
+                    // Ensure auth prompt is shown on overlay
+                    try {
+                        connectionManager.showAuthPromptOnOverlay();
+                    } catch (promptError) {
+                        console.error('Error showing auth prompt:', promptError);
+                        console.error('Stack trace:', promptError.stack);
+                        this.showAuthPrompt(); // Fallback to regular prompt
+                    }
                 } else {
                     throw error; // Re-throw if not auth-related
                 }
             }
 
             // Step 3: Setup UI components
-            this.setupComponents();
-            console.log('✅ UI components ready');
+            try {
+                this.setupComponents();
+                console.log('(✓)UI components ready');
+            } catch (error) {
+                console.error('Error setting up UI components:', error);
+                console.error('Stack trace:', error.stack);
+                throw new Error(`Failed to setup UI components: ${error.message}`);
+            }
 
             // Step 4: Setup event listeners
-            this.setupEventListeners();
-            console.log('✅ Event listeners attached');
+            try {
+                this.setupEventListeners();
+                console.log('(✓)Event listeners attached');
+            } catch (error) {
+                console.error('Error setting up event listeners:', error);
+                console.error('Stack trace:', error.stack);
+                throw new Error(`Failed to setup event listeners: ${error.message}`);
+            }
 
             this.isInitialized = true;
             console.log('🎉 Dashboard ready!');
 
             return true;
         } catch (error) {
-            console.error('❌ Dashboard initialization failed:', error);
+            console.error('(✗) Dashboard initialization failed:', error);
+            console.error('Stack trace:', error.stack);
+
+            // Show error on loading overlay if available
+            try {
+                connectionManager.updateLoadingMessage(`Initialization failed: ${error.message}`, true);
+                // Keep overlay visible with error
+                if (!connectionManager.isFullyLoaded) {
+                    connectionManager.showAuthPromptOnOverlay();
+                }
+            } catch (overlayError) {
+                console.error('Error updating overlay:', overlayError);
+            }
+
             this.showError(error.message);
             return false;
         }
@@ -117,23 +189,33 @@ export class SimplifiedDashboard {
      * Setup UI components
      */
     setupComponents() {
-        // Initialize table component
-        this.components.table = new DashboardTable('#tableBody');
+        try {
+            // Initialize table component
+            const tableBody = document.querySelector('#tableBody');
+            if (!tableBody) {
+                console.warn('Table body element not found, creating placeholder');
+            }
+            this.components.table = new DashboardTable('#tableBody');
 
-        // Initialize summary cards
-        this.components.cards = new SummaryCards({
-            critical: '#criticalCount',
-            warning: '#warningCount',
-            normal: '#normalCount',
-            increased: '#increasedCount'
-        });
+            // Initialize summary cards
+            this.components.cards = new SummaryCards({
+                critical: '#criticalCount',
+                warning: '#warningCount',
+                normal: '#normalCount',
+                increased: '#increasedCount'
+            });
 
-        // Initialize filters
-        this.components.filters = new FilterControls({
-            statusButtons: '.filter-btn',
-            searchInput: '#searchInput',
-            radTypeButtons: '#radTypeButtons'
-        });
+            // Initialize filters
+            this.components.filters = new FilterControls({
+                statusButtons: '.filter-btn',
+                searchInput: '#searchInput',
+                radTypeButtons: '#radTypeButtons'
+            });
+        } catch (error) {
+            console.error('Error in setupComponents:', error);
+            console.error('Stack trace:', error.stack);
+            throw error;
+        }
     }
 
     /**
@@ -251,7 +333,7 @@ export class SimplifiedDashboard {
     showError(message) {
         const statusEl = document.getElementById('refreshStatus');
         if (statusEl) {
-            statusEl.innerHTML = `<span style="color: #d32f2f;">❌ ${message}</span>`;
+            statusEl.innerHTML = `<span style="color: #d32f2f;">(✗) ${message}</span>`;
         }
     }
 
@@ -263,6 +345,19 @@ export class SimplifiedDashboard {
         if (statusEl) {
             statusEl.textContent = 'Ready';
         }
+    }
+
+    /**
+     * Show authentication prompt using centralized component
+     */
+    showAuthPrompt() {
+        const container = document.getElementById('events-container') || document.querySelector('.grid-container');
+        if (container) {
+            renderAuthPrompt(container);
+        }
+
+        // Also update the status
+        this.showError('Authentication required - see instructions below');
     }
 
     /**
@@ -309,7 +404,7 @@ export class SimplifiedDashboard {
                     this.isAuthenticating = false;
                     this.authRetries = 0;
                 } catch (error) {
-                    console.log('❌ Authentication failed:', error.message);
+                    console.log('(✗) Authentication failed:', error.message);
                     this.isAuthenticating = false;
                     this.updateConnectionStatus(false, 'Authentication failed');
                     return false;
@@ -320,11 +415,13 @@ export class SimplifiedDashboard {
                 const success = await apiClient.testConnection();
 
                 if (success) {
-                    console.log('✅ API connection successful');
+                    console.log('(✓)API connection successful');
                     this.updateConnectionStatus(true, 'Connected to Elasticsearch');
 
-                    // Show success message
-                    alert('✅ Connection Successful!\n\nYour authentication is working properly.');
+                    // Use a subtle notification instead of alert
+                    window.dispatchEvent(new CustomEvent('connection:success', {
+                        detail: { message: 'Connection successful' }
+                    }));
 
                     // Only refresh if we're already initialized
                     if (this.isInitialized) {
@@ -333,13 +430,18 @@ export class SimplifiedDashboard {
 
                     return true;
                 } else {
-                    console.log('❌ API connection failed');
-                    this.updateConnectionStatus(false, 'Connection failed');
-                    alert('❌ Connection Failed\n\nPlease check your cookie and try again.');
+                    console.log('(✗) API connection failed');
+                    this.updateConnectionStatus(false, 'Connection test failed - but data may still load');
+                    
+                    // Don't show an alert - just log it
+                    window.dispatchEvent(new CustomEvent('connection:failed', {
+                        detail: { message: 'Connection test failed' }
+                    }));
+                    
                     return false;
                 }
         } catch (error) {
-            console.error('❌ Connection test error:', error);
+            console.error('(✗) Connection test error:', error);
 
             // Only prompt for auth if it's an auth error and we haven't exceeded retries
             if (error.message?.includes('auth') && this.authRetries < this.maxAuthRetries) {
@@ -353,7 +455,7 @@ export class SimplifiedDashboard {
                     this.authRetries = 0;
                     return await this.testApiConnection(); // Retry after auth
                 } catch (authError) {
-                    console.log('❌ Authentication failed:', authError.message);
+                    console.log('(✗) Authentication failed:', authError.message);
                     this.isAuthenticating = false;
                 }
             }
@@ -375,7 +477,7 @@ export class SimplifiedDashboard {
             const cookie = await authService.promptForCookie();
             if (cookie) {
                 await authService.setLegacyCookie(cookie);
-                console.log('✅ Cookie saved successfully');
+                console.log('(✓)Cookie saved successfully');
 
                 // Test connection after setting cookie
                 const connected = await this.testApiConnection();
@@ -384,7 +486,7 @@ export class SimplifiedDashboard {
                 }
             }
         } catch (error) {
-            console.error('❌ Failed to set cookie:', error);
+            console.error('(✗) Failed to set cookie:', error);
         }
     }
 

@@ -6,6 +6,7 @@
 
 import TimeRangeUtils from './time-range-utils.js';
 import { ConfigService } from './config-service.js';
+import { cryptoUtils } from './crypto-utils.js';
 
 /**
  * Unified API Client
@@ -16,15 +17,40 @@ export class UnifiedAPIClient {
         // Environment detection
         this.isLocalDev = window.location.hostname === 'localhost' ||
                          window.location.hostname === '127.0.0.1';
-        this.isProduction = window.location.hostname.includes('github.io');
+        this.isProduction = window.location.hostname.includes('github.io') || 
+                           window.location.hostname.includes('github.com');
 
-        // Base URLs - unified server handles everything
-        this.baseUrl = this.isLocalDev ? 'http://localhost:8000' : '';
+        // Get configuration
+        const config = window.ConfigService?.getConfig() || {};
+        
+        // Base URLs - check for production API URL
+        if (this.isProduction && config.server?.url) {
+            // Use configured production server URL
+            this.baseUrl = config.server.url;
+        } else if (this.isProduction && window.PRODUCTION_API_URL) {
+            // Fall back to window variable
+            this.baseUrl = window.PRODUCTION_API_URL;
+        } else if (this.isLocalDev) {
+            // Local development
+            this.baseUrl = 'http://localhost:8000';
+        } else {
+            // Default to same origin
+            this.baseUrl = window.location.origin;
+        }
+
         this.apiV1 = `${this.baseUrl}/api/v1`;
-        this.wsUrl = this.isLocalDev ? 'ws://localhost:8000/ws' : null;
+        
+        // WebSocket URL
+        if (config.features?.websocket && this.baseUrl) {
+            const wsProtocol = this.baseUrl.startsWith('https') ? 'wss' : 'ws';
+            const wsHost = this.baseUrl.replace(/^https?:\/\//, '');
+            this.wsUrl = `${wsProtocol}://${wsHost}/ws`;
+        } else {
+            this.wsUrl = this.isLocalDev ? 'ws://localhost:8000/ws' : null;
+        }
 
-        // Production mode uses proxy, not direct API calls
-        this.useProxy = this.isProduction;
+        // Production mode now uses FastAPI server
+        this.useProxy = false;
 
         // WebSocket state
         this.websocket = null;
@@ -51,12 +77,24 @@ export class UnifiedAPIClient {
     /**
      * Get authentication cookie from various sources
      */
-    getElasticCookie() {
+    async getElasticCookie() {
         // Check localStorage first
         const saved = localStorage.getItem('elasticCookie');
         if (saved) {
             try {
-                const parsed = JSON.parse(saved);
+                let parsed;
+                // Try to decrypt if it looks encrypted
+                if (/^[A-Za-z0-9+/]+=*$/.test(saved) && saved.length > 100) {
+                    try {
+                        parsed = await cryptoUtils.decrypt(saved);
+                    } catch (decryptError) {
+                        // Fall back to plain text
+                        parsed = JSON.parse(saved);
+                    }
+                } else {
+                    // Legacy unencrypted format
+                    parsed = JSON.parse(saved);
+                }
                 if (parsed.expires && new Date(parsed.expires) > new Date()) {
                     return parsed.cookie;
                 }
@@ -77,7 +115,7 @@ export class UnifiedAPIClient {
     /**
      * Save authentication cookie
      */
-    saveElasticCookie(cookie) {
+    async saveElasticCookie(cookie) {
         if (!cookie || !cookie.trim()) return false;
 
         const cookieData = {
@@ -86,7 +124,14 @@ export class UnifiedAPIClient {
             saved: new Date().toISOString()
         };
 
-        localStorage.setItem('elasticCookie', JSON.stringify(cookieData));
+        try {
+            const encrypted = await cryptoUtils.encrypt(cookieData);
+            localStorage.setItem('elasticCookie', encrypted);
+        } catch (error) {
+            console.error('Failed to encrypt cookie:', error);
+            // Fallback to unencrypted
+            localStorage.setItem('elasticCookie', JSON.stringify(cookieData));
+        }
         return true;
     }
 
@@ -94,7 +139,7 @@ export class UnifiedAPIClient {
      * Get authentication details
      */
     async getAuthenticationDetails() {
-        const cookie = this.getElasticCookie();
+        const cookie = await this.getElasticCookie();
 
         if (cookie) {
             return {
@@ -128,7 +173,7 @@ export class UnifiedAPIClient {
             `Look for: sid=xxxxx`
         );
 
-        if (cookie && this.saveElasticCookie(cookie)) {
+        if (cookie && await this.saveElasticCookie(cookie)) {
             return cookie.trim();
         }
 
@@ -178,7 +223,7 @@ export class UnifiedAPIClient {
 
                 // Log success
                 console.log(
-                    `✅ API Request → ${options.method || 'GET'} ${url} | ${duration}ms`,
+                    `(✓)API Request → ${options.method || 'GET'} ${url} | ${duration}ms`,
                     { requestId, status: response.status }
                 );
 
@@ -194,7 +239,7 @@ export class UnifiedAPIClient {
             this.metrics.errors++;
 
             console.error(
-                `❌ API Request Failed → ${options.method || 'GET'} ${url} | ${duration}ms`,
+                `(✗) API Request Failed → ${options.method || 'GET'} ${url} | ${duration}ms`,
                 { requestId, error: error.message }
             );
 
@@ -409,7 +454,7 @@ export class UnifiedAPIClient {
                     if (directResponse.ok) {
                         const directData = await directResponse.json();
                         if (!directData.error) {
-                            console.log('✅ Direct Elasticsearch connection successful!');
+                            console.log('(✓)Direct Elasticsearch connection successful!');
                             result = {
                                 success: true,
                                 data: directData,
@@ -663,6 +708,48 @@ export class UnifiedAPIClient {
     }
 
     /**
+     * Check if CORS proxy/server is available (legacy compatibility)
+     */
+    async checkCorsProxy() {
+        // In unified client, this is just a health check
+        try {
+            const response = await fetch(`${this.baseUrl}/health`, {
+                method: 'GET',
+                signal: AbortSignal.timeout(1000)
+            });
+            return response.ok;
+        } catch (error) {
+            return false;
+        }
+    }
+
+    /**
+     * Test authentication (legacy compatibility)
+     */
+    async testAuthentication() {
+        try {
+            const health = await this.checkHealth();
+            if (health.healthy && health.authenticated) {
+                return {
+                    success: true,
+                    method: this.isProduction ? 'production-proxy' : 'local-server',
+                    message: 'Authentication validated successfully'
+                };
+            } else {
+                return {
+                    success: false,
+                    error: health.message || 'Authentication failed'
+                };
+            }
+        } catch (error) {
+            return {
+                success: false,
+                error: error.message
+            };
+        }
+    }
+
+    /**
      * Initialize client
      */
     async initialize() {
@@ -671,6 +758,17 @@ export class UnifiedAPIClient {
         // Check health
         const health = await this.checkHealth();
         console.log('Health check:', health);
+
+        // Emit connection status
+        if (health.healthy) {
+            window.dispatchEvent(new CustomEvent('api:connected', {
+                detail: { message: 'API connected successfully' }
+            }));
+        } else {
+            window.dispatchEvent(new CustomEvent('api:disconnected', {
+                detail: { message: health.message || 'API connection failed' }
+            }));
+        }
 
         // Connect WebSocket if in local dev
         if (this.isLocalDev) {

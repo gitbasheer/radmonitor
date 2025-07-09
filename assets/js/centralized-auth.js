@@ -4,6 +4,8 @@
  * Uses localStorage with enhanced persistence and sharing
  */
 
+import { cryptoUtils } from './crypto-utils.js';
+
 export const CentralizedAuth = (() => {
     'use strict';
 
@@ -19,7 +21,7 @@ export const CentralizedAuth = (() => {
      */
     async function init() {
         // Load from storage
-        currentAuth = loadFromStorage();
+        currentAuth = await loadFromStorage();
 
         // Check if we should try to load a shared cookie (production only)
         if (isProduction() && (!currentAuth || currentAuth.expired)) {
@@ -74,7 +76,7 @@ export const CentralizedAuth = (() => {
 
         // Save
         currentAuth = auth;
-        saveToStorage(auth);
+        await saveToStorage(auth);
 
         // Notify listeners
         window.dispatchEvent(new CustomEvent('authUpdated', {
@@ -97,6 +99,13 @@ export const CentralizedAuth = (() => {
         }
 
         window.dispatchEvent(new CustomEvent('authCleared'));
+    }
+
+    /**
+     * Delete cookie (alias for clearAuth for backward compatibility)
+     */
+    function deleteCookie() {
+        clearAuth();
     }
 
     /**
@@ -160,12 +169,12 @@ export const CentralizedAuth = (() => {
             }
 
             if (response.status === 401) {
-                console.error('❌ Cookie validation failed: Server returned 401 Unauthorized');
+                console.error('(✗) Cookie validation failed: Server returned 401 Unauthorized');
                 return false;
             }
 
             if (!response.ok) {
-                console.error(`❌ Cookie validation failed: Server returned ${response.status} ${response.statusText}`);
+                console.error(`(✗) Cookie validation failed: Server returned ${response.status} ${response.statusText}`);
                 return false;
             }
 
@@ -173,28 +182,41 @@ export const CentralizedAuth = (() => {
             if (isLocalhost) {
                 const data = await response.json();
                 if (!data.authenticated) {
-                    console.error('❌ Cookie validation failed: Auth status shows not authenticated');
+                    console.error('(✗) Cookie validation failed: Auth status shows not authenticated');
                     return false;
                 }
             }
 
-            console.log('✅ Cookie validated successfully');
+            console.log('(✓)Cookie validated successfully');
             return true;
         } catch (error) {
-            console.error('❌ Cookie validation error:', error.message);
+            console.error('(✗) Cookie validation error:', error.message);
             return false;
         }
     }
 
     /**
-     * Load from localStorage
+     * Load from localStorage with decryption
      */
-    function loadFromStorage() {
+    async function loadFromStorage() {
         try {
             const stored = localStorage.getItem(STORAGE_KEY);
             if (!stored) return null;
 
-            const auth = JSON.parse(stored);
+            // Try to decrypt if it looks encrypted (base64 pattern)
+            let auth;
+            if (/^[A-Za-z0-9+/]+=*$/.test(stored) && stored.length > 100) {
+                try {
+                    auth = await cryptoUtils.decrypt(stored);
+                } catch (decryptError) {
+                    // Fall back to plain text for backward compatibility
+                    console.warn('Failed to decrypt, trying plain text');
+                    auth = JSON.parse(stored);
+                }
+            } else {
+                // Legacy unencrypted format
+                auth = JSON.parse(stored);
+            }
 
             // Check expiry
             const now = new Date();
@@ -209,13 +231,21 @@ export const CentralizedAuth = (() => {
     }
 
     /**
-     * Save to localStorage
+     * Save to localStorage with encryption
      */
-    function saveToStorage(auth) {
+    async function saveToStorage(auth) {
         try {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(auth));
+            const encrypted = await cryptoUtils.encrypt(auth);
+            localStorage.setItem(STORAGE_KEY, encrypted);
         } catch (error) {
             console.error('Failed to save auth to storage:', error);
+            // Fallback to unencrypted if encryption fails
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(auth));
+                console.warn('Saved auth without encryption as fallback');
+            } catch (fallbackError) {
+                console.error('Failed to save auth even without encryption:', fallbackError);
+            }
         }
     }
 
@@ -300,6 +330,7 @@ export const CentralizedAuth = (() => {
         init,
         getCookie,
         setCookie,
+        deleteCookie,
         clearAuth,
         getStatus,
         exportAuth,

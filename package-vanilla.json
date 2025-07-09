@@ -1,0 +1,36 @@
+{
+  "name": "rad-monitor-dashboard",
+  "version": "2.0.0",
+  "description": "RAD Monitor Dashboard - Simplified Architecture",
+  "main": "index.html",
+  "type": "module",
+  "scripts": {
+    "start": "python3 bin/server.py",
+    "dev": "python3 bin/server.py",
+    "dev:direct": "python3 bin/server.py",
+    "start:simple": "python3 bin/simple-server.py",
+    "start:production": "python3 bin/server_production.py",
+    "test": "vitest",
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest --coverage",
+    "cleanup": "./cleanup-legacy.sh"
+  },
+  "engines": {
+    "node": ">=16"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.13.2",
+    "@modelcontextprotocol/server-everything": "^2025.5.12",
+    "cors": "^2.8.5",
+    "express": "^4.18.2",
+    "node-fetch": "^3.3.2",
+    "zod": "^3.25.67",
+    "zod-to-json-schema": "^3.24.6",
+    "zustand": "^5.0.6"
+  },
+  "devDependencies": {
+    "@vitest/ui": "^3.2.4",
+    "jsdom": "^26.1.0",
+    "vitest": "^3.2.4"
+  }
+}

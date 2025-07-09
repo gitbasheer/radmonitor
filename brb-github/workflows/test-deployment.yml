@@ -14,7 +14,7 @@ permissions:
 jobs:
   test-deployment:
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -47,10 +47,10 @@ sys.path.insert(0, '.')
 try:
     from src.config.settings import Settings
     settings = Settings()
-    print('✅ Configuration loaded successfully')
+    print('(✓)Configuration loaded successfully')
     print(f'Baseline: {settings.processing.baseline_start} to {settings.processing.baseline_end}')
 except Exception as e:
-    print(f'❌ Configuration error: {e}')
+    print(f'(✗) Configuration error: {e}')
     sys.exit(1)
           "
 
@@ -77,25 +77,25 @@ except Exception as e:
             }
           }
           EOF
-          
+
           # Test HTML generation only
           python3 -m src.data.process_data \
             --response data/raw_response.json \
             --output-template index.html \
             --output test_output.html
-          
+
           if [ -f test_output.html ]; then
-            echo "✅ HTML generation works without Elastic cookie"
+            echo "(✓)HTML generation works without Elastic cookie"
             echo "File size: $(ls -lh test_output.html | awk '{print $5}')"
             # Check for config editor
             if grep -q "config-editor.js" test_output.html; then
-              echo "✅ Config editor included"
+              echo "(✓)Config editor included"
             else
-              echo "❌ Config editor missing"
+              echo "(✗) Config editor missing"
               exit 1
             fi
           else
-            echo "❌ HTML generation failed"
+            echo "(✗) HTML generation failed"
             exit 1
           fi
 
@@ -105,23 +105,23 @@ except Exception as e:
         run: |
           echo "=== Testing with dummy Elastic cookie ==="
           echo "Cookie is set: ${ELASTIC_COOKIE:0:10}..."
-          
+
           # This will fail at data fetch but should show the direct API attempt
           set +e  # Don't exit on error
           timeout 30s ./scripts/generate_dashboard_refactored.sh 2>&1 | tee deploy_test.log
           EXIT_CODE=$?
           set -e
-          
+
           echo "Exit code: $EXIT_CODE"
-          
+
           # Check if direct API was attempted
           if grep -q "direct Elasticsearch API\|Direct API fallback" deploy_test.log; then
-            echo "✅ Direct API fallback was attempted"
+            echo "(✓)Direct API fallback was attempted"
           else
             echo "⚠️ Direct API fallback not detected - checking for proxy attempts"
             grep -i "proxy\|localhost" deploy_test.log || true
           fi
-          
+
           # Even if it fails, we validated the flow
           echo "Test completed - check logs above for behavior"
 
@@ -133,4 +133,4 @@ except Exception as e:
           path: |
             test_output.html
             deploy_test.log
-            data/raw_response.json 
+            data/raw_response.json

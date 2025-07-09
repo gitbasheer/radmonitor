@@ -68,16 +68,30 @@ def find_process_by_port_unix(port: int) -> List[Tuple[int, str]]:
             pids = result.stdout.strip().split('\n')
             for pid in pids:
                 try:
+                    # Validate PID is a valid integer
+                    pid_int = int(pid.strip())
+                    if pid_int <= 0:
+                        continue
+                    
                     # Get process name
                     name_result = subprocess.run(
-                        ['ps', '-p', pid, '-o', 'comm='],
+                        ['ps', '-p', str(pid_int), '-o', 'comm='],
                         capture_output=True,
                         text=True
                     )
                     process_name = name_result.stdout.strip()
-                    processes.append((int(pid), process_name))
+                    processes.append((pid_int, process_name))
+                except ValueError:
+                    # Invalid PID format, skip
+                    continue
                 except:
-                    processes.append((int(pid), "unknown"))
+                    # Other errors, add with unknown name
+                    try:
+                        pid_int = int(pid.strip())
+                        if pid_int > 0:
+                            processes.append((pid_int, "unknown"))
+                    except:
+                        pass
     except FileNotFoundError:
         # lsof not available, try netstat
         try:
@@ -120,22 +134,25 @@ def find_process_by_port_windows(port: int) -> List[Tuple[int, str]]:
         result = subprocess.run(
             ['netstat', '-ano'],
             capture_output=True,
-            text=True,
-            shell=True
+            text=True
         )
 
         for line in result.stdout.split('\n'):
             if f':{port}' in line and 'LISTENING' in line:
                 parts = line.split()
                 if len(parts) >= 5:
-                    pid = int(parts[-1])
+                    try:
+                        pid = int(parts[-1])
+                        if pid <= 0:
+                            continue
+                    except ValueError:
+                        continue
 
                     # Get process name using tasklist
                     name_result = subprocess.run(
                         ['tasklist', '/FI', f'PID eq {pid}', '/FO', 'CSV'],
                         capture_output=True,
-                        text=True,
-                        shell=True
+                        text=True
                     )
 
                     lines = name_result.stdout.strip().split('\n')
@@ -165,10 +182,10 @@ def kill_process(pid: int, force: bool = False) -> bool:
         if platform.system() == 'Windows':
             if force:
                 subprocess.run(['taskkill', '/F', '/PID', str(pid)],
-                             capture_output=True, shell=True)
+                             capture_output=True)
             else:
                 subprocess.run(['taskkill', '/PID', str(pid)],
-                             capture_output=True, shell=True)
+                             capture_output=True)
         else:
             if force:
                 os.kill(pid, signal.SIGKILL)  # -9
@@ -197,7 +214,7 @@ def cleanup_port(port: int, force: bool = False) -> int:
     processes = find_process_by_port(port)
 
     if not processes:
-        logger.info(f"✅ Port {port} is already free")
+        logger.info(f"(✓)Port {port} is already free")
         return 0
 
     logger.info(f"Found {len(processes)} process(es) on port {port}:")
@@ -210,18 +227,18 @@ def cleanup_port(port: int, force: bool = False) -> int:
 
         # Try graceful kill first
         if kill_process(pid, force=False):
-            logger.info(f"✅ Process {pid} terminated gracefully")
+            logger.info(f"(✓)Process {pid} terminated gracefully")
             killed_count += 1
         elif force or kill_process(pid, force=True):
-            logger.info(f"✅ Process {pid} force killed")
+            logger.info(f"(✓)Process {pid} force killed")
             killed_count += 1
         else:
-            logger.error(f"❌ Failed to kill process {pid}")
+            logger.error(f"(✗) Failed to kill process {pid}")
 
     # Verify port is free
     remaining = find_process_by_port(port)
     if not remaining:
-        logger.info(f"✅ Port {port} cleared")
+        logger.info(f"(✓)Port {port} cleared")
     else:
         logger.warning(f"⚠️  Port {port} still has {len(remaining)} process(es)")
 
@@ -278,7 +295,7 @@ def main():
     # Summary
     if not args.quiet:
         if total_killed > 0:
-            logger.info(f"\n✅ Killed {total_killed} process(es) total")
+            logger.info(f"\n(✓)Killed {total_killed} process(es) total")
         logger.info("Ports are now free!")
 
     # Exit code: 0 if successful, 1 if any ports still occupied

@@ -13,6 +13,9 @@ vi.mock('../assets/js/api-interface.js', () => ({
     }
 }));
 
+// Import the mocked version
+import { unifiedAPI } from '../assets/js/api-interface.js';
+
 describe('FlexibleTimeComparison', () => {
     beforeEach(() => {
         vi.clearAllMocks();
@@ -79,7 +82,10 @@ describe('FlexibleTimeComparison', () => {
                 comparison_start: comparisonStart.toISOString(),
                 comparison_end: comparisonEnd.toISOString(),
                 time_comparison_strategy: 'linear_scale',
-                event_pattern: 'pandc.vnext.recommendations.feed.feed*',
+                event_pattern: [
+                    'pandc.vnext.recommendations.feed.feed*',
+                    'pandc.vnext.recommendations.metricsevolved*'
+                ],
                 host: 'dashboard.godaddy.com'
             });
 

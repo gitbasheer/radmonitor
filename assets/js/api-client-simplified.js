@@ -66,16 +66,20 @@ export class SimplifiedAPIClient {
                     cookieValue = authStatus.cookie;
                 } else {
                     // Try to get from localStorage as fallback
-                    try {
-                        const saved = localStorage.getItem('elasticCookie');
-                        if (saved) {
-                            const parsed = JSON.parse(saved);
-                            if (parsed.cookie) {
-                                cookieValue = parsed.cookie;
+                    // Check both possible keys for backward compatibility
+                    cookieValue = localStorage.getItem('elastic_cookie');
+                    if (!cookieValue) {
+                        try {
+                            const saved = localStorage.getItem('elasticCookie');
+                            if (saved) {
+                                const parsed = JSON.parse(saved);
+                                if (parsed.cookie) {
+                                    cookieValue = parsed.cookie;
+                                }
                             }
+                        } catch (e) {
+                            // Ignore
                         }
-                    } catch (e) {
-                        // Ignore
                     }
                 }
 
@@ -139,7 +143,7 @@ export class SimplifiedAPIClient {
                 lastError = error;
 
                 // Log the attempt
-                console.warn(`❌ Request failed (attempt ${attempt + 1}/${maxRetries}):`, error.message);
+                console.warn(`(✗) Request failed (attempt ${attempt + 1}/${maxRetries}):`, error.message);
 
                 // Continue to next retry unless it's a non-retryable error
                 if (error.status === 401 || error.status === 403 || attempt === maxRetries - 1) {
@@ -197,15 +201,68 @@ export class SimplifiedAPIClient {
      */
     async fetchDashboardData(params = {}) {
         try {
-            // Single endpoint, let backend handle complexity
-            const response = await this.post('/dashboard/query', {
-                time_range: params.timeRange || 'now-12h',
-                filters: params.filters || {},
-                // Send minimal params, let backend handle the rest
-                options: {
-                    includeStats: true,
-                    includeMetadata: true
+            // Build Elasticsearch query matching backend expectations
+            const timeRange = params.timeRange || 'now-12h';
+            const filters = params.filters || {};
+            
+            // Construct Elasticsearch query
+            const esQuery = {
+                size: 0,
+                query: {
+                    bool: {
+                        must: [
+                            {
+                                range: {
+                                    "@timestamp": {
+                                        gte: timeRange,
+                                        lte: "now"
+                                    }
+                                }
+                            },
+                            {
+                                query_string: {
+                                    query: "pandc.vnext.recommendations.*"
+                                }
+                            }
+                        ]
+                    }
+                },
+                aggs: {
+                    events: {
+                        terms: {
+                            field: "event_id.keyword",
+                            size: 100
+                        },
+                        aggs: {
+                            current: {
+                                filter: {
+                                    range: {
+                                        "@timestamp": {
+                                            gte: timeRange,
+                                            lte: "now"
+                                        }
+                                    }
+                                }
+                            },
+                            baseline: {
+                                filter: {
+                                    range: {
+                                        "@timestamp": {
+                                            gte: "2025-06-01",
+                                            lte: "2025-06-09"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
+            };
+            
+            // Send request in expected format
+            const response = await this.post('/dashboard/query', {
+                query: esQuery,
+                force_refresh: false
             });
 
             return {
@@ -277,9 +334,13 @@ export class SimplifiedAPIClient {
                 return false;
             }
 
-                        // Simple health check instead of full query
+            // Simple health check instead of full query
             // Note: health endpoint is at root, not under /api/v1
-            const url = '/health';
+            const baseUrl = window.location.hostname === 'localhost' 
+                ? 'http://localhost:8000'
+                : '';
+            const url = `${baseUrl}/health`;
+            
             const response = await fetch(url, {
                 credentials: 'include',
                 headers: {
@@ -287,13 +348,26 @@ export class SimplifiedAPIClient {
                 }
             });
 
-            const data = await response.json();
+            if (!response.ok) {
+                console.error(`(✗) API connection failed: HTTP ${response.status}`);
+                return false;
+            }
 
-            const success = response.ok && data.status === 'healthy';
-            console.log(success ? '✅ API connection successful' : '❌ API connection failed');
+            const data = await response.json();
+            const success = data.status === 'healthy' || data.status === 'degraded';
+            
+            if (success) {
+                console.log('(✓)API connection successful:', data.message);
+                if (data.elasticsearch_status === 'disconnected') {
+                    console.warn('⚠️ Elasticsearch is disconnected');
+                }
+            } else {
+                console.log('(✗) API connection failed:', data.message);
+            }
+            
             return success;
         } catch (error) {
-            console.error('❌ Connection test error:', error);
+            console.error('(✗) Connection test error:', error);
             return false;
         }
     }

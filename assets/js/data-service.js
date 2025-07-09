@@ -9,6 +9,11 @@ import { apiClient } from './api-client-simplified.js';
 import { EventEmitter } from './event-emitter.js';
 import './types.js'; // Import type definitions
 
+// Import formula builder modules
+import { EnhancedFormulaParser } from './formula-builder/core/enhanced-ast-parser.js';
+import { EnhancedFormulaValidator } from './formula-builder/core/enhanced-validator.js';
+import { QueryBuilder } from './formula-builder/translator/query-builder.js';
+
 const STATE_STORAGE_KEY = 'radMonitorState';
 
 export class DataService extends EventEmitter {
@@ -42,6 +47,13 @@ export class DataService extends EventEmitter {
 
         // Auto-refresh timer
         this.refreshInterval = null;
+
+        // Initialize formula builder components
+        this.formulaParser = new EnhancedFormulaParser();
+        this.formulaValidator = new EnhancedFormulaValidator({
+            fieldSchema: new Map() // This will be populated from the backend
+        });
+        this.queryBuilder = new QueryBuilder();
     }
 
     /**
@@ -342,6 +354,160 @@ export class DataService extends EventEmitter {
     destroy() {
         this.stopAutoRefresh();
         this.removeAllListeners();
+    }
+
+    /**
+     * Execute a formula-based query
+     * @param {string} formula - The formula string to execute
+     * @param {Object} options - Query options
+     * @returns {Promise<Object>} Query results in the same format as fetchDashboardData
+     */
+    async executeFormulaQuery(formula, options = {}) {
+        this.setState({ loading: true, error: null });
+
+        try {
+            // Parse and validate formula
+            const parseResult = this.formulaParser.parse(formula);
+            if (!parseResult.success) {
+                throw new Error(parseResult.errors.map(e => e.message).join(', '));
+            }
+
+            // Quick validation
+            const context = {
+                dataView: options.context?.dataView,
+                timeRange: options.timeRange || this.state.timeRange
+            };
+            const validation = await this.formulaValidator.validate(parseResult.ast, context);
+
+            if (!validation.valid) {
+                const errors = validation.results
+                    .filter(r => r.severity === 'error')
+                    .map(r => r.message)
+                    .join(', ');
+                throw new Error(errors);
+            }
+
+            // Build and execute query
+            const query = this.queryBuilder.buildQuery(parseResult.ast, {
+                timeRange: this.parseTimeRange(options.timeRange || this.state.timeRange),
+                filters: options.filters || this.state.filters,
+                index: 'traffic-*'
+            });
+
+            const result = await apiClient.post('/dashboard/formula-query', {
+                formula,
+                query,
+                time_range: options.timeRange || this.state.timeRange,
+                filters: options.filters || this.state.filters
+            });
+
+            if (!result.success) {
+                throw new Error(result.error || 'Query failed');
+            }
+
+            // Update state
+            this.setState({
+                data: result.data || [],
+                stats: result.stats || this.calculateStats(result.data),
+                lastUpdate: new Date().toISOString(),
+                loading: false,
+                error: null
+            });
+
+            this.emit('dataUpdated', this.state);
+
+            return {
+                success: true,
+                data: result.data,
+                stats: result.stats,
+                metadata: result.metadata
+            };
+
+        } catch (error) {
+            this.setState({ loading: false, error: error.message });
+            this.emit('error', error);
+            return { success: false, error: error.message };
+        }
+    }
+
+    /**
+     * Validate a formula without executing it
+     * @param {string} formula - The formula to validate
+     * @param {Object} context - Validation context
+     * @returns {Promise<Object>} Validation result
+     */
+    async validateFormula(formula, context = {}) {
+        try {
+            const parseResult = this.formulaParser.parse(formula);
+            if (!parseResult.success) {
+                return {
+                    valid: false,
+                    errors: parseResult.errors,
+                    warnings: []
+                };
+            }
+
+            const validation = await this.formulaValidator.validate(parseResult.ast, context);
+            return {
+                valid: validation.valid,
+                errors: validation.results.filter(r => r.severity === 'error'),
+                warnings: validation.results.filter(r => r.severity === 'warning'),
+                complexity: validation.complexity
+            };
+
+        } catch (error) {
+            return {
+                valid: false,
+                errors: [{ message: error.message, position: 0 }],
+                warnings: []
+            };
+        }
+    }
+
+    /**
+     * Update field schema for validation
+     * @param {Array} fields - Array of field definitions
+     */
+    updateFieldSchema(fields) {
+        const fieldSchema = new Map();
+        fields.forEach(field => {
+            fieldSchema.set(field.name, {
+                type: field.type,
+                aggregatable: field.aggregatable
+            });
+        });
+        this.formulaValidator.fieldSchema = fieldSchema;
+    }
+
+    /**
+     * Parse time range string into from/to format
+     * @param {string} timeRange - Time range string
+     * @returns {Object} Object with from and to timestamps
+     */
+    parseTimeRange(timeRange) {
+        const now = new Date();
+        let from = new Date(now);
+        let to = now;
+
+        if (timeRange.startsWith('now-')) {
+            const match = timeRange.match(/now-(\d+)([hdwM])/);
+            if (match) {
+                const [, amount, unit] = match;
+                const units = { h: 'Hours', d: 'Date', w: 'Date', M: 'Month' };
+                const multiplier = { h: 1, d: 1, w: 7, M: 1 };
+
+                if (units[unit]) {
+                    from[`set${units[unit]}`](
+                        from[`get${units[unit]}`]() - (parseInt(amount) * multiplier[unit])
+                    );
+                }
+            }
+        }
+
+        return {
+            from: from.toISOString(),
+            to: to.toISOString()
+        };
     }
 }
 

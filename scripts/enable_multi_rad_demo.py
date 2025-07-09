@@ -11,23 +11,23 @@ from pathlib import Path
 def enable_all_rad_types():
     """Enable all RAD types in settings.json for demo purposes"""
     config_file = Path("config/settings.json")
-    
+
     # Read current settings
     with open(config_file, 'r') as f:
         settings = json.load(f)
-    
+
     # Enable all RAD types
     if 'rad_types' in settings:
         for rad_key, rad_config in settings['rad_types'].items():
             old_status = rad_config.get('enabled', False)
             rad_config['enabled'] = True
-            print(f"✓ Enabled {rad_config['display_name']} (was: {old_status})")
-    
+            print(f"(✓) Enabled {rad_config['display_name']} (was: {old_status})")
+
     # Save updated settings
     with open(config_file, 'w') as f:
         json.dump(settings, f, indent=2)
-    
-    print("\n✅ All RAD types enabled for testing!")
+
+    print("\n(✓)All RAD types enabled for testing!")
     print("\nTo test multi-RAD support:")
     print("1. Start the dashboard: npm run dev")
     print("2. Notice the RAD type filter buttons above the table")
@@ -38,25 +38,25 @@ def enable_all_rad_types():
 def reset_rad_types():
     """Reset RAD types to default state"""
     config_file = Path("config/settings.json")
-    
+
     # Read current settings
     with open(config_file, 'r') as f:
         settings = json.load(f)
-    
+
     # Reset to defaults (only venture_feed enabled)
     if 'rad_types' in settings:
         settings['rad_types']['venture_feed']['enabled'] = True
         settings['rad_types']['cart_recommendations']['enabled'] = False
         settings['rad_types']['product_recommendations']['enabled'] = False
-    
+
     # Save updated settings
     with open(config_file, 'w') as f:
         json.dump(settings, f, indent=2)
-    
-    print("✅ RAD types reset to defaults (only Venture Feed enabled)")
+
+    print("(✓)RAD types reset to defaults (only Venture Feed enabled)")
 
 if __name__ == '__main__':
     if len(sys.argv) > 1 and sys.argv[1] == '--reset':
         reset_rad_types()
     else:
-        enable_all_rad_types() 
+        enable_all_rad_types()

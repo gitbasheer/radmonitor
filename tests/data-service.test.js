@@ -1,11 +1,16 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { DataService } from '../assets/js/data-service.js';
 
-// Mock dependencies
+// NOTE: DataService still imports api-client-simplified.js in its implementation,
+// but we're mocking it here to behave like the unified client for testing migration.
+// The DataService module itself needs to be updated to use api-client-unified.js
+
+// Mock dependencies - we mock the old client but make it behave like the unified one
 vi.mock('../assets/js/api-client-simplified.js', () => ({
     apiClient: {
         fetchDashboardData: vi.fn(),
-        getCachedDashboardData: vi.fn()
+        getCachedDashboardData: vi.fn(),
+        post: vi.fn()
     }
 }));
 
@@ -106,7 +111,7 @@ describe('DataService', () => {
         });
     });
 
-    describe('loadData', () => {
+        describe('loadData', () => {
         it('should load data successfully', async () => {
             const mockData = [
                 { id: '1', status: 'normal', name: 'event1' },

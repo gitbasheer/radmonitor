@@ -1,0 +1,372 @@
+/**
+ * RAD Monitor Theme CSS - Updated with GoDaddy UXCore Colors
+ * CSS custom properties based on rad-theme.js and GoDaddy Design System
+ * Apply vnext-dashboard design system globally with official GoDaddy colors
+ */
+
+:root {
+    /* Import GoDaddy UXCore Colors */
+    /* Colors - Background */
+    --rad-bg-primary: #1e2836;
+    --rad-bg-secondary: #2a3b52;
+    --rad-bg-hover: #3a4b62;
+    --rad-bg-overlay: rgba(0, 0, 0, 0.7);
+
+    /* Colors - Text */
+    --rad-text-primary: rgb(222, 222, 222);
+    --rad-text-secondary: rgba(222, 222, 222, 0.9);
+    --rad-text-muted: rgba(222, 222, 222, 0.8);
+    --rad-text-dimmed: rgba(222, 222, 222, 0.6);
+    --rad-text-placeholder: rgba(222, 222, 222, 0.4);
+
+    /* Updated to Official GoDaddy Colors */
+    --rad-text-accent: #ff6900;  /* Official GoDaddy Orange (was #ff6b00) */
+    --rad-text-success: #00a63f; /* Official GoDaddy Success (was #4CAF50) */
+    --rad-text-error: #d72c0d;   /* Official GoDaddy Error (was #f44336) */
+    --rad-text-warning: #ffb900; /* Official GoDaddy Warning (was #ff9800) */
+    --rad-text-info: #0073cf;    /* Official GoDaddy Info (was #2196f3) */
+
+    /* Colors - Border */
+    --rad-border-primary: rgba(222, 222, 222, 0.3);
+    --rad-border-secondary: rgba(222, 222, 222, 0.2);
+    --rad-border-hover: rgba(222, 222, 222, 0.6);
+    --rad-border-focus: rgba(222, 222, 222, 0.8);
+
+    /* Colors - Chart (Updated to GoDaddy Standards) */
+    --rad-chart-series1: #ff6900;  /* GoDaddy Orange */
+    --rad-chart-series2: #00a63f;  /* GoDaddy Success */
+    --rad-chart-series3: #0073cf;  /* GoDaddy Info */
+    --rad-chart-series4: #9c27b0;  /* Keep purple for variety */
+    --rad-chart-series5: #ffb900;  /* GoDaddy Warning */
+    --rad-chart-grid: rgba(222, 222, 222, 0.1);
+
+    /* Spacing */
+    --rad-spacing-xs: 4px;
+    --rad-spacing-sm: 8px;
+    --rad-spacing-md: 12px;
+    --rad-spacing-lg: 16px;
+    --rad-spacing-xl: 24px;
+    --rad-spacing-xxl: 32px;
+    --rad-spacing-xxxl: 48px;
+
+    /* Typography */
+    --rad-font-primary: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    --rad-font-monospace: Monaco, Consolas, "Courier New", monospace;
+
+    /* Font sizes */
+    --rad-font-xs: 12px;
+    --rad-font-sm: 14px;
+    --rad-font-md: 16px;
+    --rad-font-lg: 18px;
+    --rad-font-xl: 24px;
+    --rad-font-xxl: 32px;
+
+    /* Border radius */
+    --rad-radius-sm: 4px;
+    --rad-radius-md: 8px;
+    --rad-radius-lg: 12px;
+    --rad-radius-round: 50%;
+
+    /* Shadows */
+    --rad-shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.2);
+    --rad-shadow-md: 0 4px 10px rgba(0, 0, 0, 0.3);
+    --rad-shadow-lg: 0 8px 20px rgba(0, 0, 0, 0.4);
+    --rad-shadow-modal: 0 4px 20px rgba(0, 0, 0, 0.5);
+
+    /* Transitions */
+    --rad-transition: all 0.3s ease;
+    --rad-transition-fast: all 0.15s ease;
+    --rad-transition-slow: all 0.5s ease;
+    --rad-transition-smooth: all 500ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Global styles */
+body {
+    background-color: var(--rad-bg-primary);
+    color: var(--rad-text-primary);
+    font-family: var(--rad-font-primary);
+    font-size: var(--rad-font-md);
+    line-height: 1.5;
+}
+
+/* Headers */
+h1, h2, h3, h4, h5, h6 {
+    color: var(--rad-text-primary);
+    font-weight: 500;
+    margin-bottom: var(--rad-spacing-md);
+}
+
+h1 { font-size: var(--rad-font-xxl); }
+h2 { font-size: var(--rad-font-xl); }
+h3 { font-size: var(--rad-font-lg); }
+
+/* Links */
+a {
+    color: var(--rad-text-accent);
+    text-decoration: none;
+    transition: var(--rad-transition);
+}
+
+a:hover {
+    color: var(--rad-text-primary);
+}
+
+/* Buttons - Base styles */
+button,
+.button,
+.btn {
+    font-family: var(--rad-font-primary);
+    font-size: var(--rad-font-md);
+    font-weight: 500;
+    padding: var(--rad-spacing-sm) var(--rad-spacing-lg);
+    border-radius: var(--rad-radius-md);
+    cursor: pointer;
+    transition: var(--rad-transition);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--rad-spacing-sm);
+}
+
+/* Button variants */
+.btn-primary {
+    background-color: var(--rad-text-accent);
+    color: white;
+    border: none;
+}
+
+.btn-primary:hover {
+    background-color: #e55a00; /* Official GoDaddy Orange Hover */
+    transform: translateY(-1px);
+    box-shadow: var(--rad-shadow-sm);
+}
+
+.btn-secondary {
+    background-color: var(--rad-bg-secondary);
+    color: var(--rad-text-secondary);
+    border: 1px solid var(--rad-border-primary);
+}
+
+.btn-secondary:hover {
+    background-color: var(--rad-bg-hover);
+    color: var(--rad-text-primary);
+    border-color: var(--rad-border-hover);
+}
+
+.btn-success {
+    background-color: var(--rad-text-success);
+    color: white;
+    border: none;
+}
+
+.btn-success:hover {
+    background-color: #00953a; /* Official GoDaddy Success Hover */
+}
+
+/* Forms */
+input,
+textarea,
+select {
+    background-color: var(--rad-bg-secondary);
+    color: var(--rad-text-primary);
+    border: 1px solid var(--rad-border-primary);
+    border-radius: var(--rad-radius-sm);
+    padding: var(--rad-spacing-sm);
+    font-family: var(--rad-font-primary);
+    font-size: var(--rad-font-md);
+    transition: var(--rad-transition);
+}
+
+input::placeholder,
+textarea::placeholder {
+    color: var(--rad-text-placeholder);
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+    outline: none;
+    border-color: var(--rad-border-focus);
+    box-shadow: 0 0 0 2px rgba(255, 107, 0, 0.2);
+}
+
+/* Cards */
+.card,
+.panel {
+    background-color: var(--rad-bg-primary);
+    border: 1px solid var(--rad-border-secondary);
+    border-radius: var(--rad-radius-md);
+    padding: var(--rad-spacing-xl);
+    transition: var(--rad-transition);
+}
+
+.card:hover,
+.panel:hover {
+    border-color: var(--rad-border-primary);
+}
+
+/* Tables */
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th {
+    background-color: var(--rad-bg-secondary);
+    color: var(--rad-text-primary);
+    font-weight: 600;
+    padding: var(--rad-spacing-md);
+    text-align: left;
+    border-bottom: 2px solid var(--rad-border-primary);
+}
+
+td {
+    padding: var(--rad-spacing-md);
+    border-bottom: 1px solid var(--rad-border-secondary);
+}
+
+tr:hover {
+    background-color: var(--rad-bg-secondary);
+}
+
+/* Status indicators */
+.status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: var(--rad-radius-round);
+    display: inline-block;
+}
+
+.status-success { background-color: var(--rad-text-success); }
+.status-error { background-color: var(--rad-text-error); }
+.status-warning { background-color: var(--rad-text-warning); }
+.status-info { background-color: var(--rad-text-info); }
+
+/* Modals */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: var(--rad-bg-overlay);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background-color: var(--rad-bg-primary);
+    border: 1px solid var(--rad-border-primary);
+    border-radius: var(--rad-radius-md);
+    box-shadow: var(--rad-shadow-modal);
+    max-width: 90%;
+    max-height: 90vh;
+    overflow: auto;
+}
+
+.modal-header {
+    padding: var(--rad-spacing-xl);
+    border-bottom: 1px solid var(--rad-border-secondary);
+}
+
+.modal-body {
+    padding: var(--rad-spacing-xl);
+}
+
+/* Loading states */
+.loading {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+.spinner {
+    border: 2px solid var(--rad-border-secondary);
+    border-top-color: var(--rad-text-accent);
+    border-radius: var(--rad-radius-round);
+    width: 20px;
+    height: 20px;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Scrollbars */
+::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--rad-bg-secondary);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--rad-border-primary);
+    border-radius: var(--rad-radius-sm);
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--rad-border-hover);
+}
+
+/* Utility classes */
+.text-accent { color: var(--rad-text-accent); }
+.text-success { color: var(--rad-text-success); }
+.text-error { color: var(--rad-text-error); }
+.text-warning { color: var(--rad-text-warning); }
+.text-info { color: var(--rad-text-info); }
+.text-muted { color: var(--rad-text-muted); }
+.text-dimmed { color: var(--rad-text-dimmed); }
+
+.bg-primary { background-color: var(--rad-bg-primary); }
+.bg-secondary { background-color: var(--rad-bg-secondary); }
+
+.border-primary { border-color: var(--rad-border-primary); }
+.border-secondary { border-color: var(--rad-border-secondary); }
+
+/* Animation classes */
+.fade-in {
+    animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.slide-in {
+    animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateY(-10px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+/* Letter animation from Branding */
+.letter {
+    display: inline-block;
+    opacity: 0;
+    filter: blur(4px);
+    transform: translateY(0) rotate(0deg);
+    transition:
+        opacity 0.3s ease-out,
+        filter 0.3s ease-out,
+        transform 0.3s ease-out;
+}
+
+.letter.animated {
+    opacity: 1;
+    filter: blur(0);
+    transform: translateY(0) rotate(0deg);
+}

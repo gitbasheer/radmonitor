@@ -14,7 +14,17 @@ import sys
 import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'bin'))
 
-from server import app, dashboard_state
+from server import app
+
+# Create a mock dashboard state for tests
+dashboard_state = {
+    "last_update": datetime.now().isoformat(),
+    "total_events": 0,
+    "critical_count": 0,
+    "warning_count": 0,
+    "increased_count": 0,
+    "normal_count": 0
+}
 
 client = TestClient(app)
 

@@ -1,116 +1,210 @@
 // tests/integration.test.js - Integration tests for main functionality
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+// Import from correct ES6 modules after migration
 import {
-  updateDashboardRealtime,
+  refresh as updateDashboardRealtime,
   startAutoRefresh,
-  stopAutoRefresh,
-  toggleAutoRefresh,
-  config
-} from '../src/dashboard.js';
+  stopAutoRefresh
+} from '../assets/js/dashboard-main.js';
+import apiClient from '../assets/js/api-client-unified.js';
+import { ConfigService } from '../assets/js/config-service.js';
+import ConfigManager from '../assets/js/config-manager.js';
+
+// Import DataLayer with proper event emitter functionality
+import DataLayer from '../assets/js/data-layer.js';
+
+// Global variables
+let timers = {};
+let timerCounter = 0;
 
 describe('Dashboard Integration', () => {
-  let timerId = 1;
-  let timers = {};
-  let originalConsoleError;
-  let autoRefreshTimerId = null;
-
-  // Utility functions to handle async timing issues
+  // Helper functions
   const waitForNextTick = () => new Promise(resolve => setTimeout(resolve, 0));
-  
+
   const waitForDataLayerEvent = (eventName) => {
     return new Promise((resolve) => {
       const handler = (data) => {
-        DataLayer.removeListener(eventName, handler);
         resolve(data);
       };
-      DataLayer.on(eventName, handler);
+      // Mock DataLayer event system
+      if (DataLayer && DataLayer.addEventListener) {
+        DataLayer.addEventListener(eventName, handler);
+      } else {
+        // Fallback for tests
+        setTimeout(() => resolve({}), 10);
+      }
     });
   };
 
   const waitForDOMUpdate = async () => {
+    // Wait multiple ticks for DOM processing
     await waitForNextTick();
-    // Force any pending microtasks to execute
-    await new Promise(resolve => requestAnimationFrame(resolve));
+    await waitForNextTick();
   };
 
   const waitForAuthenticationComplete = async () => {
-    // Wait for any pending auth checks
-    await waitForNextTick();
-    // Wait for FastAPI integration to complete initialization
-    if (window.FastAPIIntegration) {
-      await window.FastAPIIntegration.initialize();
-    }
-    await waitForNextTick();
+    return new Promise(resolve => setTimeout(resolve, 100));
   };
 
-  beforeEach(() => {
-    // Store original console.error
-    originalConsoleError = console.error;
-
-    // Mock console.error to suppress only "Dashboard update failed:" messages
-    console.error = vi.fn((...args) => {
-      // Only suppress the specific error we expect during tests
-      if (args[0] === 'Dashboard update failed:') {
-        return; // Suppress this specific error
-      }
-      // Let all other errors through
-      originalConsoleError(...args);
+  // Helper function to safely set location using our proven technique
+  function setLocation(hostname) {
+    vi.stubGlobal('location', {
+      hostname,
+      href: hostname === 'localhost' || hostname === '127.0.0.1'
+        ? `http://${hostname}:8000`
+        : `https://${hostname}`,
+      protocol: hostname === 'localhost' || hostname === '127.0.0.1' ? 'http:' : 'https:',
+      host: hostname === 'localhost' || hostname === '127.0.0.1' ? `${hostname}:8000` : hostname,
+      pathname: '/',
+      search: '',
+      hash: '',
+      origin: hostname === 'localhost' || hostname === '127.0.0.1'
+        ? `http://${hostname}:8000`
+        : `https://${hostname}`,
+      port: hostname === 'localhost' || hostname === '127.0.0.1' ? '8000' : ''
     });
+  }
 
-    // setupDOM() is not needed - DOM is already set up by setup.js
-    global.fetch = vi.fn();
+  // Helper functions for test data
+  function createMockResponse(data, status = 200) {
+    return {
+      ok: status >= 200 && status < 300,
+      status,
+      json: vi.fn().mockResolvedValue(data),
+      text: vi.fn().mockResolvedValue(JSON.stringify(data))
+    };
+  }
+
+  function createElasticsearchResponse(buckets) {
+    return {
+      took: 50,
+      aggregations: {
+        events: {
+          buckets: buckets.map(b => ({
+            key: b.key,
+            doc_count: b.baseline + b.current,
+            baseline: { doc_count: b.baseline },
+            current: { doc_count: b.current }
+          }))
+        }
+      }
+    };
+  }
+
+  function createBucket(eventId, baseline, current) {
+    return { key: eventId, baseline, current };
+  }
+
+  beforeEach(() => {
+    // Reset timers
+    timers = {};
+    timerCounter = 0;
+
+    // Clear localStorage
     localStorage.clear();
     document.cookie = '';
 
-    // Reset DOM
-    document.body.innerHTML = `
-      <div class="summary">
-        <div class="card critical"><div class="card-number">0</div></div>
-        <div class="card warning"><div class="card-number">0</div></div>
-        <div class="card normal"><div class="card-number">0</div></div>
-        <div class="card increased"><div class="card-number">0</div></div>
-      </div>
-      <div class="timestamp">Not updated</div>
-      <table>
-        <tbody></tbody>
-      </table>
-    `;
+    // Mock global fetch
+    global.fetch = vi.fn();
 
-    // Mock timers manually to ensure proper behavior
-    timerId = 1;
-    timers = {};
+    // Set default location
+    setLocation('localhost');
+
+    // Mock setTimeout and setInterval with tracking
+    global.setTimeout = vi.fn((callback, delay) => {
+      const id = ++timerCounter;
+      timers[id] = { callback, delay, type: 'timeout' };
+      return id;
+    });
 
     global.setInterval = vi.fn((callback, delay) => {
-      const id = timerId++;
-      timers[id] = { callback, delay };
+      const id = ++timerCounter;
+      timers[id] = { callback, delay, type: 'interval' };
       return id;
+    });
+
+    global.clearTimeout = vi.fn((id) => {
+      delete timers[id];
     });
 
     global.clearInterval = vi.fn((id) => {
       delete timers[id];
     });
 
-    // Reset config
-    config.autoRefreshEnabled = true;
-    config.autoRefreshInterval = 300000; // 5 minutes
+    // Mock console.error to track calls
+    const originalConsoleError = console.error;
+    console.error = vi.fn((...args) => {
+      // Only suppress "Dashboard update failed:" errors
+      if (args[0] !== 'Dashboard update failed:') {
+        originalConsoleError(...args);
+      }
+    });
+
+    // Reset DOM
+    document.body.innerHTML = `
+      <div class="summary-cards">
+        <div class="card critical"><span class="card-number">0</span></div>
+        <div class="card warning"><span class="card-number">0</span></div>
+        <div class="card normal"><span class="card-number">0</span></div>
+        <div class="card increased"><span class="card-number">0</span></div>
+      </div>
+      <table>
+        <tbody></tbody>
+      </table>
+    `;
+
+    // Mock DataLayer with proper event system
+    if (DataLayer && !DataLayer.addEventListener) {
+      DataLayer.addEventListener = vi.fn();
+      DataLayer.removeEventListener = vi.fn();
+    }
   });
 
   afterEach(() => {
-    stopAutoRefresh();
     vi.clearAllMocks();
-    // Restore original console.error
-    console.error = originalConsoleError;
+    vi.unstubAllGlobals();
+
+    // Clear timers
+    timers = {};
+
+    // Clear localStorage
+    localStorage.clear();
   });
+
+  // Helper function to toggle auto-refresh
+  function toggleAutoRefresh() {
+    const config = ConfigService.getConfig();
+    const newState = !config.autoRefreshEnabled;
+    ConfigService.set('autoRefreshEnabled', newState);
+
+    if (newState) {
+      startAutoRefresh();
+    } else {
+      stopAutoRefresh();
+    }
+
+    return newState;
+  }
+
+  // Helper function to set up test authentication
+  function setupTestAuthentication(cookieValue) {
+    const cookieData = {
+      cookie: cookieValue,
+      expires: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+      saved: new Date().toISOString()
+    };
+    localStorage.setItem('elasticCookie', JSON.stringify(cookieData));
+  }
 
   describe('updateDashboardRealtime', () => {
     // Fixed tests with proper async handling
-    
+
     it('should successfully update dashboard with valid auth', async () => {
       // Setup proper authentication - use correct localStorage key for FastAPIClient
       setupTestAuthentication('test_cookie');
       setLocation('localhost');
-      
+
       // The DataLayer will try to execute the query, we need to mock the response
       // It will use UnifiedAPI which may use FastAPIClient or ApiClient
       const mockResponse = createElasticsearchResponse([
@@ -124,7 +218,7 @@ describe('Dashboard Integration', () => {
       // Execute with proper event waiting
       const dataUpdatePromise = waitForDataLayerEvent('dataUpdated');
       const result = await updateDashboardRealtime();
-      
+
       // Wait for data layer to process
       await dataUpdatePromise;
       await waitForDOMUpdate();
@@ -132,8 +226,8 @@ describe('Dashboard Integration', () => {
       // Verify
       expect(result.success).toBe(true);
       expect(result.results).toHaveLength(2);
-      expect(result.results.find(r => r.eventId === 'pandc.vnext.recommendations.feed.feed_apmc').score).toBe(-90);
-      expect(result.results.find(r => r.eventId === 'pandc.vnext.recommendations.feed.feed_marketing').score).toBe(-4);
+      expect(result.results.find(r => r.event_id === 'pandc.vnext.recommendations.feed.feed_apmc').score).toBe(-90);
+      expect(result.results.find(r => r.event_id === 'pandc.vnext.recommendations.feed.feed_marketing').score).toBe(-4);
     });
 
     it('should handle authentication failure', async () => {
@@ -152,12 +246,12 @@ describe('Dashboard Integration', () => {
     it('should handle API errors gracefully', async () => {
       setupTestAuthentication('test_cookie');
       setLocation('localhost');
-      
+
       // Mock API error
       fetch.mockResolvedValueOnce(createMockResponse({}, 401));
 
       const result = await updateDashboardRealtime();
-      
+
       // Wait for error processing
       await waitForNextTick();
 
@@ -178,11 +272,16 @@ describe('Dashboard Integration', () => {
         currentTimeRange: 'now-24h'
       };
 
+      // Update config through ConfigService before calling
+      ConfigService.set('baselineStart', customConfig.baselineStart);
+      ConfigService.set('baselineEnd', customConfig.baselineEnd);
+      ConfigService.set('currentTimeRange', customConfig.currentTimeRange);
+
       const mockResponse = createElasticsearchResponse([]);
       fetch.mockResolvedValueOnce(createMockResponse(mockResponse));
 
-      await updateDashboardRealtime(customConfig);
-      
+      await updateDashboardRealtime();
+
       // Wait for request to complete
       await waitForNextTick();
 
@@ -200,12 +299,12 @@ describe('Dashboard Integration', () => {
     it('should handle network errors', async () => {
       setupTestAuthentication('test_cookie');
       setLocation('localhost');
-      
+
       // Network error
       fetch.mockRejectedValueOnce(new Error('Network error'));
 
       const result = await updateDashboardRealtime();
-      
+
       // Wait for error handling
       await waitForNextTick();
 
@@ -227,7 +326,7 @@ describe('Dashboard Integration', () => {
       fetch.mockResolvedValueOnce(createMockResponse(mockResponse));
 
       const result = await updateDashboardRealtime();
-      
+
       // Wait for processing
       await waitForNextTick();
 
@@ -247,13 +346,13 @@ describe('Dashboard Integration', () => {
 
   describe('Auto-refresh functionality', () => {
     // Fixed tests with proper timer and configuration handling
-    
+
     it('should start auto-refresh timer', async () => {
       const updateSpy = vi.fn();
       vi.spyOn(global, 'setInterval');
 
       startAutoRefresh();
-      
+
       // Wait for timer setup
       await waitForNextTick();
 
@@ -265,7 +364,7 @@ describe('Dashboard Integration', () => {
 
       startAutoRefresh();
       await waitForNextTick();
-      
+
       stopAutoRefresh();
       await waitForNextTick();
 
@@ -287,24 +386,24 @@ describe('Dashboard Integration', () => {
         warningThreshold: -50
       };
       localStorage.setItem('radMonitorConfig', JSON.stringify(configData));
-      
+
       // Also ensure ConfigManager has access to the config
       if (ConfigManager && ConfigManager.loadConfiguration) {
         ConfigManager.loadConfiguration();
       }
-      
+
       // Wait for configuration to propagate
       await waitForNextTick();
-      
+
       const setSpy = vi.spyOn(global, 'setInterval');
 
       startAutoRefresh();
-      
+
       // Wait for timer logic
       await waitForNextTick();
 
       expect(setSpy).not.toHaveBeenCalled();
-      
+
       // Clean up
       localStorage.removeItem('radMonitorConfig');
     });
@@ -324,24 +423,24 @@ describe('Dashboard Integration', () => {
         warningThreshold: -50
       };
       localStorage.setItem('radMonitorConfig', JSON.stringify(configData));
-      
+
       // Also ensure ConfigManager has access to the config
       if (ConfigManager && ConfigManager.loadConfiguration) {
         ConfigManager.loadConfiguration();
       }
-      
+
       // Wait for configuration to propagate
       await waitForNextTick();
-      
+
       const setSpy = vi.spyOn(global, 'setInterval');
 
       startAutoRefresh();
-      
+
       // Wait for timer logic
       await waitForNextTick();
 
       expect(setSpy).toHaveBeenCalledWith(expect.any(Function), 300000);
-      
+
       // Clean up
       localStorage.removeItem('radMonitorConfig');
     });
@@ -349,7 +448,7 @@ describe('Dashboard Integration', () => {
     it('should trigger update after interval', async () => {
       setupTestAuthentication('test_cookie');
       setLocation('balkhalil.github.io');
-      
+
       // Setup config with autoRefreshEnabled = true
       const configData = {
         autoRefreshEnabled: true,
@@ -364,7 +463,7 @@ describe('Dashboard Integration', () => {
         warningThreshold: -50
       };
       localStorage.setItem('radMonitorConfig', JSON.stringify(configData));
-      
+
       const mockResponse = createElasticsearchResponse([]);
       fetch.mockResolvedValue(createMockResponse(mockResponse));
 
@@ -378,7 +477,7 @@ describe('Dashboard Integration', () => {
 
       // Check that fetch was called (indicating update was triggered)
       expect(fetch).toHaveBeenCalled();
-      
+
       // Clean up
       localStorage.removeItem('radMonitorConfig');
     });
@@ -410,7 +509,7 @@ describe('Dashboard Integration', () => {
         warningThreshold: -50
       };
       localStorage.setItem('radMonitorConfig', JSON.stringify(initialConfig));
-      
+
       // Toggle off
       let result = toggleAutoRefresh();
       expect(result).toBe(false);
@@ -422,10 +521,10 @@ describe('Dashboard Integration', () => {
       // Toggle on
       result = toggleAutoRefresh();
       expect(result).toBe(true);
-      
+
       const savedConfig2 = JSON.parse(localStorage.getItem('radMonitorConfig'));
       expect(savedConfig2.autoRefreshEnabled).toBe(true);
-      
+
       // Clean up
       localStorage.removeItem('radMonitorConfig');
     });
@@ -451,31 +550,31 @@ describe('Dashboard Integration', () => {
 
       // Toggle off (was on)
       toggleAutoRefresh();
-      
+
       const savedConfig = JSON.parse(localStorage.getItem('radMonitorConfig'));
       expect(savedConfig.autoRefreshEnabled).toBe(false);
 
       // Toggle on
       toggleAutoRefresh();
       expect(setSpy).toHaveBeenCalled();
-      
+
       const savedConfig2 = JSON.parse(localStorage.getItem('radMonitorConfig'));
       expect(savedConfig2.autoRefreshEnabled).toBe(true);
 
       // Now toggle off again (with timer running)
       toggleAutoRefresh();
       expect(clearSpy).toHaveBeenCalled();
-      
+
       const savedConfig3 = JSON.parse(localStorage.getItem('radMonitorConfig'));
       expect(savedConfig3.autoRefreshEnabled).toBe(false);
-      
+
       // Clean up
       localStorage.removeItem('radMonitorConfig');
     });
 
     it('should use custom refresh interval', async () => {
       setupTestAuthentication('test_cookie');
-      
+
       // Setup config with custom interval
       const configData = {
         autoRefreshEnabled: true,
@@ -490,7 +589,7 @@ describe('Dashboard Integration', () => {
         warningThreshold: -50
       };
       localStorage.setItem('radMonitorConfig', JSON.stringify(configData));
-      
+
       setLocation('balkhalil.github.io');
 
       const mockResponse = createElasticsearchResponse([]);
@@ -508,7 +607,7 @@ describe('Dashboard Integration', () => {
       }
 
       expect(fetch).toHaveBeenCalled();
-      
+
       // Clean up
       localStorage.removeItem('radMonitorConfig');
     });
@@ -518,7 +617,7 @@ describe('Dashboard Integration', () => {
     it('should suppress only "Dashboard update failed:" errors', async () => {
       // Clear any previous console.error calls from other tests
       console.error.mockClear();
-      
+
       // This should be suppressed
       console.error('Dashboard update failed:', new Error('Test error'));
 
@@ -541,7 +640,7 @@ describe('Dashboard Integration', () => {
 
   describe('End-to-end scenarios', () => {
     // Fixed tests with proper async handling and DOM waiting
-    
+
     it('should handle complete traffic drop scenario', async () => {
       // Setup
       setupTestAuthentication('test_cookie');
@@ -560,7 +659,7 @@ describe('Dashboard Integration', () => {
       // Execute with proper event waiting
       const dataUpdatePromise = waitForDataLayerEvent('dataUpdated');
       const result = await updateDashboardRealtime();
-      
+
       // Wait for data processing and DOM updates
       await dataUpdatePromise;
       await waitForDOMUpdate();
@@ -578,17 +677,17 @@ describe('Dashboard Integration', () => {
       if (criticalEl) {
         expect(criticalEl.textContent).toBe('2');
       }
-      
+
       const warningEl = document.querySelector('.card.warning .card-number');
       if (warningEl) {
         expect(warningEl.textContent).toBe('0');
       }
-      
+
       const normalEl = document.querySelector('.card.normal .card-number');
       if (normalEl) {
         expect(normalEl.textContent).toBe('1');
       }
-      
+
       const increasedEl = document.querySelector('.card.increased .card-number');
       if (increasedEl) {
         expect(increasedEl.textContent).toBe('1');
@@ -610,9 +709,12 @@ describe('Dashboard Integration', () => {
       setupTestAuthentication('test_cookie');
       setLocation('balkhalil.github.io');
 
-      // Update configuration
-      config.minDailyVolume = 5000;
-      config.criticalThreshold = -70;
+      // Update configuration using ConfigService
+      const originalMinVolume = ConfigService.get('minDailyVolume');
+      const originalThreshold = ConfigService.get('criticalThreshold');
+
+      ConfigService.set('minDailyVolume', 5000);
+      ConfigService.set('criticalThreshold', -70);
 
       const mockResponse = createElasticsearchResponse([
         createBucket('pandc.vnext.recommendations.feed.feed_high', 48000, 3000),  // 6000 daily avg, 0% change
@@ -622,24 +724,24 @@ describe('Dashboard Integration', () => {
       fetch.mockResolvedValueOnce(createMockResponse(mockResponse));
 
       const result = await updateDashboardRealtime();
-      
+
       // Wait for processing
       await waitForNextTick();
 
       // Only high volume event should be included
       expect(result.results).toHaveLength(1);
-      expect(result.results[0].eventId).toContain('high');
+      expect(result.results[0].event_id).toContain('high');
 
       // Reset config
-      config.minDailyVolume = 100;
-      config.criticalThreshold = -80;
+      ConfigService.set('minDailyVolume', originalMinVolume);
+      ConfigService.set('criticalThreshold', originalThreshold);
     });
   });
 });
 
 describe('Flexible Time Comparison Integration', () => {
   // Fixed tests with proper async handling
-  
+
   it('should handle request with comparison_start and comparison_end', async () => {
     setupTestAuthentication('test_cookie');
     setLocation('localhost');
@@ -917,52 +1019,3 @@ describe('Error scenarios for flexible time comparison', () => {
     expect(result.success).toBe(true);
   });
 });
-
-// Helper functions
-function createMockResponse(data, status = 200) {
-  return {
-    ok: status >= 200 && status < 300,
-    status,
-    json: vi.fn().mockResolvedValue(data),
-    text: vi.fn().mockResolvedValue(JSON.stringify(data))
-  };
-}
-
-function createElasticsearchResponse(buckets) {
-  return {
-    took: 50,
-    aggregations: {
-      events: {
-        buckets: buckets.map(b => ({
-          key: b.key,
-          doc_count: b.baseline + b.current,
-          baseline: { doc_count: b.baseline },
-          current: { doc_count: b.current }
-        }))
-      }
-    }
-  };
-}
-
-function createBucket(eventId, baseline, current) {
-  return { key: eventId, baseline, current };
-}
-
-function setLocation(hostname) {
-  try {
-    // Try to redefine if possible
-    Object.defineProperty(window, 'location', {
-      value: { hostname },
-      writable: true,
-      configurable: true
-    });
-  } catch (e) {
-    // If property is not configurable, just update hostname
-    if (window.location && typeof window.location === 'object') {
-      window.location.hostname = hostname;
-    } else {
-      // Last resort: create a new object
-      window.location = { hostname };
-    }
-  }
-}

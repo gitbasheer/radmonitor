@@ -2,6 +2,9 @@
 <html>
 <head>
     <title>Test Authentication Flow</title>
+    <!-- Antares Design System CSS -->
+    <link rel="stylesheet" href="assets/css/antares-theme.css">
+    <link rel="stylesheet" href="assets/css/dashboard-antares.css">
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -21,29 +24,31 @@
             margin-bottom: 20px;
         }
         button {
-            background: #4CAF50;
+            background: var(--gd-color-success);
             color: white;
             border: none;
-            padding: 10px 20px;
-            border-radius: 4px;
+            padding: var(--gd-spacing-sm) var(--gd-spacing-lg);
+            border-radius: var(--gd-radius-md);
             cursor: pointer;
-            margin: 5px;
-            font-size: 16px;
+            margin: var(--gd-spacing-xs);
+            font-size: var(--gd-font-size-md);
+            font-family: var(--gd-font-family-primary);
+            height: 52px;
         }
         button:hover {
-            background: #45a049;
+            background: var(--gd-color-success-hover, #45a049);
         }
         button.secondary {
-            background: #2196F3;
+            background: var(--gd-color-primary);
         }
         button.secondary:hover {
-            background: #1976D2;
+            background: var(--gd-color-primary-hover);
         }
         button.danger {
-            background: #f44336;
+            background: var(--gd-color-error);
         }
         button.danger:hover {
-            background: #d32f2f;
+            background: var(--gd-color-error-hover);
         }
         .status {
             margin: 20px 0;
@@ -162,20 +167,20 @@
 
                 const cookie = await window.CentralizedAuth.getCookie();
                 if (cookie) {
-                    updateStatus(`✅ Authenticated! Cookie found (length: ${cookie.length})`, 'success');
+                    updateStatus(`(✓)Authenticated! Cookie found (length: ${cookie.length})`, 'success');
 
                     // Test validation
                     const isValid = await window.CentralizedAuth.validateCookie();
                     if (isValid) {
-                        updateStatus('✅ Cookie is valid and working', 'success');
+                        updateStatus('(✓)Cookie is valid and working', 'success');
                     } else {
                         updateStatus('⚠️ Cookie exists but validation failed', 'error');
                     }
                 } else {
-                    updateStatus('❌ Not authenticated - no cookie found', 'error');
+                    updateStatus('(✗) Not authenticated - no cookie found', 'error');
                 }
             } catch (error) {
-                updateStatus(`❌ Error: ${error.message}`, 'error');
+                updateStatus(`(✗) Error: ${error.message}`, 'error');
             }
         }
 
@@ -189,14 +194,14 @@
 
                 const cookie = await window.CookieModal.show();
                 if (cookie) {
-                    updateStatus('✅ Cookie saved successfully!', 'success');
+                    updateStatus('(✓)Cookie saved successfully!', 'success');
                     // Test the new auth
                     await testAuth();
                 } else {
                     updateStatus('Cookie entry cancelled', 'info');
                 }
             } catch (error) {
-                updateStatus(`❌ Error: ${error.message}`, 'error');
+                updateStatus(`(✗) Error: ${error.message}`, 'error');
             }
         }
 
@@ -207,9 +212,9 @@
                 if (window.CentralizedAuth) {
                     await window.CentralizedAuth.clearCookie();
                 }
-                updateStatus('✅ Authentication cleared', 'success');
+                updateStatus('(✓)Authentication cleared', 'success');
             } catch (error) {
-                updateStatus(`❌ Error: ${error.message}`, 'error');
+                updateStatus(`(✗) Error: ${error.message}`, 'error');
             }
         }
     </script>

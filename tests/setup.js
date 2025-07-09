@@ -3,6 +3,61 @@
 import { vi } from 'vitest';
 import { JSDOM } from 'jsdom';
 
+// Import modules that tests expect to be global
+import { DataLayer } from '../assets/js/data-layer.js';
+import { unifiedAPI } from '../assets/js/api-interface.js';
+
+// Mock modules that need to be available globally
+const MockConfigManager = {
+  getCurrentConfig: vi.fn(() => ({
+    baselineStart: '2025-06-01',
+    baselineEnd: '2025-06-09',
+    currentTimeRange: 'now-12h',
+    highVolumeThreshold: 1000,
+    mediumVolumeThreshold: 100,
+    minDailyVolume: 100,
+    criticalThreshold: -80,
+    warningThreshold: -50,
+    autoRefreshEnabled: true,
+    autoRefreshInterval: 300000
+  })),
+  loadConfiguration: vi.fn(),
+  saveConfiguration: vi.fn()
+};
+
+const MockConfigService = {
+  getConfig: vi.fn(() => ({
+    baselineStart: '2025-06-01',
+    baselineEnd: '2025-06-09',
+    currentTimeRange: 'now-12h',
+    highVolumeThreshold: 1000,
+    mediumVolumeThreshold: 100,
+    minDailyVolume: 100,
+    criticalThreshold: -80,
+    warningThreshold: -50,
+    autoRefreshEnabled: true,
+    autoRefreshInterval: 300000,
+    rad_types: {
+      venture_feed: {
+        pattern: 'pandc.vnext.recommendations.feed.feed*',
+        display_name: 'Venture Feed',
+        enabled: true,
+        color: '#4CAF50',
+        description: 'Venture recommendations feed'
+      },
+      venture_metrics: {
+        pattern: 'pandc.vnext.recommendations.metricsevolved*',
+        display_name: 'Venture Metrics',
+        enabled: true,
+        color: '#9C27B0',
+        description: 'Venture metrics evolved events'
+      }
+    }
+  })),
+  setConfig: vi.fn(),
+  updateConfig: vi.fn()
+};
+
 // Setup DOM environment
 const dom = new JSDOM('<!DOCTYPE html><html><body></body></html>', {
   url: 'http://localhost',
@@ -13,7 +68,52 @@ const dom = new JSDOM('<!DOCTYPE html><html><body></body></html>', {
 global.window = dom.window;
 global.document = dom.window.document;
 global.navigator = dom.window.navigator;
-global.location = dom.window.location;
+
+// Make modules available globally for tests
+global.DataLayer = DataLayer;
+global.unifiedAPI = unifiedAPI;
+global.ConfigManager = MockConfigManager;
+global.ConfigService = MockConfigService;
+
+// Store original location and create safer location handling
+const originalLocation = dom.window.location;
+
+// Helper to safely change location for tests
+global.setLocationForTest = (hostname = 'localhost', pathname = '/', search = '') => {
+  const url = hostname === 'localhost' || hostname === '127.0.0.1'
+    ? `http://${hostname}:8000${pathname}${search}`
+    : `https://${hostname}${pathname}${search}`;
+
+  // Use vi.stubGlobal to safely mock location without triggering navigation
+  vi.stubGlobal('location', {
+    hostname,
+    href: url,
+    pathname,
+    search,
+    protocol: hostname === 'localhost' || hostname === '127.0.0.1' ? 'http:' : 'https:',
+    port: hostname === 'localhost' || hostname === '127.0.0.1' ? '8000' : '',
+    origin: url.split(pathname)[0],
+    host: hostname === 'localhost' || hostname === '127.0.0.1' ? `${hostname}:8000` : hostname,
+    hash: ''
+  });
+};
+
+// Helper to create a mock location object for tests that need to override location
+global.createMockLocation = (options = {}) => {
+  return {
+    hostname: options.hostname || 'localhost',
+    href: options.href || 'http://localhost:8000',
+    pathname: options.pathname || '/',
+    search: options.search || '',
+    protocol: options.protocol || 'http:',
+    port: options.port || '8000',
+    origin: options.origin || 'http://localhost:8000'
+  };
+};
+
+// Initialize location
+global.setLocationForTest('localhost');
+global.location = global.window.location;
 
 // Mock fetch globally
 global.fetch = vi.fn();
@@ -66,39 +166,42 @@ Object.defineProperty(document, 'cookie', {
   }
 });
 
-// Helper to change location
-global.setLocation = (hostname = 'localhost') => {
-  const url = hostname === 'localhost' || hostname === '127.0.0.1'
-    ? `http://${hostname}`
-    : `https://${hostname}`;
-  dom.reconfigure({ url });
-};
+// Helper to change location (kept for backward compatibility)
+global.setLocation = global.setLocationForTest;
 
 // Reset mocks before each test
 beforeEach(() => {
   global.fetch.mockReset();
-  
+
   // Clear localStorage data
   Object.keys(localStorageData).forEach(key => delete localStorageData[key]);
-  
-  // Reset localStorage mocks but restore implementations
-  localStorage.getItem.mockReset();
-  localStorage.setItem.mockReset();
-  localStorage.removeItem.mockReset();
-  localStorage.clear.mockReset();
-  
-  // Restore implementations
-  localStorage.getItem.mockImplementation((key) => localStorageData[key] || null);
-  localStorage.setItem.mockImplementation((key, value) => {
-    localStorageData[key] = value;
-  });
-  localStorage.removeItem.mockImplementation((key) => {
-    delete localStorageData[key];
-  });
-  localStorage.clear.mockImplementation(() => {
-    Object.keys(localStorageData).forEach(key => delete localStorageData[key]);
-  });
-  
+
+  // Reset localStorage mocks but restore implementations (safe reset)
+  if (localStorage.getItem.mockReset) localStorage.getItem.mockReset();
+  if (localStorage.setItem.mockReset) localStorage.setItem.mockReset();
+  if (localStorage.removeItem.mockReset) localStorage.removeItem.mockReset();
+  if (localStorage.clear.mockReset) localStorage.clear.mockReset();
+
+  // Restore implementations (safe restore)
+  if (localStorage.getItem.mockImplementation) {
+    localStorage.getItem.mockImplementation((key) => localStorageData[key] || null);
+  }
+  if (localStorage.setItem.mockImplementation) {
+    localStorage.setItem.mockImplementation((key, value) => {
+      localStorageData[key] = value;
+    });
+  }
+  if (localStorage.removeItem.mockImplementation) {
+    localStorage.removeItem.mockImplementation((key) => {
+      delete localStorageData[key];
+    });
+  }
+  if (localStorage.clear.mockImplementation) {
+    localStorage.clear.mockImplementation(() => {
+      Object.keys(localStorageData).forEach(key => delete localStorageData[key]);
+    });
+  }
+
   cookies = {};
 
   // Reset DOM
@@ -107,7 +210,7 @@ beforeEach(() => {
   document.cookie = '';
 
   // Reset location to localhost
-  global.setLocation('localhost');
+  global.setLocationForTest('localhost');
 });
 
 // Global test utilities

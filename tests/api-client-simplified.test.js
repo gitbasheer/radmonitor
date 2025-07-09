@@ -1,219 +1,177 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { SimplifiedAPIClient } from '../assets/js/api-client-simplified.js';
+import apiClient, { UnifiedAPIClient } from '../assets/js/api-client-unified.js';
 
 // Mock dependencies
-vi.mock('../assets/js/auth-service.js', () => ({
-    authService: {
-        checkAuth: vi.fn()
+vi.mock('../assets/js/config-service.js', () => ({
+    ConfigService: {
+        getConfig: vi.fn(() => ({
+            baselineStart: '2025-06-01',
+            baselineEnd: '2025-06-09',
+            currentTimeRange: 'now-12h',
+            rad_types: {
+                feed: {
+                    enabled: true,
+                    pattern: 'panc.vnext.recommendations.feed.*'
+                }
+            },
+            minEventDate: '2025-05-19T04:00:00.000Z',
+            queryAggSize: 500
+        }))
     }
 }));
 
-vi.mock('../assets/js/centralized-auth.js', () => ({
-    CentralizedAuth: {
-        getCookie: vi.fn()
+vi.mock('../assets/js/time-range-utils.js', () => ({
+    default: {
+        parseTimeRangeToFilter: vi.fn((range) => ({ gte: range }))
     }
 }));
 
-import { authService } from '../assets/js/auth-service.js';
-
-describe('SimplifiedAPIClient', () => {
+describe('UnifiedAPIClient', () => {
     let client;
-    let originalLocation;
+    let originalLocalStorage;
 
     beforeEach(() => {
-        client = new SimplifiedAPIClient();
+        // Create a new instance for each test to avoid state pollution
+        client = new UnifiedAPIClient();
         global.fetch = vi.fn();
 
-        // Mock window.location properly
-        originalLocation = window.location;
-        Object.defineProperty(window, 'location', {
-            writable: true,
-            value: {
-                hostname: 'localhost',
-                href: 'http://localhost:8000'
-            }
-        });
-
-        window.CentralizedAuth = {
-            getCookie: vi.fn()
+        // Mock localStorage
+        originalLocalStorage = global.localStorage;
+        global.localStorage = {
+            getItem: vi.fn(),
+            setItem: vi.fn(),
+            removeItem: vi.fn(),
+            clear: vi.fn()
         };
 
-        // Default auth to true
-        authService.checkAuth.mockResolvedValue({ authenticated: true });
+        // Use vi.stubGlobal for safe location mocking (no navigation errors)
+        vi.stubGlobal('location', {
+            hostname: 'localhost',
+            href: 'http://localhost:8000',
+            protocol: 'http:',
+            host: 'localhost:8000',
+            pathname: '/',
+            search: '',
+            hash: '',
+            origin: 'http://localhost:8000',
+            port: '8000'
+        });
+
+        // Default auth cookie
+        global.localStorage.getItem.mockImplementation((key) => {
+            if (key === 'elasticCookie') {
+                return JSON.stringify({
+                    cookie: 'sid=Fe26.2**test**',
+                    expires: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+                    saved: new Date().toISOString()
+                });
+            }
+            return null;
+        });
     });
 
     afterEach(() => {
         vi.clearAllMocks();
         vi.restoreAllMocks();
         vi.useRealTimers();
-
-        // Restore window.location
-        Object.defineProperty(window, 'location', {
-            writable: true,
-            value: originalLocation
-        });
+        vi.unstubAllGlobals();
+        global.localStorage = originalLocalStorage;
     });
 
     describe('request', () => {
-        it('should make authenticated request with X-Elastic-Cookie header on localhost', async () => {
-            const cookie = 'sid=Fe26.2**test**';
-            window.CentralizedAuth.getCookie.mockReturnValue(cookie);
-
+        it('should make authenticated request with proper headers', async () => {
             global.fetch.mockResolvedValueOnce({
                 ok: true,
-                json: async () => ({ success: true })
+                json: async () => ({ test: 'data' })
             });
 
-            const result = await client.request('/test', {
+            const result = await client.request('http://localhost:8000/api/v1/test', {
                 method: 'GET'
             });
 
             expect(global.fetch).toHaveBeenCalledWith(
-                '/api/v1/test',
+                'http://localhost:8000/api/v1/test',
                 expect.objectContaining({
-                    credentials: 'include',
                     headers: expect.objectContaining({
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json',
-                        'X-Elastic-Cookie': cookie
+                        'Content-Type': 'application/json'
                     })
                 })
             );
 
-            expect(result).toEqual({ success: true });
+            expect(result.success).toBe(true);
+            expect(result.data).toEqual({ test: 'data' });
         });
 
-        it('should handle cookie without sid= prefix', async () => {
-            const cookie = 'Fe26.2**test**';
-            window.CentralizedAuth.getCookie.mockReturnValue(cookie);
-
+        it('should handle errors properly', async () => {
             global.fetch.mockResolvedValueOnce({
-                ok: true,
-                json: async () => ({ success: true })
+                ok: false,
+                status: 404,
+                statusText: 'Not Found',
+                json: async () => ({ detail: 'Resource not found' })
             });
 
-            await client.request('/test', { method: 'GET' });
+            const result = await client.request('http://localhost:8000/api/v1/missing');
 
-            expect(global.fetch).toHaveBeenCalledWith(
-                expect.any(String),
-                expect.objectContaining({
-                    headers: expect.objectContaining({
-                        'X-Elastic-Cookie': 'sid=' + cookie
-                    })
-                })
-            );
+            expect(result.success).toBe(false);
+            expect(result.error).toBe('Resource not found');
         });
 
-        it('should block request when not authenticated', async () => {
-            authService.checkAuth.mockResolvedValueOnce({ authenticated: false });
+        it('should handle network errors', async () => {
+            global.fetch.mockRejectedValueOnce(new Error('Network error'));
 
-            await expect(client.request('/test')).rejects.toThrow('Authentication required');
-            expect(global.fetch).not.toHaveBeenCalled();
+            const result = await client.request('http://localhost:8000/api/v1/test');
+
+            expect(result.success).toBe(false);
+            expect(result.error).toBe('Network error');
         });
 
-        it('should allow anonymous requests', async () => {
-            authService.checkAuth.mockResolvedValueOnce({ authenticated: false });
-
-            global.fetch.mockResolvedValueOnce({
-                ok: true,
-                json: async () => ({ data: 'public' })
-            });
-
-            const result = await client.request('/public', {
-                allowAnonymous: true
-            });
-
-            expect(result).toEqual({ data: 'public' });
-        });
-
-        it('should retry on failure with exponential backoff', async () => {
+        it('should support timeout', async () => {
             vi.useFakeTimers();
 
-            // First two attempts fail, third succeeds
-            global.fetch
-                .mockRejectedValueOnce(new Error('Network error'))
-                .mockRejectedValueOnce(new Error('Network error'))
-                .mockResolvedValueOnce({
-                    ok: true,
-                    json: async () => ({ success: true })
-                });
+            // Mock a long-running request
+            global.fetch.mockImplementationOnce(() => new Promise((resolve) => {
+                setTimeout(() => resolve({ ok: true, json: async () => ({}) }), 5000);
+            }));
 
-            const promise = client.request('/test');
+            const promise = client.request('http://localhost:8000/api/v1/test', {
+                timeout: 100
+            });
 
-            // Wait for first retry (1000ms)
-            await vi.advanceTimersByTimeAsync(1000);
-
-            // Wait for second retry (2000ms)
-            await vi.advanceTimersByTimeAsync(2000);
+            // Advance timers past the timeout
+            await vi.advanceTimersByTimeAsync(150);
 
             const result = await promise;
 
-            expect(result).toEqual({ success: true });
-            expect(global.fetch).toHaveBeenCalledTimes(3);
+            expect(result.success).toBe(false);
+            expect(result.error).toContain('aborted');
+
+            vi.useRealTimers();
         });
 
-        it('should not retry on 401 errors', async () => {
-            global.fetch.mockResolvedValueOnce({
-                ok: false,
-                status: 401,
-                json: async () => ({ message: 'Unauthorized' })
-            });
 
-            await expect(client.request('/test')).rejects.toThrow('Unauthorized');
-            expect(global.fetch).toHaveBeenCalledTimes(1);
-        });
-
-        it('should handle timeout', async () => {
-            vi.useFakeTimers();
-            let abortSignal;
-
-            global.fetch.mockImplementationOnce((url, options) => {
-                abortSignal = options.signal;
-                return new Promise((resolve) => {
-                    // Never resolves
-                });
-            });
-
-            const promise = client.request('/test', { timeout: 100 });
-
-            // Advance time past timeout
-            await vi.advanceTimersByTimeAsync(150);
-
-            expect(abortSignal.aborted).toBe(true);
-            await expect(promise).rejects.toThrow();
-        });
     });
 
     describe('get', () => {
-        it('should cache successful GET requests', async () => {
-            const response = { data: 'test' };
+        it('should make GET requests with correct URL', async () => {
             global.fetch.mockResolvedValueOnce({
                 ok: true,
-                json: async () => response
+                json: async () => ({ data: 'test' })
             });
 
-            // First call should fetch
-            const result1 = await client.get('/data');
-            expect(result1).toEqual(response);
-            expect(global.fetch).toHaveBeenCalledTimes(1);
+            const result = await client.get('/data');
 
-            // Second call should use cache
-            const result2 = await client.get('/data');
-            expect(result2).toEqual(response);
-            expect(global.fetch).toHaveBeenCalledTimes(1);
-            expect(client.metrics.cacheHits).toBe(1);
-        });
+            expect(global.fetch).toHaveBeenCalledWith(
+                'http://localhost:8000/api/v1/data',
+                expect.objectContaining({
+                    method: 'GET',
+                    headers: expect.objectContaining({
+                        'Content-Type': 'application/json'
+                    })
+                })
+            );
 
-        it('should skip cache when requested', async () => {
-            global.fetch.mockResolvedValue({
-                ok: true,
-                json: async () => ({ data: 'fresh' })
-            });
-
-            await client.get('/data');
-            await client.get('/data', { skipCache: true });
-
-            expect(global.fetch).toHaveBeenCalledTimes(2);
+            expect(result.success).toBe(true);
+            expect(result.data).toEqual({ data: 'test' });
         });
     });
 
@@ -222,149 +180,158 @@ describe('SimplifiedAPIClient', () => {
             const body = { query: 'test' };
             global.fetch.mockResolvedValueOnce({
                 ok: true,
-                json: async () => ({ success: true })
+                json: async () => ({ result: 'success' })
             });
 
-            await client.post('/query', body);
+            const result = await client.post('/query', body);
 
             expect(global.fetch).toHaveBeenCalledWith(
-                expect.any(String),
+                'http://localhost:8000/api/v1/query',
                 expect.objectContaining({
                     method: 'POST',
-                    body: JSON.stringify(body)
-                })
-            );
-        });
-    });
-
-    describe('fetchDashboardData', () => {
-        it('should fetch dashboard data with correct format', async () => {
-            global.fetch.mockResolvedValueOnce({
-                ok: true,
-                json: async () => ({
-                    data: [{ id: '1', status: 'normal' }],
-                    stats: { normal: 1 },
-                    metadata: { timestamp: '2025-01-01' }
-                })
-            });
-
-            const result = await client.fetchDashboardData({
-                timeRange: 'now-24h',
-                filters: { search: 'test' }
-            });
-
-            expect(global.fetch).toHaveBeenCalledWith(
-                '/api/v1/dashboard/query',
-                expect.objectContaining({
-                    body: JSON.stringify({
-                        time_range: 'now-24h',
-                        filters: { search: 'test' },
-                        options: {
-                            includeStats: true,
-                            includeMetadata: true
-                        }
+                    body: JSON.stringify(body),
+                    headers: expect.objectContaining({
+                        'Content-Type': 'application/json'
                     })
                 })
             );
 
             expect(result.success).toBe(true);
-            expect(result.data).toHaveLength(1);
-        });
-
-        it('should use snake_case for time_range', async () => {
-            global.fetch.mockResolvedValueOnce({
-                ok: true,
-                json: async () => ({ data: [], stats: {}, metadata: {} })
-            });
-
-            await client.fetchDashboardData({ timeRange: 'now-6h' });
-
-            const callArgs = global.fetch.mock.calls[0];
-            const body = JSON.parse(callArgs[1].body);
-            expect(body.time_range).toBe('now-6h');
-            expect(body.timeRange).toBeUndefined();
-        });
-
-        it('should handle errors and return fallback data', async () => {
-            vi.useFakeTimers();
-
-            // Mock cached data
-            client.cache.set('GET:/dashboard/data', {
-                data: { data: [{ id: 'cached' }] },
-                timestamp: Date.now()
-            });
-
-            // Make the request fail
-            global.fetch.mockRejectedValue(new Error('Network error'));
-
-            const promise = client.fetchDashboardData();
-
-            // Advance through all retries quickly
-            for (let i = 0; i < 3; i++) {
-                await vi.advanceTimersByTimeAsync(5000);
-            }
-
-            const result = await promise;
-
-            expect(result.success).toBe(false);
-            expect(result.error).toBe('Network error');
-            expect(result.fallback).toEqual({ data: [{ id: 'cached' }] });
-        });
-
-        it('should send empty filters object by default', async () => {
-            global.fetch.mockResolvedValueOnce({
-                ok: true,
-                json: async () => ({ data: [], stats: {}, metadata: {} })
-            });
-
-            await client.fetchDashboardData();
-
-            const callArgs = global.fetch.mock.calls[0];
-            const body = JSON.parse(callArgs[1].body);
-            expect(body.filters).toEqual({});
+            expect(result.data).toEqual({ result: 'success' });
         });
     });
 
-    describe('testConnection', () => {
-        it('should test API connection successfully', async () => {
+    describe('fetchTrafficData', () => {
+        it('should fetch traffic data with elasticsearch query', async () => {
+            const mockElasticsearchResponse = {
+                aggregations: {
+                    events: {
+                        buckets: [
+                            {
+                                key: 'panc.vnext.recommendations.feed.feed_apmc',
+                                doc_count: 1000,
+                                current: { doc_count: 100 },
+                                baseline: { doc_count: 1000 }
+                            }
+                        ]
+                    }
+                }
+            };
+
             global.fetch.mockResolvedValueOnce({
                 ok: true,
-                json: async () => ({
-                    data: [],
-                    stats: {},
-                    metadata: {}
-                })
+                json: async () => mockElasticsearchResponse
             });
 
-            const result = await client.testConnection();
+            const config = {
+                currentTimeRange: 'now-12h',
+                baselineStart: '2025-06-01',
+                baselineEnd: '2025-06-09'
+            };
 
-            expect(result).toBe(true);
+            const result = await client.fetchTrafficData(config);
+
             expect(global.fetch).toHaveBeenCalledWith(
-                expect.stringContaining('/dashboard/query'),
+                'http://localhost:8000/api/v1/kibana/proxy',
                 expect.objectContaining({
-                    body: expect.stringContaining('"time_range":"now-5m"')
+                    method: 'POST',
+                    headers: expect.objectContaining({
+                        'Content-Type': 'application/json',
+                        'X-Elastic-Cookie': 'sid=Fe26.2**test**'
+                    })
                 })
             );
+
+            // Check the request body contains a query
+            const callArgs = global.fetch.mock.calls[0];
+            const body = JSON.parse(callArgs[1].body);
+            expect(body.query).toBeDefined();
+            expect(body.query.aggs).toBeDefined();
+
+            expect(result.success).toBe(true);
+            expect(result.data).toEqual(mockElasticsearchResponse);
         });
 
-        it('should return false when not authenticated', async () => {
-            authService.checkAuth.mockResolvedValueOnce({ authenticated: false });
+        it('should handle missing authentication', async () => {
+            // Remove the auth cookie
+            global.localStorage.getItem.mockReturnValue(null);
 
-            const result = await client.testConnection();
-            expect(result).toBe(false);
+            const result = await client.fetchTrafficData({
+                currentTimeRange: 'now-12h',
+                baselineStart: '2025-06-01',
+                baselineEnd: '2025-06-09'
+            });
+
+            expect(result.success).toBe(false);
+            expect(result.error).toContain('No authentication available');
             expect(global.fetch).not.toHaveBeenCalled();
         });
 
-        it('should return false on API error', async () => {
-            global.fetch.mockRejectedValueOnce(new Error('API Error'));
+        it('should use cached results when available', async () => {
+            const mockResponse = {
+                aggregations: { events: { buckets: [] } }
+            };
 
-            const result = await client.testConnection();
-            expect(result).toBe(false);
+            global.fetch.mockResolvedValueOnce({
+                ok: true,
+                json: async () => mockResponse
+            });
+
+            const config = {
+                currentTimeRange: 'now-12h',
+                baselineStart: '2025-06-01',
+                baselineEnd: '2025-06-09'
+            };
+
+            // First call should fetch
+            const result1 = await client.fetchTrafficData(config);
+            expect(result1.success).toBe(true);
+            expect(global.fetch).toHaveBeenCalledTimes(1);
+
+            // Second call should use cache
+            const result2 = await client.fetchTrafficData(config);
+            expect(result2.success).toBe(true);
+            expect(result2.cached).toBe(true);
+            expect(global.fetch).toHaveBeenCalledTimes(1);
+        });
+    });
+
+    describe('checkHealth', () => {
+        it('should check health successfully', async () => {
+            global.fetch.mockResolvedValueOnce({
+                ok: true,
+                json: async () => ({
+                    healthy: true,
+                    status: 'ok',
+                    version: '1.0.0'
+                })
+            });
+
+            const result = await client.checkHealth();
+
+            expect(result.healthy).toBe(true);
+            expect(result.status).toBe('ok');
+            expect(global.fetch).toHaveBeenCalledWith(
+                'http://localhost:8000/health',
+                expect.any(Object)
+            );
+        });
+
+        it('should handle health check failure', async () => {
+            global.fetch.mockRejectedValueOnce(new Error('Network error'));
+
+            const result = await client.checkHealth();
+
+            expect(result.healthy).toBe(false);
+            expect(result.error).toBe('Network error');
         });
     });
 
     describe('metrics', () => {
         it('should track request metrics', async () => {
+            // Reset metrics
+            client.metrics = { requests: 0, errors: 0, totalTime: 0 };
+
             global.fetch.mockResolvedValue({
                 ok: true,
                 json: async () => ({})
@@ -373,50 +340,53 @@ describe('SimplifiedAPIClient', () => {
             await client.get('/test1');
             await client.post('/test2', {});
 
-            // Now make a failing request
+            // Make a failing request
             global.fetch.mockRejectedValueOnce(new Error('Error'));
-            try {
-                await client.get('/test3');
-            } catch (e) {
-                // Expected to fail
-            }
+            await client.get('/test3');
 
-            const metrics = client.getMetrics();
+            const metrics = client.getClientMetrics();
             expect(metrics.requests).toBe(3);
             expect(metrics.errors).toBe(1);
-            expect(metrics.cacheHits).toBe(0);
+            expect(metrics.successRate).toBe(67); // 2/3 success = 67%
         });
 
-        it('should calculate cache hit rate', async () => {
+        it('should calculate average response time', async () => {
+            // Reset metrics
+            client.metrics = { requests: 0, errors: 0, totalTime: 0 };
+
             global.fetch.mockResolvedValue({
                 ok: true,
                 json: async () => ({})
             });
 
-            // Make 2 requests that will be cached
             await client.get('/test1');
             await client.get('/test2');
 
-            // Hit cache twice
-            await client.get('/test1');
-            await client.get('/test2');
-
-            const metrics = client.getMetrics();
+            const metrics = client.getClientMetrics();
             expect(metrics.requests).toBe(2);
-            expect(metrics.cacheHits).toBe(2);
-            expect(metrics.cacheHitRate).toBe(100);
+            expect(metrics.avgResponseTime).toBeGreaterThan(0);
         });
     });
 
     describe('clearCache', () => {
         it('should clear all cached data', async () => {
+            const mockResponse = {
+                aggregations: { events: { buckets: [] } }
+            };
+
             global.fetch.mockResolvedValue({
                 ok: true,
-                json: async () => ({ data: 'test' })
+                json: async () => mockResponse
             });
 
-            // Cache some data
-            await client.get('/test');
+            // Cache some data by making a traffic data request
+            const config = {
+                currentTimeRange: 'now-12h',
+                baselineStart: '2025-06-01',
+                baselineEnd: '2025-06-09'
+            };
+
+            await client.fetchTrafficData(config);
             expect(client.cache.size).toBe(1);
 
             // Clear cache
@@ -424,8 +394,67 @@ describe('SimplifiedAPIClient', () => {
             expect(client.cache.size).toBe(0);
 
             // Next request should fetch again
-            await client.get('/test');
+            await client.fetchTrafficData(config);
             expect(global.fetch).toHaveBeenCalledTimes(2);
+        });
+    });
+
+    describe('authentication', () => {
+        it('should get authentication details from localStorage', async () => {
+            const authDetails = await client.getAuthenticationDetails();
+
+            expect(authDetails.valid).toBe(true);
+            expect(authDetails.method).toBe('unified-server');
+            expect(authDetails.cookie).toBe('sid=Fe26.2**test**');
+        });
+
+        it('should handle missing cookie', async () => {
+            global.localStorage.getItem.mockReturnValue(null);
+
+            const authDetails = await client.getAuthenticationDetails();
+
+            expect(authDetails.valid).toBe(false);
+            expect(authDetails.message).toContain('No authentication cookie found');
+        });
+
+        it('should save cookie to localStorage', () => {
+            const cookie = 'sid=Fe26.2**newcookie**';
+            const result = client.saveElasticCookie(cookie);
+
+            expect(result).toBe(true);
+            expect(global.localStorage.setItem).toHaveBeenCalledWith(
+                'elasticCookie',
+                expect.stringContaining('"cookie":"sid=Fe26.2**newcookie**"')
+            );
+        });
+    });
+
+    describe('initialization', () => {
+        it('should initialize successfully when healthy', async () => {
+            global.fetch.mockResolvedValueOnce({
+                ok: true,
+                json: async () => ({ healthy: true, status: 'ok' })
+            });
+
+            const eventSpy = vi.fn();
+            window.addEventListener('api:connected', eventSpy);
+
+            const result = await client.initialize();
+
+            expect(result).toBe(true);
+            expect(eventSpy).toHaveBeenCalled();
+        });
+
+        it('should handle initialization failure', async () => {
+            global.fetch.mockRejectedValueOnce(new Error('Connection failed'));
+
+            const eventSpy = vi.fn();
+            window.addEventListener('api:disconnected', eventSpy);
+
+            const result = await client.initialize();
+
+            expect(result).toBe(false);
+            expect(eventSpy).toHaveBeenCalled();
         });
     });
 });

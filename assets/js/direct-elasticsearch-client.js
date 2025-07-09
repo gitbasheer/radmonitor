@@ -32,7 +32,7 @@ export class DirectElasticsearchClient {
      */
     async executeQuery(query) {
         const cookie = this.getAuthCookie();
-        
+
         if (!cookie) {
             return {
                 success: false,
@@ -41,10 +41,10 @@ export class DirectElasticsearchClient {
         }
 
         const url = `${this.elasticsearchUrl}${this.indexPath}`;
-        
+
         try {
             console.log('🔄 Attempting direct Elasticsearch connection...');
-            
+
             const response = await fetch(url, {
                 method: 'POST',
                 headers: {
@@ -68,7 +68,7 @@ export class DirectElasticsearchClient {
             }
 
             const data = await response.json();
-            
+
             if (data.error) {
                 return {
                     success: false,
@@ -76,7 +76,7 @@ export class DirectElasticsearchClient {
                 };
             }
 
-            console.log('✅ Direct Elasticsearch connection successful!');
+            console.log('(✓)Direct Elasticsearch connection successful!');
             return {
                 success: true,
                 data: data,
@@ -99,8 +99,8 @@ export class DirectElasticsearchClient {
     async testConnection() {
         const testQuery = {
             size: 0,
-            query: { 
-                bool: { 
+            query: {
+                bool: {
                     filter: [{
                         range: {
                             "@timestamp": {
@@ -118,4 +118,4 @@ export class DirectElasticsearchClient {
 
 // Create singleton instance
 export const directClient = new DirectElasticsearchClient();
-export default directClient; 
+export default directClient;

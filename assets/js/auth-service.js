@@ -50,16 +50,35 @@ export class AuthService {
                 }
             }
 
-            // Try backend auth check
+            // Check for stored cookie first
+            const storedCookie = localStorage.getItem('elastic_cookie');
+            
+            // Try backend auth check with cookie
+            const headers = {
+                'Accept': 'application/json'
+            };
+            
+            if (storedCookie) {
+                headers['X-Elastic-Cookie'] = storedCookie;
+                headers['Cookie'] = storedCookie;
+            }
+            
             const response = await fetch('/api/v1/auth/status', {
                 credentials: 'include',
-                headers: {
-                    'Accept': 'application/json'
-                }
+                headers: headers
             });
 
             if (response.ok) {
-                this.authStatus = await response.json();
+                const result = await response.json();
+                // If server says authenticated, include the cookie in the status
+                if (result.authenticated && storedCookie) {
+                    this.authStatus = {
+                        ...result,
+                        cookie: storedCookie
+                    };
+                } else {
+                    this.authStatus = result;
+                }
                 return this.authStatus;
             }
 
@@ -121,7 +140,7 @@ export class AuthService {
 
         // If already authenticated, return immediately
         if (status.authenticated) {
-            console.log('✅ Using existing authentication');
+            console.log('(✓)Using existing authentication');
             return status;
         }
 
@@ -133,7 +152,7 @@ export class AuthService {
             // Re-check auth after setting cookie
             const newStatus = await this.checkAuth();
             if (newStatus.authenticated) {
-                console.log('✅ Authentication successful with new cookie');
+                console.log('(✓)Authentication successful with new cookie');
                 return newStatus;
             }
         }
