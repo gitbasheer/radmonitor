@@ -317,10 +317,17 @@ const ConfigEditor = {
                 // Save cookie to localStorage in the format expected by the API client
                 const cookieData = {
                     cookie: flatConfig.elasticCookie,
-                    expires: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-                    saved: new Date().toISOString()
-                };
+                                    expires: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+                saved: new Date().toISOString()
+            };
+
+            // Use centralized auth if available
+            if (window.CentralizedAuth) {
+                await window.CentralizedAuth.setCookie(cookieValue);
+            } else {
+                // Fallback to legacy storage
                 localStorage.setItem('elasticCookie', JSON.stringify(cookieData));
+            }
 
                 // Test the connection using the unified API
                 try {

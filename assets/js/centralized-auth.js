@@ -13,13 +13,19 @@ export const CentralizedAuth = (() => {
     const COOKIE_LIFESPAN = 24 * 60 * 60 * 1000; // 24 hours
     const SHARED_COOKIE_URL = '/config/shared-cookie.json'; // Optional: for team sharing
 
+    // Legacy keys for migration
+    const LEGACY_KEYS = ['elasticCookie', 'elastic_cookie'];
+
     let currentAuth = null;
     let authCheckTimer = null;
 
     /**
-     * Initialize auth system
+     * Initialize auth system with migration
      */
     async function init() {
+        // Migrate legacy keys first
+        await migrateLegacyKeys();
+
         // Load from storage
         currentAuth = await loadFromStorage();
 
@@ -32,6 +38,53 @@ export const CentralizedAuth = (() => {
         startAuthValidation();
 
         return currentAuth;
+    }
+
+    /**
+     * Migrate legacy authentication keys to centralized storage
+     */
+    async function migrateLegacyKeys() {
+        for (const legacyKey of LEGACY_KEYS) {
+            try {
+                const legacyData = localStorage.getItem(legacyKey);
+                if (legacyData) {
+                    const parsed = JSON.parse(legacyData);
+
+                    // Check if it's a valid cookie format
+                    if (parsed.cookie && parsed.expires) {
+                        const expiresAt = new Date(parsed.expires);
+                        if (expiresAt > new Date()) {
+                            // Valid legacy cookie found - migrate it
+                            console.log(`🔄 Migrating legacy cookie from ${legacyKey}`);
+
+                            const auth = {
+                                cookie: parsed.cookie,
+                                createdAt: parsed.saved || new Date().toISOString(),
+                                expiresAt: parsed.expires,
+                                source: `migrated-from-${legacyKey}`,
+                                validated: false
+                            };
+
+                            // Save to centralized storage
+                            await saveToStorage(auth);
+
+                            // Remove legacy key
+                            localStorage.removeItem(legacyKey);
+
+                            console.log(`✅ Successfully migrated cookie from ${legacyKey}`);
+                        } else {
+                            // Expired legacy cookie - remove it
+                            localStorage.removeItem(legacyKey);
+                            console.log(`🗑️ Removed expired legacy cookie from ${legacyKey}`);
+                        }
+                    }
+                }
+            } catch (error) {
+                console.warn(`Failed to migrate legacy key ${legacyKey}:`, error);
+                // Remove invalid legacy data
+                localStorage.removeItem(legacyKey);
+            }
+        }
     }
 
     /**
@@ -92,6 +145,11 @@ export const CentralizedAuth = (() => {
     function clearAuth() {
         currentAuth = null;
         localStorage.removeItem(STORAGE_KEY);
+
+        // Also clear any legacy keys
+        for (const legacyKey of LEGACY_KEYS) {
+            localStorage.removeItem(legacyKey);
+        }
 
         if (authCheckTimer) {
             clearInterval(authCheckTimer);
@@ -336,6 +394,7 @@ export const CentralizedAuth = (() => {
         getStatus,
         exportAuth,
         importAuth,
+        migrateLegacyKeys,
 
         // Events to listen for:
         // - authUpdated: Cookie was updated

@@ -235,15 +235,23 @@ async function handlePreConfiguredCookie(cookieValue) {
     try {
         console.log('🔐 Setting up pre-configured authentication...');
 
-        // Store the cookie in localStorage with proper format
-        const cookieData = {
-            cookie: cookieValue.trim(),
-            expires: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-            saved: new Date().toISOString(),
-            source: 'github-secrets'
-        };
+        // Use centralized auth if available
+        if (window.CentralizedAuth) {
+            await window.CentralizedAuth.setCookie(cookieValue.trim(), {
+                source: 'github-secrets',
+                skipValidation: true
+            });
+        } else {
+            // Fallback to localStorage (should not happen in production)
+            const cookieData = {
+                cookie: cookieValue.trim(),
+                expires: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+                saved: new Date().toISOString(),
+                source: 'github-secrets'
+            };
 
-        localStorage.setItem('elasticCookie', JSON.stringify(cookieData));
+            localStorage.setItem('elasticCookie', JSON.stringify(cookieData));
+        }
 
         // Update config to reflect the auto-authentication
         config.elasticCookie = cookieValue.trim();

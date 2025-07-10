@@ -40,22 +40,22 @@ describe('Formula Builder Component Fixes', () => {
 
     it('should handle setValue before element is connected', async () => {
       const { EnhancedFormulaEditor } = await import('../assets/js/formula-builder/ui/enhanced-formula-editor.js');
-      
+
       // Define custom element
       if (!customElements.get('enhanced-formula-editor')) {
         customElements.define('enhanced-formula-editor', EnhancedFormulaEditor);
       }
-      
+
       // Create element
       const editor = new EnhancedFormulaEditor();
-      
+
       // Set value before connecting to DOM
       expect(() => editor.setValue('test formula')).not.toThrow();
       expect(editor.getValue()).toBe('test formula');
-      
+
       // Connect to DOM
       document.body.appendChild(editor);
-      
+
       // Value should be applied after connection
       await new Promise(resolve => setTimeout(resolve, 0));
       expect(editor.getValue()).toBe('test formula');
@@ -96,10 +96,10 @@ describe('Formula Builder Component Fixes', () => {
     });
 
     it('should use window global for API key', async () => {
-      window.FORMULA_AI_API_KEY = 'test-key';
+      window.FORMULA_AI_API_KEY = 'test-key-for-testing-only';
       const { FormulaAIAssistant } = await import('../assets/js/formula-builder/ai/formula-ai-assistant.js');
       const assistant = new FormulaAIAssistant();
-      
+
       // Should not throw and should have initialized
       expect(assistant).toBeDefined();
     });
@@ -111,7 +111,7 @@ describe('Formula Builder Component Fixes', () => {
       const editorElement = document.createElement('div');
       editorElement.id = 'formulaEditor';
       document.body.appendChild(editorElement);
-      
+
       // Import should not throw
       const module = await import('../assets/js/formula-editor-integration.js');
       expect(module.formulaEditorIntegration).toBeDefined();
@@ -149,33 +149,33 @@ describe('Import Chain Validation', () => {
 describe('Error Handling', () => {
   it('should handle missing DOM elements gracefully', async () => {
     const { formulaEditorIntegration } = await import('../assets/js/formula-editor-integration.js');
-    
+
     // Remove formula editor element if exists
     const existingEditor = document.getElementById('formulaEditor');
     if (existingEditor) {
       existingEditor.remove();
     }
-    
+
     // Init should not throw even with missing element
     await expect(formulaEditorIntegration.init()).resolves.not.toThrow();
   });
 
   it('should emit proper events on initialization', async () => {
     const events = [];
-    
+
     // Listen for events
     window.addEventListener('formula:initialized', (e) => events.push(e));
     window.addEventListener('formula:error', (e) => events.push(e));
-    
+
     // Create formula editor element
     const editorElement = document.createElement('enhanced-formula-editor');
     editorElement.id = 'formulaEditor';
     document.body.appendChild(editorElement);
-    
+
     // Import and init
     const { formulaEditorIntegration } = await import('../assets/js/formula-editor-integration.js');
     await formulaEditorIntegration.init();
-    
+
     // Should have emitted initialization event
     expect(events.some(e => e.type === 'formula:initialized')).toBe(true);
   });

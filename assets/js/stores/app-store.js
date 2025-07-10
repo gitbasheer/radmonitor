@@ -67,8 +67,15 @@ export const appStore = createStore((set, get) => ({
       const startTime = Date.now();
 
       try {
-        // Check localStorage first
-        const storedCookie = localStorage.getItem('elastic_cookie');
+        // Check centralized auth first
+        let storedCookie = null;
+        if (window.CentralizedAuth) {
+            storedCookie = window.CentralizedAuth.getCookie();
+        } else {
+            // Fallback to localStorage
+            storedCookie = localStorage.getItem('elastic_cookie');
+        }
+
         if (storedCookie) {
           // Ensure minimum time has passed to prevent flash
           const elapsed = Date.now() - startTime;
@@ -94,7 +101,13 @@ export const appStore = createStore((set, get) => ({
         const sid = urlParams.get('sid');
         if (sid) {
           const cookie = `sid=${sid}`;
-          localStorage.setItem('elastic_cookie', cookie);
+
+          // Use centralized auth if available
+          if (window.CentralizedAuth) {
+            await window.CentralizedAuth.setCookie(cookie, { source: 'url' });
+          } else {
+            localStorage.setItem('elastic_cookie', cookie);
+          }
 
           // Clean URL
           window.history.replaceState({}, document.title, window.location.pathname);
@@ -152,9 +165,15 @@ export const appStore = createStore((set, get) => ({
       }
     },
 
-    setCookie: (cookie) => {
+    setCookie: async (cookie) => {
       const formattedCookie = cookie.startsWith('sid=') ? cookie : `sid=${cookie}`;
-      localStorage.setItem('elastic_cookie', formattedCookie);
+
+      // Use centralized auth if available
+      if (window.CentralizedAuth) {
+        await window.CentralizedAuth.setCookie(formattedCookie, { source: 'manual' });
+      } else {
+        localStorage.setItem('elastic_cookie', formattedCookie);
+      }
 
       set((state) => ({
         auth: {
@@ -169,7 +188,12 @@ export const appStore = createStore((set, get) => ({
     },
 
     clearAuth: () => {
-      localStorage.removeItem('elastic_cookie');
+      // Use centralized auth if available
+      if (window.CentralizedAuth) {
+        window.CentralizedAuth.clearAuth();
+      } else {
+        localStorage.removeItem('elastic_cookie');
+      }
       set((state) => ({
         auth: {
           isAuthenticated: false,

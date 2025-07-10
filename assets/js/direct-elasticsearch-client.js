@@ -10,9 +10,15 @@ export class DirectElasticsearchClient {
     }
 
     /**
-     * Get authentication cookie from localStorage
+     * Get authentication cookie from centralized auth or localStorage
      */
     getAuthCookie() {
+        // Use centralized auth if available
+        if (window.CentralizedAuth) {
+            return window.CentralizedAuth.getCookie();
+        }
+
+        // Fallback to localStorage
         try {
             const saved = localStorage.getItem('elasticCookie');
             if (saved) {
