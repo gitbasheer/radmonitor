@@ -163,3 +163,14 @@ src/
 .env.local
 .env.development
 .env.test
+COMPLETE_ARCHITECTURE_MAP.md
+connect_all_eids.md
+connect_all.md
+proposal_tickets.md
+SECURITY_ARCHITECTURE_ANALYSIS.md
+spike_eval_2.md
+spike_eval_3.md
+spike_eval.md
+sprint_work.md
+test-memory-fixes.js
+agent_collab.md
