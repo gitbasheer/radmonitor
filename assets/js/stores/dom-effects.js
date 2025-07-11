@@ -42,15 +42,8 @@ class DOMEffectsManager {
       }
     }
 
-    // Handle auth prompt visibility
-    const authOverlay = document.getElementById('authOverlay');
-    if (authOverlay) {
-      if (ui.showAuthPrompt) {
-        authOverlay.style.display = 'flex';
-      } else {
-        authOverlay.style.display = 'none';
-      }
-    }
+    // Auth overlay is now handled by auth-overlay.js component itself
+    // Removed duplicate control to prevent conflicts
 
     // Handle modal open body class
     if (ui.activeModal) {

@@ -256,10 +256,10 @@ class Validator:
             try:
                 with open(".env", "r") as f:
                     contents = f.read()
-                if "ES_COOKIE" in contents or "ELASTIC_COOKIE" in contents:
+                if "ELASTIC_COOKIE" in contents:
                     self.result.add_pass("Cookie configured in .env")
                 else:
-                    self.result.add_fail("Cookie configured in .env", "Add ES_COOKIE to .env")
+                    self.result.add_fail("Cookie configured in .env", "Add ELASTIC_COOKIE to .env")
             except:
                 self.result.add_fail(".env file readable", "Cannot read .env file")
         else:
@@ -267,7 +267,7 @@ class Validator:
 
         # Test environment variables
         test_vars = {
-            "ES_COOKIE": "test_validation",
+            "ELASTIC_COOKIE": "test_validation",
             "BASELINE_START": "2024-01-01T00:00:00",
             "BASELINE_END": "2024-01-07T00:00:00"
         }

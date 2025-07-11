@@ -3,6 +3,8 @@
  * Central control point for all FastAPI features
  */
 
+import { getApiUrl } from './config-service.js';
+
 /**
  * Exponential Backoff with Jitter for reconnection
  */
@@ -35,8 +37,13 @@ export const FastAPIIntegration = {
 
     // Central configuration
     config: {
-        apiUrl: window.FASTAPI_URL || window.API_URL || 'http://localhost:8000',
-        wsUrl: window.FASTAPI_WS_URL || 'ws://localhost:8000/ws',
+        apiUrl: getApiUrl(),
+        wsUrl: (() => {
+            const apiUrl = getApiUrl();
+            const wsProtocol = apiUrl.startsWith('https') ? 'wss' : 'ws';
+            const wsHost = apiUrl.replace(/^https?:\/\//, '');
+            return `${wsProtocol}://${wsHost}/ws`;
+        })(),
         reconnectInterval: 5000, // Deprecated - using exponential backoff
         maxReconnectAttempts: 10, // Increased for exponential backoff
         enableRealtime: true,

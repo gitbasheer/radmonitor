@@ -13,6 +13,7 @@
  */
 
 import { appStore, useUI, useActions } from '../stores/app-store.js';
+import DOMPurify from './../lib/dompurify.js';
 
 // Component registry - maps component names to their @ux imports
 const UX_COMPONENTS = {
@@ -83,11 +84,11 @@ export const UXComponents = {
 
     if (loading) {
       button.classList.add('ux-button--loading');
-      button.innerHTML = '<span class="ux-spinner ux-spinner--small"></span>';
+      button.innerHTML = DOMPurify.sanitize('<span class="ux-spinner ux-spinner--small"></span>');
     } else {
       button.textContent = text;
       if (icon) {
-        button.innerHTML = `<span class="ux-icon ux-icon--${icon}"></span> ${text}`;
+        button.innerHTML = DOMPurify.sanitize(`<span class="ux-icon ux-icon--${icon}"></span> ${text}`);
       }
     }
 
@@ -116,14 +117,14 @@ export const UXComponents = {
     if (title) {
       const header = document.createElement('div');
       header.className = 'ux-card__header';
-      header.innerHTML = `<h3 class="ux-text ux-text--heading-3">${title}</h3>`;
+      header.innerHTML = DOMPurify.sanitize(`<h3 class="ux-text ux-text--heading-3">${title}</h3>`);
       card.appendChild(header);
     }
 
     const body = document.createElement('div');
     body.className = 'ux-card__body';
     if (typeof content === 'string') {
-      body.innerHTML = content;
+      body.innerHTML = DOMPurify.sanitize(content);
     } else {
       body.appendChild(content);
     }
@@ -133,7 +134,7 @@ export const UXComponents = {
       const footerEl = document.createElement('div');
       footerEl.className = 'ux-card__footer';
       if (typeof footer === 'string') {
-        footerEl.innerHTML = footer;
+        footerEl.innerHTML = DOMPurify.sanitize(footer);
       } else {
         footerEl.appendChild(footer);
       }
@@ -176,10 +177,10 @@ export const UXComponents = {
     if (title) {
       const header = document.createElement('div');
       header.className = 'ux-modal__header';
-      header.innerHTML = `
+      header.innerHTML = DOMPurify.sanitize(`
         <h2 class="ux-text ux-text--heading-2">${title}</h2>
         ${closable ? '<button class="ux-modal__close ux-button ux-button--tertiary ux-button--small"><span class="ux-icon ux-icon--close"></span></button>' : ''}
-      `;
+      `);
       modalContent.appendChild(header);
 
       if (closable) {
@@ -192,7 +193,7 @@ export const UXComponents = {
     const body = document.createElement('div');
     body.className = 'ux-modal__body';
     if (typeof content === 'string') {
-      body.innerHTML = content;
+      body.innerHTML = DOMPurify.sanitize(content);
     } else {
       body.appendChild(content);
     }
@@ -202,7 +203,7 @@ export const UXComponents = {
       const footerEl = document.createElement('div');
       footerEl.className = 'ux-modal__footer';
       if (typeof footer === 'string') {
-        footerEl.innerHTML = footer;
+        footerEl.innerHTML = DOMPurify.sanitize(footer);
       } else {
         footerEl.appendChild(footer);
       }
@@ -238,9 +239,9 @@ export const UXComponents = {
 
       setContent(newContent) {
         if (typeof newContent === 'string') {
-          body.innerHTML = newContent;
+          body.innerHTML = DOMPurify.sanitize(newContent);
         } else {
-          body.innerHTML = '';
+          body.innerHTML = ''; // Safe - clearing content only
           body.appendChild(newContent);
         }
       },
@@ -315,13 +316,13 @@ export const UXComponents = {
 
     const content = document.createElement('div');
     content.className = 'ux-alert__content';
-    content.innerHTML = message;
+    content.innerHTML = DOMPurify.sanitize(message);
     alert.appendChild(content);
 
     if (dismissible) {
       const closeBtn = document.createElement('button');
       closeBtn.className = 'ux-alert__close ux-button ux-button--tertiary ux-button--small';
-      closeBtn.innerHTML = '<span class="ux-icon ux-icon--close"></span>';
+      closeBtn.innerHTML = DOMPurify.sanitize('<span class="ux-icon ux-icon--close"></span>');
       closeBtn.addEventListener('click', () => {
         alert.remove();
         onDismiss();
@@ -358,7 +359,7 @@ export const UXComponents = {
     if (dismissible) {
       const closeBtn = document.createElement('button');
       closeBtn.className = 'ux-chip__close';
-      closeBtn.innerHTML = '<span class="ux-icon ux-icon--close-small"></span>';
+      closeBtn.innerHTML = DOMPurify.sanitize('<span class="ux-icon ux-icon--close-small"></span>');
       closeBtn.addEventListener('click', () => {
         chip.remove();
         onDismiss();
@@ -425,7 +426,7 @@ export const UXComponents = {
 
     const tooltip = document.createElement('div');
     tooltip.className = `ux-tooltip ux-tooltip--${position}`;
-    tooltip.innerHTML = content;
+    tooltip.innerHTML = DOMPurify.sanitize(content);
 
     let showTimeout;
     let hideTimeout;
@@ -542,13 +543,13 @@ export const UXComponents = {
       if (Array.isArray(children)) {
         children.forEach(child => {
           if (typeof child === 'string') {
-            box.innerHTML += child;
+            box.innerHTML = DOMPurify.sanitize(box.innerHTML + child);
           } else {
             box.appendChild(child);
           }
         });
       } else if (typeof children === 'string') {
-        box.innerHTML = children;
+        box.innerHTML = DOMPurify.sanitize(children);
       } else {
         box.appendChild(children);
       }

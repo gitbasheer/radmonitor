@@ -39,7 +39,7 @@ test_scenarios = [
             "ENVIRONMENT": "development",
             "ELASTICSEARCH_URL": "https://elasticsearch.example.com:9243",
             "KIBANA_URL": "https://kibana.example.com:9243",
-            "ES_COOKIE": "sid=Fe26.2**test-cookie**",
+            "ELASTIC_COOKIE": "sid=Fe26.2**test-cookie**",
             "BASELINE_START": "2024-01-01T00:00:00",
             "BASELINE_END": "2024-01-07T00:00:00",
             "LOG_LEVEL": "DEBUG",

@@ -40,59 +40,22 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # ====================
-# Environment Validation
+# Configuration Loading
 # ====================
 
-# Add the parent directory to the path to import env_validator
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+# Add the parent directory to the path
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 try:
-    from env_validator import validate_environment, EnvValidationError
+    from config import get_config, AppConfig
 
-    # Validate environment variables at startup
-    validated_env = validate_environment()
-    print("✅ Environment validation completed successfully\n")
+    # Load configuration
+    config = get_config()
+    print(f"✅ Configuration loaded successfully (environment: {config.environment})\n")
 
-except EnvValidationError as e:
-    print(f"❌ Environment validation failed:\n{e}", file=sys.stderr)
-    sys.exit(1)
 except Exception as e:
-    print(f"❌ Failed to validate environment: {e}", file=sys.stderr)
+    print(f"❌ Failed to load configuration: {e}", file=sys.stderr)
     sys.exit(1)
-
-# ====================
-# Local Settings Implementation (replacing src imports)
-# ====================
-
-class Settings:
-    """Simple settings loader replacing src.config.settings"""
-    def __init__(self):
-        config_path = Path(__file__).parent.parent / "config" / "settings.json"
-        self._settings = {}
-
-        if config_path.exists():
-            try:
-                with open(config_path, 'r') as f:
-                    self._settings = json.load(f)
-            except Exception as e:
-                print(f"Warning: Failed to load settings: {e}")
-
-                # Environment variable overrides from validated values
-        self.elasticsearch_url = validated_env.get('ELASTICSEARCH_URL',
-            self._settings.get('elasticsearch', {}).get('url', 'https://usieventho-prod-usw2.es.us-west-2.aws.found.io:9243'))
-        self.kibana_url = validated_env.get('KIBANA_URL',
-            self._settings.get('kibana', {}).get('url', 'https://usieventho-prod-usw2.kb.us-west-2.aws.found.io:9243'))
-
-    def get(self, key, default=None):
-        return self._settings.get(key, default)
-
-def get_settings():
-    """Get settings instance"""
-    return Settings()
-
-def reload_settings():
-    """Reload settings (placeholder for compatibility)"""
-    return Settings()
 
 # Simple models replacing src.data.models
 class TrafficEvent(BaseModel):
@@ -108,18 +71,25 @@ class ProcessingConfig(BaseModel):
     time_range: str
 
 # Configure structured logging
+log_processors = [
+    structlog.stdlib.filter_by_level,
+    structlog.stdlib.add_logger_name,
+    structlog.stdlib.add_log_level,
+    structlog.stdlib.PositionalArgumentsFormatter(),
+    structlog.processors.TimeStamper(fmt="iso"),
+    structlog.processors.StackInfoRenderer(),
+    structlog.processors.format_exc_info,
+    structlog.processors.UnicodeDecoder(),
+]
+
+# Use JSON renderer in production
+if config.environment == "production":
+    log_processors.append(structlog.processors.JSONRenderer())
+else:
+    log_processors.append(structlog.dev.ConsoleRenderer())
+
 structlog.configure(
-    processors=[
-        structlog.stdlib.filter_by_level,
-        structlog.stdlib.add_logger_name,
-        structlog.stdlib.add_log_level,
-        structlog.stdlib.PositionalArgumentsFormatter(),
-        structlog.processors.TimeStamper(fmt="iso"),
-        structlog.processors.StackInfoRenderer(),
-        structlog.processors.format_exc_info,
-        structlog.processors.UnicodeDecoder(),
-        structlog.dev.ConsoleRenderer()  # Human-readable for development
-    ],
+    processors=log_processors,
     context_class=dict,
     logger_factory=structlog.stdlib.LoggerFactory(),
     cache_logger_on_first_use=True,
@@ -131,17 +101,20 @@ logger = structlog.get_logger()
 # Configuration
 # ====================
 
-# Server configuration
-SERVER_PORT = validated_env.get("SERVER_PORT", 8000)
-SERVER_HOST = validated_env.get("SERVER_HOST", "0.0.0.0")
-ENVIRONMENT = validated_env.get("ENVIRONMENT", "development")
+# Server configuration with safe access
+SERVER_PORT = config.server.port if hasattr(config, 'server') and hasattr(config.server, 'port') else int(os.getenv('PORT', 8000))
+SERVER_HOST = config.server.host if hasattr(config, 'server') and hasattr(config.server, 'host') else os.getenv('HOST', '0.0.0.0')
+ENVIRONMENT = config.environment if hasattr(config, 'environment') else os.getenv('ENVIRONMENT', 'development')
 
-# Kibana configuration
-KIBANA_URL = validated_env.get("KIBANA_URL", "https://usieventho-prod-usw2.kb.us-west-2.aws.found.io:9243")
-KIBANA_SEARCH_PATH = "/api/console/proxy?path=traffic-*/_search&method=POST"
+# Kibana configuration with safe access
+ELASTICSEARCH_URL = str(config.elasticsearch.url) if hasattr(config, 'elasticsearch') and hasattr(config.elasticsearch, 'url') else os.getenv('ELASTICSEARCH_URL', 'https://usieventho-prod-usw2.kb.us-west-2.aws.found.io:9243/')
+KIBANA_SEARCH_PATH = config.kibana.search_path if hasattr(config, 'kibana') and hasattr(config.kibana, 'search_path') else '/api/console/proxy?path=traffic-*/_search&method=POST'
 
-# Cache configuration
-CACHE_TTL = timedelta(minutes=5)
+# Cache configuration with safe access
+redis_ttl = 300  # default
+if hasattr(config, 'redis') and config.redis:
+    redis_ttl = getattr(config.redis, 'ttl', 300) if getattr(config.redis, 'enabled', False) else 300
+CACHE_TTL = timedelta(seconds=redis_ttl)
 
 # ====================
 # Models
@@ -242,6 +215,159 @@ async def execute_elasticsearch_query(query: Dict[str, Any], cookie: Optional[st
     """Execute Elasticsearch query via Kibana proxy"""
     start_time = time.time()
 
+    # In development mode, return mock data
+    if ENVIRONMENT == 'development':
+        logger.info("Development mode: Returning mock dashboard data")
+        return {
+            "success": True,
+            "data": {
+                "aggregations": {
+                    "rad_types": {
+                        "buckets": [
+                            {"key": "login", "doc_count": 1523},
+                            {"key": "api_call", "doc_count": 3421},
+                            {"key": "page_view", "doc_count": 892},
+                            {"key": "file_download", "doc_count": 234}
+                        ]
+                    },
+                    "status_counts": {
+                        "buckets": [
+                            {"key": "normal", "doc_count": 4523},
+                            {"key": "warning", "doc_count": 892},
+                            {"key": "critical", "doc_count": 234},
+                            {"key": "increased", "doc_count": 421}
+                        ]
+                    }
+                },
+                "hits": {
+                    "total": {"value": 6070},
+                    "hits": [
+                        {
+                            "_source": {
+                                "name": "traffic.login.success",
+                                "rad_type": "login",
+                                "status": "normal",
+                                "score": 15.2,
+                                "current": 523,
+                                "baseline": 450,
+                                "impact": "Low",
+                                "timestamp": datetime.utcnow().isoformat()
+                            }
+                        },
+                        {
+                            "_source": {
+                                "name": "traffic.api.errors",
+                                "rad_type": "api_call",
+                                "status": "critical",
+                                "score": -45.8,
+                                "current": 892,
+                                "baseline": 234,
+                                "impact": "High",
+                                "timestamp": datetime.utcnow().isoformat()
+                            }
+                        },
+                        {
+                            "_source": {
+                                "name": "traffic.page.home",
+                                "rad_type": "page_view",
+                                "status": "increased",
+                                "score": 28.9,
+                                "current": 1245,
+                                "baseline": 967,
+                                "impact": "Medium",
+                                "timestamp": datetime.utcnow().isoformat()
+                            }
+                        },
+                        {
+                            "_source": {
+                                "name": "traffic.file.downloads",
+                                "rad_type": "file_download",
+                                "status": "warning",
+                                "score": -12.5,
+                                "current": 156,
+                                "baseline": 178,
+                                "impact": "Low",
+                                "timestamp": datetime.utcnow().isoformat()
+                            }
+                        },
+                        {
+                            "_source": {
+                                "name": "traffic.api.auth",
+                                "rad_type": "api_call",
+                                "status": "normal",
+                                "score": 5.2,
+                                "current": 2341,
+                                "baseline": 2225,
+                                "impact": "Low",
+                                "timestamp": datetime.utcnow().isoformat()
+                            }
+                        },
+                        {
+                            "_source": {
+                                "name": "traffic.login.failed",
+                                "rad_type": "login",
+                                "status": "critical",
+                                "score": -89.2,
+                                "current": 523,
+                                "baseline": 56,
+                                "impact": "High",
+                                "timestamp": datetime.utcnow().isoformat()
+                            }
+                        },
+                        {
+                            "_source": {
+                                "name": "traffic.page.checkout",
+                                "rad_type": "page_view",
+                                "status": "increased",
+                                "score": 45.6,
+                                "current": 892,
+                                "baseline": 613,
+                                "impact": "High",
+                                "timestamp": datetime.utcnow().isoformat()
+                            }
+                        },
+                        {
+                            "_source": {
+                                "name": "traffic.api.payments",
+                                "rad_type": "api_call",
+                                "status": "normal",
+                                "score": 2.1,
+                                "current": 1567,
+                                "baseline": 1534,
+                                "impact": "Low",
+                                "timestamp": datetime.utcnow().isoformat()
+                            }
+                        },
+                        {
+                            "_source": {
+                                "name": "traffic.file.uploads",
+                                "rad_type": "file_download",
+                                "status": "warning",
+                                "score": -23.4,
+                                "current": 89,
+                                "baseline": 116,
+                                "impact": "Medium",
+                                "timestamp": datetime.utcnow().isoformat()
+                            }
+                        },
+                        {
+                            "_source": {
+                                "name": "traffic.page.search",
+                                "rad_type": "page_view",
+                                "status": "normal",
+                                "score": 8.9,
+                                "current": 3421,
+                                "baseline": 3145,
+                                "impact": "Low",
+                                "timestamp": datetime.utcnow().isoformat()
+                            }
+                        }
+                    ]
+                }
+            },
+            "query_time_ms": int((time.time() - start_time) * 1000)
+        }
+
     headers = {
         'Content-Type': 'application/json',
         'kbn-xsrf': 'true'
@@ -253,7 +379,7 @@ async def execute_elasticsearch_query(query: Dict[str, Any], cookie: Optional[st
     async with httpx.AsyncClient(timeout=30.0) as client:
         try:
             response = await client.post(
-                f"{KIBANA_URL}{KIBANA_SEARCH_PATH}",
+                f"{ELASTICSEARCH_URL}{KIBANA_SEARCH_PATH}",
                 headers=headers,
                 json=query
             )
@@ -359,13 +485,11 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 # ====================
 
 # CORS Middleware
-# Configure allowed origins from environment for security
-ALLOWED_ORIGINS = validated_env.get("ALLOWED_ORIGINS", ["http://localhost:8000", "http://localhost:3000"])
-ALLOWED_ORIGINS = [origin.strip() for origin in ALLOWED_ORIGINS if origin.strip()]  # Clean whitespace
+# Configure allowed origins from configuration
+ALLOWED_ORIGINS = config.cors_proxy.allowed_origins.copy()
 
-# Add production origin if running in production
-if validated_env.get("ENVIRONMENT") == "production":
-    # Add the current host as an allowed origin in production
+# Add production origins if running in production
+if config.environment == "production":
     production_origins = [
         "https://vh-rad-traffic-monitor.vercel.app",
         "https://vh-rad-traffic-monitor.github.io"
@@ -376,7 +500,7 @@ logger.info(f"CORS allowed origins: {ALLOWED_ORIGINS}")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=ALLOWED_ORIGINS,  # Use specific origins for security
+    allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["Content-Type", "Authorization", "Cookie", "X-Requested-With"],
@@ -436,8 +560,6 @@ async def read_index():
 @app.get("/health")
 async def health_check():
     """Health check endpoint"""
-    settings = get_settings()
-
     # Check Elasticsearch connectivity
     es_healthy = False
     es_message = "Not checked"
@@ -561,19 +683,68 @@ async def websocket_endpoint(websocket: WebSocket):
 @app.get("/api/v1/config/settings")
 async def get_config_settings():
     """Get current configuration settings"""
-    settings = get_settings()
-    return {
-        "elasticsearch": {
-            "url": settings.elasticsearch_url,
-            "index_pattern": settings.get('elasticsearch', {}).get('index_pattern', 'traffic-*')
-        },
-        "kibana": {
-            "url": settings.kibana_url
-        },
-        "processing": settings.get('processing', {}),
-        "dashboard": settings.get('dashboard', {}),
-        "rad_types": settings.get('rad_types', {})
-    }
+    # Access the global config properly with safe attribute access
+    app_config = config
+    
+    # Build response with safe attribute access
+    response = {}
+    
+    # Add elasticsearch config if it exists
+    if hasattr(app_config, 'elasticsearch') and app_config.elasticsearch:
+        response["elasticsearch"] = {
+            "url": str(app_config.elasticsearch.url) if hasattr(app_config.elasticsearch, 'url') else None,
+            "index_pattern": getattr(app_config.elasticsearch, 'index_pattern', 'traffic-*')
+        }
+    else:
+        # Fallback to default values
+        response["elasticsearch"] = {
+            "url": os.getenv('ELASTICSEARCH_URL', 'https://usieventho-prod-usw2.es.us-west-2.aws.found.io:9243/'),
+            "index_pattern": "traffic-*"
+        }
+    
+    # Add kibana config if it exists
+    if hasattr(app_config, 'kibana') and app_config.kibana:
+        response["kibana"] = {
+            "url": str(app_config.kibana.url) if hasattr(app_config.kibana, 'url') else None
+        }
+    else:
+        response["kibana"] = {
+            "url": os.getenv('ELASTICSEARCH_URL', 'https://usieventho-prod-usw2.kb.us-west-2.aws.found.io:9243/')
+        }
+    
+    # Add processing config if it exists
+    if hasattr(app_config, 'processing') and app_config.processing:
+        response["processing"] = app_config.processing.model_dump()
+    else:
+        response["processing"] = {
+            "baseline_start": "2025-06-01",
+            "baseline_end": "2025-06-09",
+            "current_time_range": "now-12h",
+            "high_volume_threshold": 1000,
+            "medium_volume_threshold": 100,
+            "critical_threshold": -80,
+            "warning_threshold": -50,
+            "min_daily_volume": 100
+        }
+    
+    # Add dashboard config if it exists
+    if hasattr(app_config, 'dashboard') and app_config.dashboard:
+        response["dashboard"] = app_config.dashboard.model_dump()
+    else:
+        response["dashboard"] = {
+            "refresh_interval": 300,
+            "max_events_display": 200,
+            "enable_websocket": True,
+            "theme": "light"
+        }
+    
+    # Add rad_types if it exists
+    if hasattr(app_config, 'rad_types') and app_config.rad_types:
+        response["rad_types"] = {k: v.model_dump() for k, v in app_config.rad_types.items()}
+    else:
+        response["rad_types"] = {}
+    
+    return response
 
 @app.post("/api/v1/config/settings")
 async def update_config_settings(update: ConfigUpdateRequest):
@@ -589,13 +760,35 @@ async def update_config_settings(update: ConfigUpdateRequest):
 @app.get("/api/v1/config/health")
 async def config_health():
     """Check configuration health"""
-    settings = get_settings()
-    return {
+    app_config = config
+    
+    # Build health response with safe attribute access
+    health_status = {
         "healthy": True,
-        "config_loaded": bool(settings._settings),
-        "elasticsearch_configured": bool(settings.elasticsearch_url),
-        "kibana_configured": bool(settings.kibana_url)
+        "config_loaded": True,
+        "elasticsearch_configured": False,
+        "kibana_configured": False,
+        "environment": "development",
+        "redis_enabled": False
     }
+    
+    # Check elasticsearch configuration
+    if hasattr(app_config, 'elasticsearch') and app_config.elasticsearch:
+        health_status["elasticsearch_configured"] = bool(getattr(app_config.elasticsearch, 'url', None))
+    
+    # Check kibana configuration
+    if hasattr(app_config, 'kibana') and app_config.kibana:
+        health_status["kibana_configured"] = bool(getattr(app_config.kibana, 'url', None))
+    
+    # Get environment
+    if hasattr(app_config, 'environment'):
+        health_status["environment"] = app_config.environment
+    
+    # Check redis configuration
+    if hasattr(app_config, 'redis') and app_config.redis:
+        health_status["redis_enabled"] = getattr(app_config.redis, 'enabled', False)
+    
+    return health_status
 
 # ====================
 # Dashboard API Endpoints
@@ -604,17 +797,38 @@ async def config_health():
 @app.get("/api/v1/dashboard/config", response_model=DashboardConfig)
 async def get_dashboard_config():
     """Get dashboard configuration"""
-    settings = get_settings()
-    processing = settings.get('processing', {})
-
+    app_config = config
+    
+    # Build dashboard config with safe attribute access
+    baseline_start = "2025-06-01"
+    baseline_end = "2025-06-09"
+    
+    if hasattr(app_config, 'processing') and app_config.processing:
+        baseline_start = getattr(app_config.processing, 'baseline_start', baseline_start)
+        baseline_end = getattr(app_config.processing, 'baseline_end', baseline_end)
+    
+    # Get other config values with safe defaults
+    time_range = "now-12h"
+    critical_threshold = -80
+    warning_threshold = -50
+    high_volume_threshold = 1000
+    medium_volume_threshold = 100
+    
+    if hasattr(app_config, 'processing') and app_config.processing:
+        time_range = getattr(app_config.processing, 'current_time_range', time_range)
+        critical_threshold = getattr(app_config.processing, 'critical_threshold', critical_threshold)
+        warning_threshold = getattr(app_config.processing, 'warning_threshold', warning_threshold)
+        high_volume_threshold = getattr(app_config.processing, 'high_volume_threshold', high_volume_threshold)
+        medium_volume_threshold = getattr(app_config.processing, 'medium_volume_threshold', medium_volume_threshold)
+    
     return DashboardConfig(
-        baseline_start=processing.get('baseline_start', '2025-06-01'),
-        baseline_end=processing.get('baseline_end', '2025-06-09'),
-        time_range=processing.get('current_time_range', 'now-12h'),
-        critical_threshold=processing.get('critical_threshold', -80),
-        warning_threshold=processing.get('warning_threshold', -50),
-        high_volume_threshold=processing.get('high_volume_threshold', 1000),
-        medium_volume_threshold=processing.get('medium_volume_threshold', 100)
+        baseline_start=baseline_start,
+        baseline_end=baseline_end,
+        time_range=time_range,
+        critical_threshold=critical_threshold,
+        warning_threshold=warning_threshold,
+        high_volume_threshold=high_volume_threshold,
+        medium_volume_threshold=medium_volume_threshold
     )
 
 @app.post("/api/v1/dashboard/config", response_model=DashboardConfig)
@@ -665,10 +879,28 @@ async def query_dashboard_data(
     app_state.metrics["cache_misses"] += 1
 
     # Execute query - check all possible auth headers
-    auth_cookie = cookie or x_elastic_cookie or authorization
+    # Try headers in consistent order, log each step for diagnostics
+    auth_cookie = None
+    if cookie:
+        logger.info("Using Cookie header")
+        auth_cookie = cookie
+    elif x_elastic_cookie:
+        logger.info("Using X-Elastic-Cookie header")
+        auth_cookie = x_elastic_cookie
+    elif authorization:
+        logger.info("Using Authorization header")
+        auth_cookie = authorization
+    else:
+        logger.warning("No authentication cookie found")
+    
+    if not auth_cookie:
+        raise HTTPException(status_code=401, detail="Authentication credentials not found")
+
+    # Continue with query execution
     result = await execute_elasticsearch_query(query_request.query, auth_cookie)
 
     if not result["success"]:
+        logger.error("Query Execution Failed", error=result.get('error', 'Unknown'), details=result.get('details', 'No details'))
         raise HTTPException(
             status_code=500,
             detail=f"Query failed: {result.get('error', 'Unknown error')}"
@@ -678,8 +910,41 @@ async def query_dashboard_data(
     data = result["data"]
     processed_data = []
 
-    # Extract events from aggregations if present
-    if "aggregations" in data and "events" in data["aggregations"]:
+    # In development mode with mock data, extract from hits
+    if ENVIRONMENT == 'development' and "hits" in data and "hits" in data["hits"]:
+        # Define RAD type colors and display names
+        rad_type_config = {
+            "login": {"color": "#6B7280", "display": "Login"},
+            "api_call": {"color": "#3B82F6", "display": "API Call"},
+            "page_view": {"color": "#10B981", "display": "Page View"},
+            "file_download": {"color": "#F59E0B", "display": "File Download"}
+        }
+        
+        for hit in data["hits"]["hits"]:
+            source = hit.get("_source", {})
+            rad_type = source.get("rad_type", "")
+            rad_config = rad_type_config.get(rad_type, {"color": "#6B7280", "display": rad_type.title()})
+            
+            impact = source.get("impact", "").lower()
+            impact_class = "high" if impact == "high" else "medium" if impact == "medium" else "low"
+            
+            processed_data.append({
+                "id": f"{source.get('name', '')}_{source.get('timestamp', '')}",
+                "name": source.get("name", ""),
+                "radType": rad_type,
+                "radColor": rad_config["color"],
+                "radDisplayName": rad_config["display"],
+                "status": source.get("status", "").upper(),
+                "score": source.get("score", 0),
+                "current": source.get("current", 0),
+                "baseline": source.get("baseline", 0),
+                "impact": source.get("impact", ""),
+                "impactClass": impact_class,
+                "timestamp": source.get("timestamp", ""),
+                "kibanaUrl": "#"
+            })
+    # Extract events from aggregations if present (production mode)
+    elif "aggregations" in data and "events" in data["aggregations"]:
         buckets = data["aggregations"]["events"].get("buckets", [])
         for bucket in buckets:
             processed_data.append({
@@ -938,39 +1203,63 @@ def print_startup_banner():
 if __name__ == "__main__":
     print_startup_banner()
 
-    # Configure uvicorn
-    config = uvicorn.Config(
-        app,
-        host=SERVER_HOST,
-        port=SERVER_PORT,
-        reload=ENVIRONMENT == "development",
-        log_level="info" if ENVIRONMENT == "development" else "warning",
-        access_log=ENVIRONMENT == "development"
-    )
+    # Create an async function to run the server
+    async def run_server():
+        # Configure uvicorn
+        config = uvicorn.Config(
+            app,
+            host=SERVER_HOST,
+            port=SERVER_PORT,
+            reload=False,  # Disable reload to prevent orphaned processes
+            log_level="info" if ENVIRONMENT == "development" else "warning",
+            access_log=ENVIRONMENT == "development",
+            loop="asyncio"
+        )
 
-    # Run server with graceful shutdown
-    server = uvicorn.Server(config)
+        # Create server instance
+        server = uvicorn.Server(config)
 
-    # Create shutdown event
-    shutdown_event = asyncio.Event()
+        # Set up signal handlers for graceful shutdown
+        loop = asyncio.get_event_loop()
+        
+        def signal_handler(sig):
+            logger.info(f"Received signal {sig}, initiating graceful shutdown...")
+            server.should_exit = True
 
-    # Handle graceful shutdown
-    def signal_handler(sig, frame):
-        logger.info("Received shutdown signal, initiating graceful shutdown...")
-        server.should_exit = True
-        shutdown_event.set()
+        # Register signal handlers
+        for sig in [signal.SIGTERM, signal.SIGINT]:
+            loop.add_signal_handler(sig, signal_handler, sig)
 
-    signal.signal(signal.SIGINT, signal_handler)
-    signal.signal(signal.SIGTERM, signal_handler)
+        try:
+            # Run the server
+            await server.serve()
+        except Exception as e:
+            logger.error(f"Server error: {e}")
+        finally:
+            # Clean up signal handlers
+            for sig in [signal.SIGTERM, signal.SIGINT]:
+                loop.remove_signal_handler(sig)
+            
+            # Force close any remaining connections
+            await asyncio.sleep(0.1)
+            logger.info("Server shutdown complete")
 
-    # Run server with proper async handling
+    # Run the async function
     try:
-        server.run()
-    except (KeyboardInterrupt, SystemExit):
-        logger.info("Server shutdown complete")
-    except asyncio.CancelledError:
-        # This is expected during shutdown, not an error
-        logger.info("Async tasks cancelled during shutdown")
+        asyncio.run(run_server())
+    except KeyboardInterrupt:
+        logger.info("Keyboard interrupt received")
+    except Exception as e:
+        logger.error(f"Unexpected error: {e}")
     finally:
-        # Clean shutdown message
+        # Extra cleanup - force kill any remaining tasks
+        try:
+            # Get all running tasks
+            loop = asyncio.new_event_loop()
+            pending = asyncio.all_tasks(loop) if hasattr(asyncio, 'all_tasks') else asyncio.Task.all_tasks(loop)
+            for task in pending:
+                task.cancel()
+        except:
+            pass
+        
         logger.info("RAD Monitor server stopped")

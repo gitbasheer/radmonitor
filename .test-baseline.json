@@ -1,0 +1,4456 @@
+{
+  "timestamp": "2025-07-10T21:26:56.505193",
+  "total_test_files": 65,
+  "total_individual_tests": 699,
+  "test_files": {
+    "passed": 0,
+    "failed": 43,
+    "skipped": 22,
+    "error": 0
+  },
+  "individual_tests": {
+    "passed": 592,
+    "failed": 107,
+    "skipped": 0,
+    "error": 0
+  },
+  "tests": [
+    {
+      "name": "tests/uiUpdates.test.js",
+      "type": "javascript",
+      "status": "failed",
+      "duration": 1.6319410800933838,
+      "command": [
+        "npm",
+        "test",
+        "--",
+        "tests/uiUpdates.test.js",
+        "--run"
+      ],
+      "individual_tests": [
+        {
+          "name": "tests/uiUpdates.test.js > UI Updates > updateDashboardUI > should update summary card counts 76ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/uiUpdates.test.js > UI Updates > updateDashboardUI > should update timestamp 13ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/uiUpdates.test.js > UI Updates > updateDashboardUI > should handle empty results 12ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/uiUpdates.test.js > UI Updates > updateDashboardUI > should handle missing DOM elements gracefully 15ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/uiUpdates.test.js > UI Updates > updateDashboardUI > should call updateTable with results 12ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/uiUpdates.test.js > UI Updates > updateTable > should create table rows for results 48ms",
+          "status": "failed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/uiUpdates.test.js > UI Updates > updateTable > should handle positive scores correctly 12ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/uiUpdates.test.js > UI Updates > updateTable > should clear existing table content 8ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/uiUpdates.test.js > UI Updates > updateTable > should handle missing tbody gracefully 8ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/uiUpdates.test.js > UI Updates > updateTable > should apply correct CSS classes based on status 13ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/uiUpdates.test.js > UI Updates > updateTable > should format large numbers with commas 32ms",
+          "status": "failed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/uiUpdates.test.js > UI Updates > updateTable > should escape HTML in display names 10ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/uiUpdates.test.js > UI Updates > UI Integration > should handle complete dashboard update 13ms",
+          "status": "passed",
+          "duration": 0.0
+        }
+      ]
+    },
+    {
+      "name": "tests/integration-rad-type.test.js",
+      "type": "javascript",
+      "status": "failed",
+      "duration": 0.8599588871002197,
+      "command": [
+        "npm",
+        "test",
+        "--",
+        "tests/integration-rad-type.test.js",
+        "--run"
+      ],
+      "individual_tests": [
+        {
+          "name": "tests/integration-rad-type.test.js > RAD Type Integration Test > Full Flow Integration > should process data, display in UI, and filter correctly 58ms",
+          "status": "failed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/integration-rad-type.test.js > RAD Type Integration Test > Full Flow Integration > should update summary cards correctly 35ms",
+          "status": "failed",
+          "duration": 0.0
+        }
+      ]
+    },
+    {
+      "name": "tests/formula-rad-integration.test.js",
+      "type": "javascript",
+      "status": "failed",
+      "duration": 1.0381419658660889,
+      "command": [
+        "npm",
+        "test",
+        "--",
+        "tests/formula-rad-integration.test.js",
+        "--run"
+      ],
+      "individual_tests": [
+        {
+          "name": "tests/formula-rad-integration.test.js > Formula RAD Integration > Entity Validation (Silent Failure Prevention) > should validate required entity fields 23ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/formula-rad-integration.test.js > Formula RAD Integration > Entity Validation (Silent Failure Prevention) > should support nested field access like RAD 12ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/formula-rad-integration.test.js > Formula RAD Integration > Formula Synthesizer Pattern > should evaluate formula eligibility like RAD synthesizers 13ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/formula-rad-integration.test.js > Formula RAD Integration > Formula Synthesizer Pattern > should handle missing fields gracefully (no silent failures) 10ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/formula-rad-integration.test.js > Formula RAD Integration > Formula Synthesizer Pattern > should apply custom eligibility rules 10ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/formula-rad-integration.test.js > Formula RAD Integration > Formula RAD Cards > should get eligible cards and rank them 9ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/formula-rad-integration.test.js > Formula RAD Integration > Formula RAD Cards > should track impressions with index positions 8ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/formula-rad-integration.test.js > Formula RAD Integration > Formula RAD Cards > should handle card actions and track clicks 12ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/formula-rad-integration.test.js > Formula RAD Integration > Experiment Integration > should assign users to experiment cohorts 25ms",
+          "status": "failed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/formula-rad-integration.test.js > Formula RAD Integration > Experiment Integration > should respect targeting rules 7ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/formula-rad-integration.test.js > Formula RAD Integration > Experiment Integration > should apply experiment variations to config 7ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/formula-rad-integration.test.js > Formula RAD Integration > Event Tracking and Monitoring > should never send empty EIDs 22ms",
+          "status": "failed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/formula-rad-integration.test.js > Formula RAD Integration > Event Tracking and Monitoring > should track performance warnings 23ms",
+          "status": "failed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/formula-rad-integration.test.js > Formula RAD Integration > Event Tracking and Monitoring > should monitor health metrics 28ms",
+          "status": "failed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/formula-rad-integration.test.js > Formula RAD Integration > Full Integration Flow > should complete full RAD-style formula suggestion flow 8ms",
+          "status": "passed",
+          "duration": 0.0
+        }
+      ]
+    },
+    {
+      "name": "tests/rad-formula-patterns.test.js",
+      "type": "javascript",
+      "status": "failed",
+      "duration": 0.888282060623169,
+      "command": [
+        "npm",
+        "test",
+        "--",
+        "tests/rad-formula-patterns.test.js",
+        "--run"
+      ],
+      "individual_tests": [
+        {
+          "name": "tests/rad-formula-patterns.test.js > RAD-Specific Formula Patterns > Formula Patterns Registry > contains RAD monitoring patterns 21ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/rad-formula-patterns.test.js > RAD-Specific Formula Patterns > Formula Patterns Registry > Traffic Drop Alert pattern is correct 11ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/rad-formula-patterns.test.js > RAD-Specific Formula Patterns > Formula Patterns Registry > Baseline Deviation pattern is correct 10ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/rad-formula-patterns.test.js > RAD-Specific Formula Patterns > Formula Patterns Registry > all RAD patterns have required fields 13ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/rad-formula-patterns.test.js > RAD-Specific Formula Patterns > Function Metadata > contains all required monitoring functions 10ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/rad-formula-patterns.test.js > RAD-Specific Formula Patterns > Function Metadata > functions have correct metadata 8ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/rad-formula-patterns.test.js > RAD-Specific Formula Patterns > Function Metadata > functions have examples 8ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/rad-formula-patterns.test.js > RAD-Specific Formula Patterns > Pattern Usage in Templates > patterns use valid functions from metadata 12ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/rad-formula-patterns.test.js > RAD-Specific Formula Patterns > Pattern Usage in Templates > patterns have valid formula syntax 8ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/rad-formula-patterns.test.js > RAD-Specific Formula Patterns > Integration with Visual Builder > RAD patterns are categorized correctly 7ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/rad-formula-patterns.test.js > RAD-Specific Formula Patterns > Integration with Visual Builder > RAD patterns have appropriate complexity levels 7ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/rad-formula-patterns.test.js > RAD-Specific Formula Patterns > Pattern Descriptions > descriptions are clear and helpful 7ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/rad-formula-patterns.test.js > RAD-Specific Formula Patterns > Pattern Descriptions > descriptions match the formula intent 8ms",
+          "status": "passed",
+          "duration": 0.0
+        }
+      ]
+    },
+    {
+      "name": "tests/formula-builder-fixes.test.js",
+      "type": "javascript",
+      "status": "failed",
+      "duration": 91.83690905570984,
+      "command": [
+        "npm",
+        "test",
+        "--",
+        "tests/formula-builder-fixes.test.js",
+        "--run"
+      ],
+      "individual_tests": [
+        {
+          "name": "tests/formula-builder-fixes.test.js > Formula Builder Component Fixes > Enhanced Formula Editor > should import EnhancedFormulaParser successfully 44ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/formula-builder-fixes.test.js > Formula Builder Component Fixes > Enhanced Formula Editor > should handle setValue before element is connected 45164ms",
+          "status": "failed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/formula-builder-fixes.test.js > Formula Builder Component Fixes > Enhanced Visual Builder > should import all required constants 89ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/formula-builder-fixes.test.js > Formula Builder Component Fixes > Enhanced Visual Builder > should have access to FUNCTION_CATEGORIES 15ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/formula-builder-fixes.test.js > Formula Builder Component Fixes > Enhanced Visual Builder > should have access to FUNCTION_METADATA 13ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/formula-builder-fixes.test.js > Formula Builder Component Fixes > Enhanced Visual Builder > should have access to FORMULA_PATTERNS 13ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/formula-builder-fixes.test.js > Formula Builder Component Fixes > Formula AI Assistant > should not reference process.env 21ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/formula-builder-fixes.test.js > Formula Builder Component Fixes > Formula AI Assistant > should use window global for API key 10ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/formula-builder-fixes.test.js > Formula Builder Component Fixes > Formula Editor Integration > should initialize without errors 43ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/formula-builder-fixes.test.js > Formula Builder Component Fixes > Visual Builder Integration > should initialize without errors 42ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/formula-builder-fixes.test.js > Import Chain Validation > should have all imports properly resolved 13ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/formula-builder-fixes.test.js > Error Handling > should handle missing DOM elements gracefully 8ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/formula-builder-fixes.test.js > Error Handling > should emit proper events on initialization 45106ms",
+          "status": "failed",
+          "duration": 0.0
+        }
+      ]
+    },
+    {
+      "name": "tests/formula-builder.test.js",
+      "type": "javascript",
+      "status": "failed",
+      "duration": 1.4837298393249512,
+      "command": [
+        "npm",
+        "test",
+        "--",
+        "tests/formula-builder.test.js",
+        "--run"
+      ],
+      "individual_tests": [
+        {
+          "name": "tests/formula-builder.test.js > Formula Parser > Basic Parsing > should parse simple function calls 23ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/formula-builder.test.js > Formula Parser > Basic Parsing > should parse function with field argument 12ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/formula-builder.test.js > Formula Parser > Basic Parsing > should parse function with named arguments 12ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/formula-builder.test.js > Formula Parser > Basic Parsing > should parse nested field paths 10ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/formula-builder.test.js > Formula Parser > Binary Operations > should parse addition 13ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/formula-builder.test.js > Formula Parser > Binary Operations > should parse division 8ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/formula-builder.test.js > Formula Parser > Binary Operations > should parse complex arithmetic 7ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/formula-builder.test.js > Formula Parser > Comparison Operations > should parse greater than 7ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/formula-builder.test.js > Formula Parser > Comparison Operations > should parse less than or equal 7ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/formula-builder.test.js > Formula Parser > Comparison Operations > should parse equality 14ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/formula-builder.test.js > Formula Parser > Complex Formulas > should parse ifelse conditions 7ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/formula-builder.test.js > Formula Parser > Complex Formulas > should parse nested ifelse 6ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/formula-builder.test.js > Formula Parser > Complex Formulas > should parse complex KQL filters 6ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/formula-builder.test.js > Formula Parser > Error Handling > should throw on unclosed parentheses 6ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/formula-builder.test.js > Formula Parser > Error Handling > should throw on invalid syntax 6ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/formula-builder.test.js > Formula Parser > Error Handling > should throw on mismatched quotes 7ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/formula-builder.test.js > Query Builder > Basic Query Generation > should generate count query 8ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/formula-builder.test.js > Query Builder > Basic Query Generation > should generate average aggregation 7ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/formula-builder.test.js > Query Builder > Basic Query Generation > should add time range filter 7ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/formula-builder.test.js > Query Builder > KQL Filter Translation > should translate simple KQL 7ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/formula-builder.test.js > Query Builder > KQL Filter Translation > should translate timestamp ranges 9ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/formula-builder.test.js > Query Builder > Complex Queries > should handle multiple aggregations 9ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/formula-builder.test.js > Query Builder > Complex Queries > should handle nested aggregations with filters 13ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/formula-builder.test.js > Formula Integration > should parse and build query for real-world formula 7ms",
+          "status": "passed",
+          "duration": 0.0
+        }
+      ]
+    },
+    {
+      "name": "tests/refactored-modules.test.js",
+      "type": "javascript",
+      "status": "failed",
+      "duration": 1.2462701797485352,
+      "command": [
+        "npm",
+        "test",
+        "--",
+        "tests/refactored-modules.test.js",
+        "--run"
+      ],
+      "individual_tests": [
+        {
+          "name": "tests/refactored-modules.test.js > TimeRangeUtils > should parse standard time ranges 19ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/refactored-modules.test.js > TimeRangeUtils > should parse custom time ranges 12ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/refactored-modules.test.js > TimeRangeUtils > should validate time ranges 11ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/refactored-modules.test.js > TimeRangeUtils > should format time ranges for display 13ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/refactored-modules.test.js > TimeRangeUtils > should provide presets 10ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/refactored-modules.test.js > ConfigManager > should get current config from form 10ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/refactored-modules.test.js > ConfigManager > should save and load configuration 12ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/refactored-modules.test.js > ConfigManager > should fix invalid time ranges when loading 16ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/refactored-modules.test.js > ConfigManager > should set preset time ranges 9ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/refactored-modules.test.js > ConfigManager > should highlight active preset 9ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/refactored-modules.test.js > DataProcessor > should process elasticsearch data 8ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/refactored-modules.test.js > DataProcessor > should calculate scores correctly 7ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/refactored-modules.test.js > DataProcessor > should determine status correctly 7ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/refactored-modules.test.js > DataProcessor > should get summary stats 7ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/refactored-modules.test.js > UIUpdater > should update summary cards 11ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/refactored-modules.test.js > UIUpdater > should update data table 32ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/refactored-modules.test.js > UIUpdater > should build kibana URLs 10ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/refactored-modules.test.js > UIUpdater > should update timestamp 10ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/refactored-modules.test.js > UIUpdater > should show/hide loading states 9ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/refactored-modules.test.js > ApiClient > should check health endpoint 13ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/refactored-modules.test.js > ApiClient > should get authentication details 7ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/refactored-modules.test.js > ApiClient > should fetch data from Kibana 8ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/refactored-modules.test.js > ApiClient > should handle fetch errors gracefully 11ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/refactored-modules.test.js > ConsoleVisualizer > should show welcome message 8ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/refactored-modules.test.js > ConsoleVisualizer > should create ASCII bars 8ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/refactored-modules.test.js > ConsoleVisualizer > should get correct status icons 9ms",
+          "status": "passed",
+          "duration": 0.0
+        }
+      ]
+    },
+    {
+      "name": "tests/duplicate-export-fix.test.js",
+      "type": "javascript",
+      "status": "failed",
+      "duration": 1.0146422386169434,
+      "command": [
+        "npm",
+        "test",
+        "--",
+        "tests/duplicate-export-fix.test.js",
+        "--run"
+      ],
+      "individual_tests": [
+        {
+          "name": "tests/duplicate-export-fix.test.js > Duplicate Export Fix > should successfully import EnhancedFormulaEditor without syntax errors 37ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/duplicate-export-fix.test.js > Duplicate Export Fix > should only export EnhancedFormulaEditor once 13ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/duplicate-export-fix.test.js > Duplicate Export Fix > should properly register custom element without errors 12ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/duplicate-export-fix.test.js > Favicon Fix > should have favicon endpoint defined in server 14ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/duplicate-export-fix.test.js > Formula Builder Integration After Fixes > should initialize formula editor without errors 17ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/duplicate-export-fix.test.js > Formula Builder Integration After Fixes > should handle all imports correctly 32ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/duplicate-export-fix.test.js > Console Error Prevention > should not have any syntax errors in JavaScript files 78ms",
+          "status": "passed",
+          "duration": 0.0
+        }
+      ]
+    },
+    {
+      "name": "tests/data-layer-rad-type.test.js",
+      "type": "javascript",
+      "status": "failed",
+      "duration": 0.898806095123291,
+      "command": [
+        "npm",
+        "test",
+        "--",
+        "tests/data-layer-rad-type.test.js",
+        "--run"
+      ],
+      "individual_tests": [
+        {
+          "name": "tests/data-layer-rad-type.test.js > DataLayer RAD Type Integration > Query Building with Multiple RAD Types > should build query with multiple enabled RAD patterns 24ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/data-layer-rad-type.test.js > DataLayer RAD Type Integration > Data Transformation with RAD Types > should add rad_type field to transformed data 42ms",
+          "status": "failed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/data-layer-rad-type.test.js > DataLayer RAD Type Integration > Query Patterns Fallback > should use default pattern when no RAD types are enabled 31ms",
+          "status": "failed",
+          "duration": 0.0
+        }
+      ]
+    },
+    {
+      "name": "tests/timeRange.test.js",
+      "type": "javascript",
+      "status": "failed",
+      "duration": 1.0890467166900635,
+      "command": [
+        "npm",
+        "test",
+        "--",
+        "tests/timeRange.test.js",
+        "--run"
+      ],
+      "individual_tests": [
+        {
+          "name": "tests/timeRange.test.js > Time Range Parsing > Existing \"now-\" format > should parse now-6h correctly 23ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/timeRange.test.js > Time Range Parsing > Existing \"now-\" format > should parse now-12h correctly 12ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/timeRange.test.js > Time Range Parsing > Existing \"now-\" format > should parse now-24h correctly 11ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/timeRange.test.js > Time Range Parsing > Existing \"now-\" format > should parse now-3d correctly (days to hours) 12ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/timeRange.test.js > Time Range Parsing > Inspection time format > should parse inspection_time correctly 12ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/timeRange.test.js > Time Range Parsing > Inspection time format > should validate inspection_time 9ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/timeRange.test.js > Time Range Parsing > Inspection time format > should format inspection_time correctly 7ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/timeRange.test.js > Time Range Parsing > Inspection time format > should generate correct filter for inspection_time 8ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/timeRange.test.js > Time Range Parsing > Inspection time format > should include inspection_time in presets 8ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/timeRange.test.js > Time Range Parsing > New custom time window format > should parse -3h-6h correctly (from 3h ago to 6h ago) 13ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/timeRange.test.js > Time Range Parsing > New custom time window format > should parse -1h-4h correctly (from 1h ago to 4h ago) 7ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/timeRange.test.js > Time Range Parsing > New custom time window format > should parse -2h-8h correctly 7ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/timeRange.test.js > Time Range Parsing > New custom time window format > should parse mixed units like -2h-1d correctly 8ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/timeRange.test.js > Time Range Parsing > New custom time window format > should parse -1d-2d correctly (yesterday vs day before) 7ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/timeRange.test.js > Time Range Parsing > Edge cases and validation > should handle invalid format gracefully 10ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/timeRange.test.js > Time Range Parsing > Edge cases and validation > should handle empty string 7ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/timeRange.test.js > Time Range Parsing > Edge cases and validation > should handle null/undefined 7ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/timeRange.test.js > Time Range Parsing > Edge cases and validation > should validate different formats 7ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/timeRange.test.js > Time Range Parsing > Real-world usage scenarios > should support looking at traffic during a specific incident window 8ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/timeRange.test.js > Time Range Parsing > Real-world usage scenarios > should support comparing different time periods 9ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/timeRange.test.js > Time Range Parsing > Real-world usage scenarios > should support maintenance window analysis 9ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/timeRange.test.js > Time Range Parsing > Real-world usage scenarios > should support inspection time for post-incident analysis 9ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/timeRange.test.js > Time Range Parsing > Time range formatting > should format standard ranges correctly 13ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/timeRange.test.js > Time Range Parsing > Time range formatting > should format custom ranges correctly 7ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/timeRange.test.js > Time Range Parsing > Time range formatting > should format inspection time correctly 8ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/timeRange.test.js > Query Generation with Time Ranges > should generate correct filter for relative time range 8ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/timeRange.test.js > Query Generation with Time Ranges > should generate correct filter for custom time range 7ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/timeRange.test.js > Query Generation with Time Ranges > should generate correct filter for inspection time 8ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/timeRange.test.js > Query Generation with Time Ranges > should handle invalid format with default 8ms",
+          "status": "passed",
+          "duration": 0.0
+        }
+      ]
+    },
+    {
+      "name": "tests/centralized-auth.test.js",
+      "type": "javascript",
+      "status": "failed",
+      "duration": 1.046778917312622,
+      "command": [
+        "npm",
+        "test",
+        "--",
+        "tests/centralized-auth.test.js",
+        "--run"
+      ],
+      "individual_tests": [
+        {
+          "name": "tests/centralized-auth.test.js > CentralizedAuth > init > should initialize with no existing auth 24ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/centralized-auth.test.js > CentralizedAuth > init > should load existing auth from localStorage 12ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/centralized-auth.test.js > CentralizedAuth > init > should detect expired auth 12ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/centralized-auth.test.js > CentralizedAuth > setCookie > should accept valid Fe26 format cookie 11ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/centralized-auth.test.js > CentralizedAuth > setCookie > should accept sid= format cookie 14ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/centralized-auth.test.js > CentralizedAuth > setCookie > should reject invalid cookie format 11ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/centralized-auth.test.js > CentralizedAuth > setCookie > should reject expired cookie on validation with proper error message 8ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/centralized-auth.test.js > CentralizedAuth > setCookie > should reject when server says not authenticated 7ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/centralized-auth.test.js > CentralizedAuth > setCookie > should skip validation when requested 7ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/centralized-auth.test.js > CentralizedAuth > validateCookie > should validate cookie using auth/status endpoint for localhost 13ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/centralized-auth.test.js > CentralizedAuth > validateCookie > should handle sid= prefix properly 9ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/centralized-auth.test.js > CentralizedAuth > validateCookie > should use proxy validation for production 8ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/centralized-auth.test.js > CentralizedAuth > validateCookie > should log proper error messages 8ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/centralized-auth.test.js > CentralizedAuth > validateCookie > should handle network errors gracefully 8ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/centralized-auth.test.js > CentralizedAuth > validateCookie > should log success message on valid cookie 8ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/centralized-auth.test.js > CentralizedAuth > getCookie > should return null when no auth exists 7ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/centralized-auth.test.js > CentralizedAuth > getCookie > should return cookie when valid auth exists 7ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/centralized-auth.test.js > CentralizedAuth > getCookie > should return null when auth is expired 7ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/centralized-auth.test.js > CentralizedAuth > getStatus > should return correct status for valid auth 8ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/centralized-auth.test.js > CentralizedAuth > getStatus > should calculate age and remaining time correctly 8ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/centralized-auth.test.js > CentralizedAuth > clearAuth > should clear auth and localStorage 8ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/centralized-auth.test.js > CentralizedAuth > exportAuth/importAuth > should export valid auth data 8ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/centralized-auth.test.js > CentralizedAuth > exportAuth/importAuth > should return null when exporting expired auth 12ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/centralized-auth.test.js > CentralizedAuth > exportAuth/importAuth > should import valid auth data 8ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/centralized-auth.test.js > CentralizedAuth > environment detection > should use localhost endpoint in development 8ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/centralized-auth.test.js > CentralizedAuth > environment detection > should use Netlify proxy in production 10ms",
+          "status": "passed",
+          "duration": 0.0
+        }
+      ]
+    },
+    {
+      "name": "tests/search-filter-rad-type.test.js",
+      "type": "javascript",
+      "status": "failed",
+      "duration": 1.132910966873169,
+      "command": [
+        "npm",
+        "test",
+        "--",
+        "tests/search-filter-rad-type.test.js",
+        "--run"
+      ],
+      "individual_tests": [
+        {
+          "name": "tests/search-filter-rad-type.test.js > SearchFilter RAD Type Filtering > RAD Type Filtering > should show all rows when ALL RAD type is selected 61ms",
+          "status": "failed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/search-filter-rad-type.test.js > SearchFilter RAD Type Filtering > RAD Type Filtering > should filter by specific RAD type using data attribute 37ms",
+          "status": "failed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/search-filter-rad-type.test.js > SearchFilter RAD Type Filtering > RAD Type Filtering > should filter by multiple RAD types 37ms",
+          "status": "failed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/search-filter-rad-type.test.js > SearchFilter RAD Type Filtering > RAD Type Filtering > should combine RAD type filter with status filter 27ms",
+          "status": "failed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/search-filter-rad-type.test.js > SearchFilter RAD Type Filtering > RAD Type Filtering > should combine RAD type filter with search 29ms",
+          "status": "failed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/search-filter-rad-type.test.js > SearchFilter RAD Type Filtering > RAD Type Filtering > should update results info with RAD type information 36ms",
+          "status": "failed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/search-filter-rad-type.test.js > SearchFilter RAD Type Filtering > Edge Cases > should handle rows without data-rad-type attribute 31ms",
+          "status": "failed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/search-filter-rad-type.test.js > SearchFilter RAD Type Filtering > Edge Cases > should reset filters correctly 29ms",
+          "status": "failed",
+          "duration": 0.0
+        }
+      ]
+    },
+    {
+      "name": "tests/authentication.test.js",
+      "type": "javascript",
+      "status": "failed",
+      "duration": 0.9180960655212402,
+      "command": [
+        "npm",
+        "test",
+        "--",
+        "tests/authentication.test.js",
+        "--run"
+      ],
+      "individual_tests": [
+        {
+          "name": "tests/authentication.test.js > Authentication > checkCorsProxy > should return true when CORS proxy is available 23ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/authentication.test.js > Authentication > checkCorsProxy > should return false when CORS proxy is not available 12ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/authentication.test.js > Authentication > checkCorsProxy > should return false when fetch throws an error 11ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/authentication.test.js > Authentication > checkCorsProxy > should handle connection refused errors 13ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/authentication.test.js > Authentication > getAuthenticationDetails > should return invalid auth when no cookie is found 12ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/authentication.test.js > Authentication > getAuthenticationDetails > should get cookie from localStorage 8ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/authentication.test.js > Authentication > getAuthenticationDetails > should get cookie from localStorage 8ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/authentication.test.js > Authentication > getAuthenticationDetails > should use proxy method on localhost when CORS proxy is available 12ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/authentication.test.js > Authentication > getAuthenticationDetails > should use direct method when not on localhost 8ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/authentication.test.js > Authentication > getAuthenticationDetails > should return valid even when CORS proxy not available (unified client behavior) 6ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/authentication.test.js > Authentication > getAuthenticationDetails > should handle GitHub Pages deployment 8ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/authentication.test.js > Authentication > getAuthenticationDetails > should handle 127.0.0.1 as localhost 7ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/authentication.test.js > Authentication > Authentication integration > should handle complete authentication flow for local development 7ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/authentication.test.js > Authentication > Authentication integration > should handle complete authentication flow for production 8ms",
+          "status": "passed",
+          "duration": 0.0
+        }
+      ]
+    },
+    {
+      "name": "tests/api-client-simplified.test.js",
+      "type": "javascript",
+      "status": "failed",
+      "duration": 46.513684034347534,
+      "command": [
+        "npm",
+        "test",
+        "--",
+        "tests/api-client-simplified.test.js",
+        "--run"
+      ],
+      "individual_tests": [
+        {
+          "name": "tests/api-client-simplified.test.js > UnifiedAPIClient > request > should make authenticated request with proper headers 25ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/api-client-simplified.test.js > UnifiedAPIClient > request > should handle errors properly 12ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/api-client-simplified.test.js > UnifiedAPIClient > request > should handle network errors 11ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/api-client-simplified.test.js > UnifiedAPIClient > request > should support timeout 45111ms",
+          "status": "failed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/api-client-simplified.test.js > UnifiedAPIClient > get > should make GET requests with correct URL 26ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/api-client-simplified.test.js > UnifiedAPIClient > post > should send POST request with body 19ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/api-client-simplified.test.js > UnifiedAPIClient > fetchTrafficData > should fetch traffic data with elasticsearch query 16ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/api-client-simplified.test.js > UnifiedAPIClient > fetchTrafficData > should handle missing authentication 13ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/api-client-simplified.test.js > UnifiedAPIClient > fetchTrafficData > should use cached results when available 15ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/api-client-simplified.test.js > UnifiedAPIClient > checkHealth > should check health successfully 10ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/api-client-simplified.test.js > UnifiedAPIClient > checkHealth > should handle health check failure 12ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/api-client-simplified.test.js > UnifiedAPIClient > metrics > should track request metrics 32ms",
+          "status": "failed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/api-client-simplified.test.js > UnifiedAPIClient > metrics > should calculate average response time 32ms",
+          "status": "failed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/api-client-simplified.test.js > UnifiedAPIClient > clearCache > should clear all cached data 10ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/api-client-simplified.test.js > UnifiedAPIClient > authentication > should get authentication details from localStorage 13ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/api-client-simplified.test.js > UnifiedAPIClient > authentication > should handle missing cookie 10ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/api-client-simplified.test.js > UnifiedAPIClient > authentication > should save cookie to localStorage 30ms",
+          "status": "failed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/api-client-simplified.test.js > UnifiedAPIClient > initialization > should initialize successfully when healthy 14ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/api-client-simplified.test.js > UnifiedAPIClient > initialization > should handle initialization failure 9ms",
+          "status": "passed",
+          "duration": 0.0
+        }
+      ]
+    },
+    {
+      "name": "tests/consoleVisualization.test.js",
+      "type": "javascript",
+      "status": "failed",
+      "duration": 1.177401065826416,
+      "command": [
+        "npm",
+        "test",
+        "--",
+        "tests/consoleVisualization.test.js",
+        "--run"
+      ],
+      "individual_tests": [
+        {
+          "name": "tests/consoleVisualization.test.js > Console Visualization > Bar creation > should create bars with correct proportions 23ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/consoleVisualization.test.js > Console Visualization > Bar creation > should handle different characters and widths 13ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/consoleVisualization.test.js > Console Visualization > Status icons > should return correct status icons 11ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/consoleVisualization.test.js > Console Visualization > Console output formatting > should log visualization header with colors 11ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/consoleVisualization.test.js > Console Visualization > Console output formatting > should log time window information with colors 13ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/consoleVisualization.test.js > Console Visualization > Console output formatting > should log custom time window information 8ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/consoleVisualization.test.js > Console Visualization > Console output formatting > should log summary statistics with multiple colors 8ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/consoleVisualization.test.js > Console Visualization > Data processing for visualization > should process mock data correctly 8ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/consoleVisualization.test.js > Console Visualization > Welcome message > should display welcome message with colors 9ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/consoleVisualization.test.js > Console Visualization > Integration scenarios > should handle empty data gracefully 24ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/consoleVisualization.test.js > Console Visualization > Integration scenarios > should format bar charts with status colors 9ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/consoleVisualization.test.js > Console Visualization > Integration scenarios > should handle real-world time range scenarios 7ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/consoleVisualization.test.js > Console Visualization > Integration scenarios > should properly truncate long event names 7ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/consoleVisualization.test.js > Console Visualization > Integration scenarios > should format large numbers correctly 8ms",
+          "status": "passed",
+          "duration": 0.0
+        }
+      ]
+    },
+    {
+      "name": "tests/integration.test.js",
+      "type": "javascript",
+      "status": "failed",
+      "duration": 0.8031408786773682,
+      "command": [
+        "npm",
+        "test",
+        "--",
+        "tests/integration.test.js",
+        "--run"
+      ],
+      "individual_tests": []
+    },
+    {
+      "name": "tests/scoring.test.js",
+      "type": "javascript",
+      "status": "failed",
+      "duration": 1.1000359058380127,
+      "command": [
+        "npm",
+        "test",
+        "--",
+        "tests/scoring.test.js",
+        "--run"
+      ],
+      "individual_tests": [
+        {
+          "name": "tests/scoring.test.js > Score Calculation > calculateScore > should calculate score for traffic drop 24ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/scoring.test.js > Score Calculation > calculateScore > should calculate score for traffic increase 13ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/scoring.test.js > Score Calculation > calculateScore > should return 0 when baseline is 0 11ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/scoring.test.js > Score Calculation > calculateScore > should handle edge cases 36ms",
+          "status": "failed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/scoring.test.js > Score Calculation > calculateScore > should round to nearest integer 7ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/scoring.test.js > Score Calculation > getStatus > High volume cards (>=1000 daily) > should return CRITICAL for score <= -80 7ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/scoring.test.js > Score Calculation > getStatus > High volume cards (>=1000 daily) > should return WARNING for score <= -50 and > -80 8ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/scoring.test.js > Score Calculation > getStatus > High volume cards (>=1000 daily) > should return NORMAL for negative scores > -50 13ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/scoring.test.js > Score Calculation > getStatus > High volume cards (>=1000 daily) > should return INCREASED for positive scores 7ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/scoring.test.js > Score Calculation > getStatus > High volume cards (>=1000 daily) > should return NORMAL for score = 0 8ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/scoring.test.js > Score Calculation > getStatus > Medium volume cards (100-999 daily) > should return CRITICAL for score <= -80 9ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/scoring.test.js > Score Calculation > getStatus > Medium volume cards (100-999 daily) > should return WARNING for score <= -30 and > -80 7ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/scoring.test.js > Score Calculation > getStatus > Medium volume cards (100-999 daily) > should return NORMAL for negative scores > -30 8ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/scoring.test.js > Score Calculation > getStatus > Medium volume cards (100-999 daily) > should return INCREASED for positive scores 8ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/scoring.test.js > Score Calculation > getStatus > Edge cases > should handle boundary values for high volume 8ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/scoring.test.js > Score Calculation > getStatus > Edge cases > should handle very low volume 8ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/scoring.test.js > Score Calculation > getStatus > Edge cases > should handle extreme scores 7ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/scoring.test.js > Score Calculation > calculateImpact > should return normal variance for small differences 7ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/scoring.test.js > Score Calculation > calculateImpact > should calculate loss impact 10ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/scoring.test.js > Score Calculation > calculateImpact > should calculate gain impact 8ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/scoring.test.js > Score Calculation > calculateImpact > should handle large numbers with proper formatting 12ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/scoring.test.js > Score Calculation > calculateImpact > should handle edge cases 7ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/scoring.test.js > Score Calculation > calculateImpact > should handle zero values 7ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/scoring.test.js > Score Calculation > Scoring integration scenarios > should handle critical traffic drop scenario 8ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/scoring.test.js > Score Calculation > Scoring integration scenarios > should handle warning scenario for medium volume 7ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/scoring.test.js > Score Calculation > Scoring integration scenarios > should handle traffic increase scenario 7ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/scoring.test.js > Score Calculation > Scoring integration scenarios > should handle normal variance scenario 8ms",
+          "status": "passed",
+          "duration": 0.0
+        }
+      ]
+    },
+    {
+      "name": "tests/data-service-formula.test.js",
+      "type": "javascript",
+      "status": "failed",
+      "duration": 0.854011058807373,
+      "command": [
+        "npm",
+        "test",
+        "--",
+        "tests/data-service-formula.test.js",
+        "--run"
+      ],
+      "individual_tests": []
+    },
+    {
+      "name": "tests/rad-type-classification.test.js",
+      "type": "javascript",
+      "status": "failed",
+      "duration": 0.9907522201538086,
+      "command": [
+        "npm",
+        "test",
+        "--",
+        "tests/rad-type-classification.test.js",
+        "--run"
+      ],
+      "individual_tests": [
+        {
+          "name": "tests/rad-type-classification.test.js > RAD Type Classification > determineRadType > should classify venture feed events correctly 23ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/rad-type-classification.test.js > RAD Type Classification > determineRadType > should classify venture metrics events correctly 12ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/rad-type-classification.test.js > RAD Type Classification > determineRadType > should return unknown for disabled RAD types 12ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/rad-type-classification.test.js > RAD Type Classification > determineRadType > should return unknown for non-matching events 11ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/rad-type-classification.test.js > RAD Type Classification > determineRadType > should handle edge cases gracefully 13ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/rad-type-classification.test.js > RAD Type Classification > getDisplayName > should return full event ID for venture feed events 27ms",
+          "status": "failed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/rad-type-classification.test.js > RAD Type Classification > getDisplayName > should handle venture metrics events 28ms",
+          "status": "failed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/rad-type-classification.test.js > RAD Type Classification > getDisplayName > should handle unknown RAD types 7ms",
+          "status": "passed",
+          "duration": 0.0
+        }
+      ]
+    },
+    {
+      "name": "tests/enhanced-formula-builder.test.js",
+      "type": "javascript",
+      "status": "failed",
+      "duration": 1.4443461894989014,
+      "command": [
+        "npm",
+        "test",
+        "--",
+        "tests/enhanced-formula-builder.test.js",
+        "--run"
+      ],
+      "individual_tests": [
+        {
+          "name": "tests/enhanced-formula-builder.test.js > Enhanced AST Parser > Basic Parsing > parses simple function calls 24ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/enhanced-formula-builder.test.js > Enhanced AST Parser > Basic Parsing > parses nested function calls 12ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/enhanced-formula-builder.test.js > Enhanced AST Parser > Basic Parsing > parses functions with named arguments 15ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/enhanced-formula-builder.test.js > Enhanced AST Parser > Basic Parsing > parses KQL filters 10ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/enhanced-formula-builder.test.js > Enhanced AST Parser > Operator Precedence > respects multiplication over addition 11ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/enhanced-formula-builder.test.js > Enhanced AST Parser > Operator Precedence > handles parentheses correctly 8ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/enhanced-formula-builder.test.js > Enhanced AST Parser > Operator Precedence > handles comparison operators 8ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/enhanced-formula-builder.test.js > Enhanced AST Parser > Unary Operators > parses negative numbers 14ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/enhanced-formula-builder.test.js > Enhanced AST Parser > Unary Operators > parses NOT operator 7ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/enhanced-formula-builder.test.js > Enhanced AST Parser > Complex Formulas > parses error rate formula 8ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/enhanced-formula-builder.test.js > Enhanced AST Parser > Complex Formulas > parses week over week formula 9ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/enhanced-formula-builder.test.js > Enhanced AST Parser > Complex Formulas > parses complex nested formula 7ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/enhanced-formula-builder.test.js > Enhanced AST Parser > Error Handling > reports unclosed parentheses 7ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/enhanced-formula-builder.test.js > Enhanced AST Parser > Error Handling > reports invalid syntax 7ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/enhanced-formula-builder.test.js > Enhanced AST Parser > Error Handling > reports unexpected tokens 9ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/enhanced-formula-builder.test.js > Enhanced AST Parser > Performance > parses simple formulas in under 10ms 8ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/enhanced-formula-builder.test.js > Enhanced AST Parser > Performance > uses cache effectively 23ms",
+          "status": "failed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/enhanced-formula-builder.test.js > Enhanced Formula Validator > Syntax Validation > validates correct function calls 8ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/enhanced-formula-builder.test.js > Enhanced Formula Validator > Syntax Validation > detects unknown functions 14ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/enhanced-formula-builder.test.js > Enhanced Formula Validator > Syntax Validation > validates function argument count 7ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/enhanced-formula-builder.test.js > Enhanced Formula Validator > Syntax Validation > validates named arguments 8ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/enhanced-formula-builder.test.js > Enhanced Formula Validator > Type Validation > validates numeric operations 7ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/enhanced-formula-builder.test.js > Enhanced Formula Validator > Type Validation > detects type mismatches in operators 7ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/enhanced-formula-builder.test.js > Enhanced Formula Validator > Type Validation > validates function return types 10ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/enhanced-formula-builder.test.js > Enhanced Formula Validator > Security Validation > detects formula length violations 9ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/enhanced-formula-builder.test.js > Enhanced Formula Validator > Security Validation > detects excessive nesting 8ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/enhanced-formula-builder.test.js > Enhanced Formula Validator > Security Validation > detects forbidden patterns in strings 8ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/enhanced-formula-builder.test.js > Enhanced Formula Validator > Performance Validation > warns about high complexity formulas 8ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/enhanced-formula-builder.test.js > Enhanced Formula Validator > Performance Validation > suggests optimization for duplicate subexpressions 13ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/enhanced-formula-builder.test.js > Enhanced Formula Validator > Data View Validation > validates field existence 8ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/enhanced-formula-builder.test.js > Enhanced Formula Validator > Data View Validation > suggests similar fields 8ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/enhanced-formula-builder.test.js > Enhanced Formula Validator > Performance > validates in under 100ms 7ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/enhanced-formula-builder.test.js > Visual Formula Builder Component > component is defined 7ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/enhanced-formula-builder.test.js > Visual Formula Builder Component > can create instance 24ms",
+          "status": "failed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/enhanced-formula-builder.test.js > Visual Formula Builder Component > has required methods 26ms",
+          "status": "failed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/enhanced-formula-builder.test.js > Formula Editor Component > component is defined 13ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/enhanced-formula-builder.test.js > Formula Editor Component > can create instance 36ms",
+          "status": "failed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/enhanced-formula-builder.test.js > Formula Editor Component > has required methods 25ms",
+          "status": "failed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/enhanced-formula-builder.test.js > Integration Tests > components work together 23ms",
+          "status": "failed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/enhanced-formula-builder.test.js > Accessibility Tests > components have proper structure 8ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/enhanced-formula-builder.test.js > Security Tests > prevents code injection 9ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/enhanced-formula-builder.test.js > Security Tests > escapes HTML in editor 23ms",
+          "status": "failed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/enhanced-formula-builder.test.js > Performance Benchmarks > bundle size is under 50KB 8ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/enhanced-formula-builder.test.js > Performance Benchmarks > formula validation benchmark 14ms",
+          "status": "passed",
+          "duration": 0.0
+        }
+      ]
+    },
+    {
+      "name": "tests/ui-rad-type-display.test.js",
+      "type": "javascript",
+      "status": "failed",
+      "duration": 0.9686980247497559,
+      "command": [
+        "npm",
+        "test",
+        "--",
+        "tests/ui-rad-type-display.test.js",
+        "--run"
+      ],
+      "individual_tests": [
+        {
+          "name": "tests/ui-rad-type-display.test.js > UI RAD Type Display > updateDataTable > should display full event ID in table 52ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/ui-rad-type-display.test.js > UI RAD Type Display > updateDataTable > should show correct RAD type badge for venture_feed 22ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/ui-rad-type-display.test.js > UI RAD Type Display > updateDataTable > should show correct RAD type badge for venture_metrics 21ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/ui-rad-type-display.test.js > UI RAD Type Display > updateDataTable > should add data-rad-type attribute to table row 14ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/ui-rad-type-display.test.js > UI RAD Type Display > updateDataTable > should handle unknown RAD type gracefully 13ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/ui-rad-type-display.test.js > UI RAD Type Display > updateDataTable > should update summary cards correctly 10ms",
+          "status": "passed",
+          "duration": 0.0
+        }
+      ]
+    },
+    {
+      "name": "tests/cookie.test.js",
+      "type": "javascript",
+      "status": "failed",
+      "duration": 0.9912300109863281,
+      "command": [
+        "npm",
+        "test",
+        "--",
+        "tests/cookie.test.js",
+        "--run"
+      ],
+      "individual_tests": [
+        {
+          "name": "tests/cookie.test.js > Cookie Management > setCookie > should set a cookie with the given name and value 25ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/cookie.test.js > Cookie Management > setCookie > should validate cookie format 13ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/cookie.test.js > Cookie Management > setCookie > should handle elastic session cookie format 12ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/cookie.test.js > Cookie Management > setCookie > should validate cookie with server 11ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/cookie.test.js > Cookie Management > getCookie > should get cookie value when available 12ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/cookie.test.js > Cookie Management > getCookie > should return null for expired cookie 21ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/cookie.test.js > Cookie Management > getCookie > should return null when no cookie stored 9ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/cookie.test.js > Cookie Management > getCookie > should handle corrupted storage data 8ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/cookie.test.js > Cookie Management > deleteCookie > should delete an existing cookie 14ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/cookie.test.js > Cookie Management > deleteCookie > should handle deleting non-existent cookie gracefully 7ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/cookie.test.js > Cookie Management > deleteCookie > should clear auth state when deleting cookie 7ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/cookie.test.js > Cookie Management > Cookie integration scenarios > should handle cookie lifecycle 8ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/cookie.test.js > Cookie Management > Cookie integration scenarios > should handle elastic cookie format 8ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/cookie.test.js > Cookie Management > Cookie integration scenarios > should validate auth status 7ms",
+          "status": "passed",
+          "duration": 0.0
+        }
+      ]
+    },
+    {
+      "name": "tests/searchFilter.test.js",
+      "type": "javascript",
+      "status": "failed",
+      "duration": 1.2144479751586914,
+      "command": [
+        "npm",
+        "test",
+        "--",
+        "tests/searchFilter.test.js",
+        "--run"
+      ],
+      "individual_tests": [
+        {
+          "name": "tests/searchFilter.test.js > Search Functionality > should return all results when search term is empty 24ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/searchFilter.test.js > Search Functionality > should return all results when search term is null 12ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/searchFilter.test.js > Search Functionality > should filter by display name (case insensitive) 14ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/searchFilter.test.js > Search Functionality > should filter by event ID 11ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/searchFilter.test.js > Search Functionality > should return multiple matches 10ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/searchFilter.test.js > Search Functionality > should handle partial matches 9ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/searchFilter.test.js > Search Functionality > should return empty array when no matches found 8ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/searchFilter.test.js > Search Functionality > should trim whitespace from search term 11ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/searchFilter.test.js > Status Filter > should return all results when status is null 7ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/searchFilter.test.js > Status Filter > should filter by CRITICAL status 7ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/searchFilter.test.js > Status Filter > should filter by WARNING status 8ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/searchFilter.test.js > Status Filter > should be case insensitive 7ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/searchFilter.test.js > Status Filter > should return empty array for non-existent status 7ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/searchFilter.test.js > Threshold Filter > should return all results when no filters applied 7ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/searchFilter.test.js > Threshold Filter > should hide normal and increased when hideNormal is true 8ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/searchFilter.test.js > Threshold Filter > should show only critical when criticalOnly is true 9ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/searchFilter.test.js > Threshold Filter > should prioritize criticalOnly over hideNormal 9ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/searchFilter.test.js > Combined Filters > should apply search filter only 8ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/searchFilter.test.js > Combined Filters > should apply status filter only 9ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/searchFilter.test.js > Combined Filters > should apply threshold filters only 8ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/searchFilter.test.js > Combined Filters > should apply all filters together 14ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/searchFilter.test.js > Combined Filters > should handle empty filter object 8ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/searchFilter.test.js > Combined Filters > should handle no filters parameter 7ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/searchFilter.test.js > Preference Management > should save preferences to localStorage 8ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/searchFilter.test.js > Preference Management > should load preferences from localStorage 9ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/searchFilter.test.js > Preference Management > should return null when no preferences saved 9ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/searchFilter.test.js > Preference Management > should handle corrupted localStorage data 8ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/searchFilter.test.js > Preference Management > should apply preferences to config 29ms",
+          "status": "failed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/searchFilter.test.js > Preference Management > should handle null preferences gracefully 18ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/searchFilter.test.js > Filter Integration with Config > should use config values for filtering 10ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/searchFilter.test.js > Filter Integration with Config > should respect dynamic thresholds in status calculation 8ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/searchFilter.test.js > Search and Filter Edge Cases > should handle empty results array 7ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/searchFilter.test.js > Search and Filter Edge Cases > should handle special characters in search 7ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/searchFilter.test.js > Search and Filter Edge Cases > should handle very long search terms 8ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/searchFilter.test.js > Search and Filter Edge Cases > should maintain result order after filtering 8ms",
+          "status": "passed",
+          "duration": 0.0
+        }
+      ]
+    },
+    {
+      "name": "tests/flexibleTimeComparison.test.js",
+      "type": "javascript",
+      "status": "failed",
+      "duration": 1.2081480026245117,
+      "command": [
+        "npm",
+        "test",
+        "--",
+        "tests/flexibleTimeComparison.test.js",
+        "--run"
+      ],
+      "individual_tests": [
+        {
+          "name": "tests/flexibleTimeComparison.test.js > FlexibleTimeComparison > compareCustomPeriods > should compare custom time periods with linear scale strategy 54ms",
+          "status": "failed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/flexibleTimeComparison.test.js > FlexibleTimeComparison > compareCustomPeriods > should handle API errors gracefully 14ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/flexibleTimeComparison.test.js > FlexibleTimeComparison > compareCustomPeriods > should use different comparison strategies 12ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/flexibleTimeComparison.test.js > FlexibleTimeComparison > compareLastMinutes > should compare last N minutes correctly 9ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/flexibleTimeComparison.test.js > FlexibleTimeComparison > compareLastMinutes > should handle fractional days in baseline 8ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/flexibleTimeComparison.test.js > FlexibleTimeComparison > compareWithStrategies > should compare using all strategies 14ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/flexibleTimeComparison.test.js > FlexibleTimeComparison > compareWithStrategies > should handle strategy failures gracefully 7ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/flexibleTimeComparison.test.js > FlexibleTimeComparison > analyzeHourlyPattern > should analyze hourly patterns correctly 7ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/flexibleTimeComparison.test.js > FlexibleTimeComparison > formatDuration > should format durations correctly 8ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/flexibleTimeComparison.test.js > FlexibleTimeComparison > summarizeResults > should summarize results correctly 7ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/flexibleTimeComparison.test.js > FlexibleTimeComparison > summarizeResults > should handle zero baseline traffic 8ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/flexibleTimeComparison.test.js > FlexibleTimeComparison > runExamples > should run all examples without errors 9ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/flexibleTimeComparison.test.js > FlexibleTimeComparison > runExamples > should handle example failures gracefully 8ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/flexibleTimeComparison.test.js > FlexibleTimeComparison > Integration scenarios > should handle real-world scenario: 39 minutes vs 3.5 days 9ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/flexibleTimeComparison.test.js > FlexibleTimeComparison > Edge Cases - Comprehensive Coverage > Duration Edge Cases > should handle zero duration comparison periods 8ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/flexibleTimeComparison.test.js > FlexibleTimeComparison > Edge Cases - Comprehensive Coverage > Duration Edge Cases > should handle negative durations (end before start) 8ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/flexibleTimeComparison.test.js > FlexibleTimeComparison > Edge Cases - Comprehensive Coverage > Duration Edge Cases > should handle very large durations (years) 9ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/flexibleTimeComparison.test.js > FlexibleTimeComparison > Edge Cases - Comprehensive Coverage > Duration Edge Cases > should handle millisecond precision 12ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/flexibleTimeComparison.test.js > FlexibleTimeComparison > Edge Cases - Comprehensive Coverage > Strategy Edge Cases > should handle null/undefined strategy gracefully 8ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/flexibleTimeComparison.test.js > FlexibleTimeComparison > Edge Cases - Comprehensive Coverage > Strategy Edge Cases > should handle concurrent requests with different strategies 8ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/flexibleTimeComparison.test.js > FlexibleTimeComparison > Edge Cases - Comprehensive Coverage > Date/Time Edge Cases > should handle daylight saving time transitions 8ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/flexibleTimeComparison.test.js > FlexibleTimeComparison > Edge Cases - Comprehensive Coverage > Date/Time Edge Cases > should handle leap year dates 7ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/flexibleTimeComparison.test.js > FlexibleTimeComparison > Edge Cases - Comprehensive Coverage > Date/Time Edge Cases > should handle very old dates (epoch) 8ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/flexibleTimeComparison.test.js > FlexibleTimeComparison > Edge Cases - Comprehensive Coverage > Date/Time Edge Cases > should handle future dates 9ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/flexibleTimeComparison.test.js > FlexibleTimeComparison > Edge Cases - Comprehensive Coverage > Normalization Edge Cases > should handle extreme normalization factors (> 1 million) 8ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/flexibleTimeComparison.test.js > FlexibleTimeComparison > Edge Cases - Comprehensive Coverage > Normalization Edge Cases > should handle normalization factor < 1 (comparison > baseline) 8ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/flexibleTimeComparison.test.js > FlexibleTimeComparison > Edge Cases - Comprehensive Coverage > Error Recovery > should handle NaN in calculations gracefully 7ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/flexibleTimeComparison.test.js > FlexibleTimeComparison > Edge Cases - Comprehensive Coverage > Error Recovery > should handle Infinity in calculations 13ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/flexibleTimeComparison.test.js > FlexibleTimeComparison > Edge Cases - Comprehensive Coverage > Error Recovery > should handle malformed API responses 8ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/flexibleTimeComparison.test.js > FlexibleTimeComparison > Edge Cases - Comprehensive Coverage > formatDuration Edge Cases > should format edge case durations correctly 9ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/flexibleTimeComparison.test.js > FlexibleTimeComparison > Edge Cases - Comprehensive Coverage > Memory and Performance > should handle large result sets efficiently 10ms",
+          "status": "passed",
+          "duration": 0.0
+        }
+      ]
+    },
+    {
+      "name": "tests/ai-formula-integration.test.js",
+      "type": "javascript",
+      "status": "failed",
+      "duration": 46.6250901222229,
+      "command": [
+        "npm",
+        "test",
+        "--",
+        "tests/ai-formula-integration.test.js",
+        "--run"
+      ],
+      "individual_tests": [
+        {
+          "name": "tests/ai-formula-integration.test.js > FormulaAIAssistant > Natural Language Pattern Matching > matches traffic drop patterns 52ms",
+          "status": "failed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/ai-formula-integration.test.js > FormulaAIAssistant > Natural Language Pattern Matching > matches baseline deviation patterns 11ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/ai-formula-integration.test.js > FormulaAIAssistant > Natural Language Pattern Matching > matches error rate patterns 31ms",
+          "status": "failed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/ai-formula-integration.test.js > FormulaAIAssistant > Natural Language Pattern Matching > matches health score patterns 9ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/ai-formula-integration.test.js > FormulaAIAssistant > Natural Language Pattern Matching > matches anomaly detection patterns 8ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/ai-formula-integration.test.js > FormulaAIAssistant > Natural Language Pattern Matching > matches business impact patterns 12ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/ai-formula-integration.test.js > FormulaAIAssistant > Natural Language Pattern Matching > matches time comparison patterns 21ms",
+          "status": "failed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/ai-formula-integration.test.js > FormulaAIAssistant > Natural Language Pattern Matching > returns alternatives when multiple patterns match 23ms",
+          "status": "failed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/ai-formula-integration.test.js > FormulaAIAssistant > Learning System > learns from user patterns 7ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/ai-formula-integration.test.js > FormulaAIAssistant > Learning System > prioritizes learned patterns over predefined ones 8ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/ai-formula-integration.test.js > FormulaAIAssistant > Learning System > limits learned patterns to prevent memory issues 8ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/ai-formula-integration.test.js > FormulaAIAssistant > Caching > caches successful results 8ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/ai-formula-integration.test.js > FormulaAIAssistant > Caching > respects cache TTL 45126ms",
+          "status": "failed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/ai-formula-integration.test.js > FormulaAIAssistant > Caching > can disable caching 25ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/ai-formula-integration.test.js > FormulaAIAssistant > Formula Explanation > explains simple formulas 47ms",
+          "status": "failed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/ai-formula-integration.test.js > FormulaAIAssistant > Formula Explanation > explains complex formulas 31ms",
+          "status": "failed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/ai-formula-integration.test.js > FormulaAIAssistant > Formula Explanation > handles invalid formulas gracefully 31ms",
+          "status": "failed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/ai-formula-integration.test.js > FormulaAIAssistant > Performance > generates formulas quickly 10ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/ai-formula-integration.test.js > FormulaAIAssistant > Performance > handles concurrent requests 12ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/ai-formula-integration.test.js > AI Formula Integration UI > initializes UI components 35ms",
+          "status": "failed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/ai-formula-integration.test.js > AI Formula Integration UI > handles input with debouncing 31ms",
+          "status": "failed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/ai-formula-integration.test.js > AI Formula Integration UI > displays results correctly 32ms",
+          "status": "failed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/ai-formula-integration.test.js > AI Formula Integration UI > applies formula to editor 30ms",
+          "status": "failed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/ai-formula-integration.test.js > AI Formula Integration UI > handles feedback correctly 33ms",
+          "status": "failed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/ai-formula-integration.test.js > AI Formula Integration UI > saves and loads learned patterns 28ms",
+          "status": "failed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/ai-formula-integration.test.js > AI Formula Integration UI > shows error messages appropriately 32ms",
+          "status": "failed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/ai-formula-integration.test.js > AI Formula Integration UI > cleans up properly 34ms",
+          "status": "failed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/ai-formula-integration.test.js > RAD-Specific Patterns > generates correct formulas for all RAD monitoring patterns 29ms",
+          "status": "failed",
+          "duration": 0.0
+        }
+      ]
+    },
+    {
+      "name": "tests/memory-leak-fixes.test.js",
+      "type": "javascript",
+      "status": "failed",
+      "duration": 1.2869529724121094,
+      "command": [
+        "npm",
+        "test",
+        "--",
+        "tests/memory-leak-fixes.test.js",
+        "--run"
+      ],
+      "individual_tests": [
+        {
+          "name": "tests/memory-leak-fixes.test.js > Memory Leak Fixes > Cache Size Limits > should limit responseCache size in data-layer.js 21ms",
+          "status": "failed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/memory-leak-fixes.test.js > Memory Leak Fixes > Cache Size Limits > should limit parsedCache size in data-layer.js 15ms",
+          "status": "failed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/memory-leak-fixes.test.js > Memory Leak Fixes > Cache Size Limits > should limit cache size in api-client-unified.js 16ms",
+          "status": "failed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/memory-leak-fixes.test.js > Memory Leak Fixes > Event Listener Cleanup > should clean up dashboard requestAnimationFrame 14ms",
+          "status": "failed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/memory-leak-fixes.test.js > Memory Leak Fixes > Event Listener Cleanup > should clean up connection status manager event listeners 11ms",
+          "status": "failed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/memory-leak-fixes.test.js > Memory Leak Fixes > Event Listener Cleanup > should clean up search filter event listeners 12ms",
+          "status": "failed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/memory-leak-fixes.test.js > Memory Leak Fixes > Timer Cleanup > should clean up WebSocket reconnect intervals 24ms",
+          "status": "failed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/memory-leak-fixes.test.js > Memory Leak Fixes > Timer Cleanup > should clean up refresh intervals 11ms",
+          "status": "failed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/memory-leak-fixes.test.js > Memory Leak Fixes > Global Reference Cleanup > should clean up global dashboard references 10ms",
+          "status": "failed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/memory-leak-fixes.test.js > Memory Leak Fixes > Global Reference Cleanup > should clean up global service references 10ms",
+          "status": "failed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/memory-leak-fixes.test.js > Memory Leak Fixes > Formula Experiment Manager > should limit assignments Map size 10ms",
+          "status": "failed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/memory-leak-fixes.test.js > Memory Leak Fixes > Formula Experiment Manager > should limit localStorage size 12ms",
+          "status": "failed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/memory-leak-fixes.test.js > Memory Leak Fixes > Resource Manager Integration > should track intervals through ResourceManager 12ms",
+          "status": "failed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/memory-leak-fixes.test.js > Memory Leak Fixes > Resource Manager Integration > should track timeouts through ResourceManager 11ms",
+          "status": "failed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/memory-leak-fixes.test.js > Memory Leak Fixes > Resource Manager Integration > should track event listeners through ResourceManager 13ms",
+          "status": "failed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/memory-leak-fixes.test.js > Memory Leak Fixes > Cleanup Manager Integration > should register cleanup functions 18ms",
+          "status": "failed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/memory-leak-fixes.test.js > Memory Leak Fixes > Cleanup Manager Integration > should clean up all modules 12ms",
+          "status": "failed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/memory-leak-fixes.test.js > Memory Leak Fixes > Memory Usage Monitoring > should provide resource statistics 12ms",
+          "status": "failed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/memory-leak-fixes.test.js > Memory Leak Fixes > Memory Usage Monitoring > should provide cleanup statistics 13ms",
+          "status": "failed",
+          "duration": 0.0
+        }
+      ]
+    },
+    {
+      "name": "tests/formula-editor-integration.test.js",
+      "type": "javascript",
+      "status": "failed",
+      "duration": 1.2812190055847168,
+      "command": [
+        "npm",
+        "test",
+        "--",
+        "tests/formula-editor-integration.test.js",
+        "--run"
+      ],
+      "individual_tests": [
+        {
+          "name": "tests/formula-editor-integration.test.js > FormulaEditorIntegration > Initialization > should initialize successfully 49ms",
+          "status": "failed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/formula-editor-integration.test.js > FormulaEditorIntegration > Initialization > should handle missing editor element gracefully 12ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/formula-editor-integration.test.js > FormulaEditorIntegration > Initialization > should load available fields 13ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/formula-editor-integration.test.js > FormulaEditorIntegration > Event Handling > should schedule validation on input 14ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/formula-editor-integration.test.js > FormulaEditorIntegration > Event Handling > should debounce validation 10ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/formula-editor-integration.test.js > FormulaEditorIntegration > Event Handling > should reload fields on focus 34ms",
+          "status": "failed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/formula-editor-integration.test.js > FormulaEditorIntegration > Validation > should validate valid formula 25ms",
+          "status": "failed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/formula-editor-integration.test.js > FormulaEditorIntegration > Validation > should show validation errors 25ms",
+          "status": "failed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/formula-editor-integration.test.js > FormulaEditorIntegration > Validation > should handle empty formula 25ms",
+          "status": "failed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/formula-editor-integration.test.js > FormulaEditorIntegration > Validation > should prevent concurrent validation 32ms",
+          "status": "failed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/formula-editor-integration.test.js > FormulaEditorIntegration > Test Formula Execution > should test valid formula successfully 25ms",
+          "status": "failed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/formula-editor-integration.test.js > FormulaEditorIntegration > Test Formula Execution > should handle test errors 24ms",
+          "status": "failed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/formula-editor-integration.test.js > FormulaEditorIntegration > Test Formula Execution > should handle empty formula 26ms",
+          "status": "failed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/formula-editor-integration.test.js > FormulaEditorIntegration > Test Formula Execution > should disable button during test 34ms",
+          "status": "failed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/formula-editor-integration.test.js > FormulaEditorIntegration > Test Formula Execution > should show limited results 24ms",
+          "status": "failed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/formula-editor-integration.test.js > FormulaEditorIntegration > Field Schema Management > should update editor field schema 24ms",
+          "status": "failed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/formula-editor-integration.test.js > FormulaEditorIntegration > Field Schema Management > should update data service field schema 10ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/formula-editor-integration.test.js > FormulaEditorIntegration > Status Updates > should update status with correct colors 19ms",
+          "status": "passed",
+          "duration": 0.0
+        }
+      ]
+    },
+    {
+      "name": "tests/dataProcessing.test.js",
+      "type": "javascript",
+      "status": "failed",
+      "duration": 1.0669689178466797,
+      "command": [
+        "npm",
+        "test",
+        "--",
+        "tests/dataProcessing.test.js",
+        "--run"
+      ],
+      "individual_tests": [
+        {
+          "name": "tests/dataProcessing.test.js > Data Processing > processElasticsearchResponse > should process valid Elasticsearch response 24ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/dataProcessing.test.js > Data Processing > processElasticsearchResponse > should filter out low volume events 40ms",
+          "status": "failed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/dataProcessing.test.js > Data Processing > processElasticsearchResponse > should calculate baseline for 12 hours correctly 29ms",
+          "status": "failed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/dataProcessing.test.js > Data Processing > processElasticsearchResponse > should sort results by score (most negative first) 28ms",
+          "status": "failed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/dataProcessing.test.js > Data Processing > processElasticsearchResponse > should handle empty buckets 8ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/dataProcessing.test.js > Data Processing > processElasticsearchResponse > should throw error for invalid response structure 8ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/dataProcessing.test.js > Data Processing > processElasticsearchResponse > should remove event prefix from display name 7ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/dataProcessing.test.js > Data Processing > processElasticsearchResponse > should handle missing baseline or current counts 23ms",
+          "status": "failed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/dataProcessing.test.js > Data Processing > processElasticsearchResponse > should respect minDailyVolume configuration 23ms",
+          "status": "failed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/dataProcessing.test.js > Data Processing > fetchTrafficData > should fetch data using proxy method 8ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/dataProcessing.test.js > Data Processing > fetchTrafficData > should fetch data using direct method 13ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/dataProcessing.test.js > Data Processing > fetchTrafficData > should use custom configuration when provided 7ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/dataProcessing.test.js > Data Processing > fetchTrafficData > should throw error on HTTP error response 8ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/dataProcessing.test.js > Data Processing > fetchTrafficData > should throw error on Elasticsearch error 7ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/dataProcessing.test.js > Data Processing > fetchTrafficData > should throw error on network failure 8ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/dataProcessing.test.js > Data Processing > fetchTrafficData > should build correct query structure 8ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/dataProcessing.test.js > Data Processing > fetchTrafficData > should handle timeout gracefully 7ms",
+          "status": "passed",
+          "duration": 0.0
+        }
+      ]
+    },
+    {
+      "name": "tests/data-service.test.js",
+      "type": "javascript",
+      "status": "failed",
+      "duration": 1.1229248046875,
+      "command": [
+        "npm",
+        "test",
+        "--",
+        "tests/data-service.test.js",
+        "--run"
+      ],
+      "individual_tests": [
+        {
+          "name": "tests/data-service.test.js > DataService > initialization > should initialize with default state 24ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/data-service.test.js > DataService > initialization > should load persisted state from localStorage 13ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/data-service.test.js > DataService > initialization > should handle corrupted localStorage data gracefully 12ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/data-service.test.js > DataService > loadData > should load data successfully 13ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/data-service.test.js > DataService > loadData > should send empty filters object to server 11ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/data-service.test.js > DataService > loadData > should handle authentication errors gracefully 9ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/data-service.test.js > DataService > loadData > should handle expired cookie errors 9ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/data-service.test.js > DataService > loadData > should use cached data on error 13ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/data-service.test.js > DataService > loadData > should calculate stats if not provided 7ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/data-service.test.js > DataService > applyFilters > should update clientFilters not filters 7ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/data-service.test.js > DataService > applyFilters > should persist filter changes 7ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/data-service.test.js > DataService > applyFilters > should emit filtersChanged event 7ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/data-service.test.js > DataService > getFilteredData > should filter by status 8ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/data-service.test.js > DataService > getFilteredData > should filter by search term 8ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/data-service.test.js > DataService > getFilteredData > should filter by RAD types 7ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/data-service.test.js > DataService > getFilteredData > should apply multiple filters 7ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/data-service.test.js > DataService > getFilteredData > should return all data when no filters applied 7ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/data-service.test.js > DataService > updateTimeRange > should update time range and reload data 7ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/data-service.test.js > DataService > updateTimeRange > should persist time range change 7ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/data-service.test.js > DataService > refresh > should reload data with force flag 8ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/data-service.test.js > DataService > auto-refresh > should start auto-refresh timer 16ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/data-service.test.js > DataService > auto-refresh > should stop auto-refresh 8ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/data-service.test.js > DataService > state management > should emit stateChanged event on state updates 8ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/data-service.test.js > DataService > state management > should merge state updates 7ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/data-service.test.js > DataService > clearPersistedState > should clear localStorage and reset to defaults 8ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/data-service.test.js > DataService > destroy > should clean up timers and listeners 8ms",
+          "status": "passed",
+          "duration": 0.0
+        }
+      ]
+    },
+    {
+      "name": "tests/unit/test-utilities.test.js",
+      "type": "javascript",
+      "status": "failed",
+      "duration": 1.373431921005249,
+      "command": [
+        "npm",
+        "test",
+        "--",
+        "tests/unit/test-utilities.test.js",
+        "--run"
+      ],
+      "individual_tests": [
+        {
+          "name": "tests/unit/test-utilities.test.js > Test Utilities > Environment Setup > should set up DOM environment correctly 40ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/test-utilities.test.js > Test Utilities > Environment Setup > should set up localStorage correctly 24ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/test-utilities.test.js > Test Utilities > Environment Setup > should set up authentication correctly 23ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/test-utilities.test.js > Test Utilities > Environment Setup > should set up configuration correctly 15ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/test-utilities.test.js > Test Utilities > Environment Setup > should set up location correctly 22ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/test-utilities.test.js > Test Utilities > Mock Response Creation > should create proper HTTP responses 16ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/test-utilities.test.js > Test Utilities > Mock Response Creation > should create error responses 14ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/test-utilities.test.js > Test Utilities > Mock Response Creation > should create Elasticsearch responses 13ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/test-utilities.test.js > Test Utilities > Test Data Generation > should generate test RAD events 14ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/test-utilities.test.js > Test Utilities > Test Data Generation > should generate varied RAD types 15ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/test-utilities.test.js > Test Utilities > Assertion Helpers > should assert element existence 16ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/test-utilities.test.js > Test Utilities > Assertion Helpers > should assert API calls 23ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/test-utilities.test.js > Test Utilities > Async Utilities > should provide async utility functions 14ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/test-utilities.test.js > Test Utilities > Async Utilities > should return promises from async utilities 15ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/test-utilities.test.js > Test Utilities > Location Management > should change location safely 15ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/test-utilities.test.js > Test Utilities > Location Management > should handle localhost correctly 20ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/test-utilities.test.js > Test Utilities > Mock Integration > should work with fetch mocks 26ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/test-utilities.test.js > Test Utilities > Mock Integration > should work with localStorage mocks 14ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/test-utilities.test.js > Test Utilities > Mock Integration > should work with timer mocks 17ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/test-utilities.test.js > Test Utilities > Error Handling > should handle missing DOM elements gracefully 31ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/test-utilities.test.js > Test Utilities > Error Handling > should handle fetch errors 18ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/test-utilities.test.js > Test Utilities > Error Handling > should handle localStorage errors 14ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/test-utilities.test.js > Test Utilities > Cleanup > should clean up mocks properly 24ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/test-utilities.test.js > Test Utilities > Cleanup > should reset localStorage 18ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/test-utilities.test.js > Test Utilities > Cleanup > should reset DOM 19ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/test-utilities.test.js > Test Utilities Integration Examples > Dashboard Testing Example > should test dashboard update workflow 16ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/test-utilities.test.js > Test Utilities Integration Examples > Authentication Testing Example > should test authentication flow 25ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/test-utilities.test.js > Test Utilities Integration Examples > Configuration Testing Example > should test configuration management 16ms",
+          "status": "passed",
+          "duration": 0.0
+        }
+      ]
+    },
+    {
+      "name": "tests/integration/dashboard-core.test.js",
+      "type": "javascript",
+      "status": "failed",
+      "duration": 0.8808202743530273,
+      "command": [
+        "npm",
+        "test",
+        "--",
+        "tests/integration/dashboard-core.test.js",
+        "--run"
+      ],
+      "individual_tests": []
+    },
+    {
+      "name": "tests/stores/app-store.test.js",
+      "type": "javascript",
+      "status": "failed",
+      "duration": 300.0181119441986,
+      "command": [
+        "npm",
+        "test",
+        "--",
+        "tests/stores/app-store.test.js",
+        "--run"
+      ],
+      "individual_tests": []
+    },
+    {
+      "name": "tests/unit/test-utilities.test.js",
+      "type": "javascript",
+      "status": "failed",
+      "duration": 1.6063201427459717,
+      "command": [
+        "npm",
+        "test",
+        "--",
+        "tests/unit/test-utilities.test.js",
+        "--run"
+      ],
+      "individual_tests": [
+        {
+          "name": "tests/unit/test-utilities.test.js > Test Utilities > Environment Setup > should set up DOM environment correctly 39ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/test-utilities.test.js > Test Utilities > Environment Setup > should set up localStorage correctly 26ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/test-utilities.test.js > Test Utilities > Environment Setup > should set up authentication correctly 19ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/test-utilities.test.js > Test Utilities > Environment Setup > should set up configuration correctly 17ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/test-utilities.test.js > Test Utilities > Environment Setup > should set up location correctly 20ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/test-utilities.test.js > Test Utilities > Mock Response Creation > should create proper HTTP responses 14ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/test-utilities.test.js > Test Utilities > Mock Response Creation > should create error responses 15ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/test-utilities.test.js > Test Utilities > Mock Response Creation > should create Elasticsearch responses 14ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/test-utilities.test.js > Test Utilities > Test Data Generation > should generate test RAD events 13ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/test-utilities.test.js > Test Utilities > Test Data Generation > should generate varied RAD types 13ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/test-utilities.test.js > Test Utilities > Assertion Helpers > should assert element existence 14ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/test-utilities.test.js > Test Utilities > Assertion Helpers > should assert API calls 19ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/test-utilities.test.js > Test Utilities > Async Utilities > should provide async utility functions 14ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/test-utilities.test.js > Test Utilities > Async Utilities > should return promises from async utilities 32ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/test-utilities.test.js > Test Utilities > Location Management > should change location safely 20ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/test-utilities.test.js > Test Utilities > Location Management > should handle localhost correctly 16ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/test-utilities.test.js > Test Utilities > Mock Integration > should work with fetch mocks 21ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/test-utilities.test.js > Test Utilities > Mock Integration > should work with localStorage mocks 15ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/test-utilities.test.js > Test Utilities > Mock Integration > should work with timer mocks 14ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/test-utilities.test.js > Test Utilities > Error Handling > should handle missing DOM elements gracefully 13ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/test-utilities.test.js > Test Utilities > Error Handling > should handle fetch errors 14ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/test-utilities.test.js > Test Utilities > Error Handling > should handle localStorage errors 21ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/test-utilities.test.js > Test Utilities > Cleanup > should clean up mocks properly 30ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/test-utilities.test.js > Test Utilities > Cleanup > should reset localStorage 17ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/test-utilities.test.js > Test Utilities > Cleanup > should reset DOM 17ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/test-utilities.test.js > Test Utilities Integration Examples > Dashboard Testing Example > should test dashboard update workflow 12ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/test-utilities.test.js > Test Utilities Integration Examples > Authentication Testing Example > should test authentication flow 12ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/test-utilities.test.js > Test Utilities Integration Examples > Configuration Testing Example > should test configuration management 12ms",
+          "status": "passed",
+          "duration": 0.0
+        }
+      ]
+    },
+    {
+      "name": "tests/integration/dashboard-core.test.js",
+      "type": "javascript",
+      "status": "failed",
+      "duration": 0.7623097896575928,
+      "command": [
+        "npm",
+        "test",
+        "--",
+        "tests/integration/dashboard-core.test.js",
+        "--run"
+      ],
+      "individual_tests": []
+    },
+    {
+      "name": "tests/api-types.test.ts",
+      "type": "javascript",
+      "status": "failed",
+      "duration": 0.8920681476593018,
+      "command": [
+        "npm",
+        "test",
+        "--",
+        "tests/api-types.test.ts",
+        "--run"
+      ],
+      "individual_tests": [
+        {
+          "name": "tests/api-types.test.ts > TrafficQueryRequest Type > should accept new comparison fields 22ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/api-types.test.ts > TrafficQueryRequest Type > should allow all time comparison strategies 11ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/api-types.test.ts > TrafficQueryRequest Type > should maintain backward compatibility with current_time_range 11ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/api-types.test.ts > TrafficQueryRequest Type > should allow mixing old and new fields 10ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/api-types.test.ts > TrafficQueryRequest Type > should type check optional fields correctly 10ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/api-types.test.ts > TrafficQueryResponse Type > should include new metadata fields 10ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/api-types.test.ts > TrafficQueryResponse Type > should allow comparison_method to be any strategy 8ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/api-types.test.ts > TrafficQueryResponse Type > should type TrafficEvent correctly 7ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/api-types.test.ts > Type Safety > should enforce literal types for strategies 7ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/api-types.test.ts > Type Safety > should enforce literal types for event status 8ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/api-types.test.ts > Type Safety > should handle time range types correctly 13ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/api-types.test.ts > Real-world Usage Scenarios > should handle 39 minutes vs 3.5 days comparison 6ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/api-types.test.ts > Real-world Usage Scenarios > should handle inspection time with new fields 6ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/api-types.test.ts > Type Exports > should export all necessary types 6ms",
+          "status": "passed",
+          "duration": 0.0
+        }
+      ]
+    },
+    {
+      "name": "tests/unit/emil/query-engine/query-builder.test.ts",
+      "type": "javascript",
+      "status": "failed",
+      "duration": 1.0868639945983887,
+      "command": [
+        "npm",
+        "test",
+        "--",
+        "tests/unit/emil/query-engine/query-builder.test.ts",
+        "--run"
+      ],
+      "individual_tests": [
+        {
+          "name": "tests/unit/emil/query-engine/query-builder.test.ts > ESQLQueryBuilder > buildFromIntent > should build health check query from intent 24ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/emil/query-engine/query-builder.test.ts > ESQLQueryBuilder > buildFromIntent > should use default parameters when not provided 13ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/emil/query-engine/query-builder.test.ts > ESQLQueryBuilder > buildFromIntent > should handle baseline comparison intent 35ms",
+          "status": "failed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/emil/query-engine/query-builder.test.ts > ESQLQueryBuilder > buildFromIntent > should calculate time window from context 31ms",
+          "status": "failed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/emil/query-engine/query-builder.test.ts > ESQLQueryBuilder > buildFromTemplate > should build query from template with parameters 9ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/emil/query-engine/query-builder.test.ts > ESQLQueryBuilder > buildFromTemplate > should throw error for unknown template 14ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/emil/query-engine/query-builder.test.ts > ESQLQueryBuilder > buildFromTemplate > should throw error for missing required parameters 7ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/emil/query-engine/query-builder.test.ts > ESQLQueryBuilder > parameter validation > should validate parameter types 6ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/emil/query-engine/query-builder.test.ts > ESQLQueryBuilder > parameter validation > should validate interval format 8ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/emil/query-engine/query-builder.test.ts > ESQLQueryBuilder > parameter validation > should validate percentage values 8ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/emil/query-engine/query-builder.test.ts > ESQLQueryBuilder > parameter validation > should format array parameters correctly 8ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/emil/query-engine/query-builder.test.ts > ESQLQueryBuilder > validateQuery > should validate valid query 7ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/emil/query-engine/query-builder.test.ts > ESQLQueryBuilder > validateQuery > should detect missing FROM clause 7ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/emil/query-engine/query-builder.test.ts > ESQLQueryBuilder > validateQuery > should detect unclosed brackets 8ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/emil/query-engine/query-builder.test.ts > ESQLQueryBuilder > validateQuery > should detect unresolved placeholders 7ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/emil/query-engine/query-builder.test.ts > ESQLQueryBuilder > parseQuery > should extract parameters from query template 7ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/emil/query-engine/query-builder.test.ts > ESQLQueryBuilder > parseQuery > should handle duplicate parameters 7ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/emil/query-engine/query-builder.test.ts > ESQLQueryBuilder > edge cases > should handle empty EID array 7ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/emil/query-engine/query-builder.test.ts > ESQLQueryBuilder > edge cases > should escape special characters in EIDs 27ms",
+          "status": "failed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/emil/query-engine/query-builder.test.ts > ESQLQueryBuilder > edge cases > should handle very long time ranges 7ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/emil/query-engine/query-builder.test.ts > ESQLQueryBuilder > edge cases > should clean up extra whitespace 7ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/emil/query-engine/query-builder.test.ts > ESQLQueryBuilder > performance > should build queries quickly 16ms",
+          "status": "passed",
+          "duration": 0.0
+        }
+      ]
+    },
+    {
+      "name": "tests/unit/emil/trie/radix-trie.test.ts",
+      "type": "javascript",
+      "status": "failed",
+      "duration": 0.9402239322662354,
+      "command": [
+        "npm",
+        "test",
+        "--",
+        "tests/unit/emil/trie/radix-trie.test.ts",
+        "--run"
+      ],
+      "individual_tests": [
+        {
+          "name": "tests/unit/emil/trie/radix-trie.test.ts > RadixTrie > insert and search > should insert and retrieve exact matches 22ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/emil/trie/radix-trie.test.ts > RadixTrie > insert and search > should handle empty key insertion 11ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/emil/trie/radix-trie.test.ts > RadixTrie > insert and search > should update existing keys 10ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/emil/trie/radix-trie.test.ts > RadixTrie > prefix search > should find all keys with given prefix 10ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/emil/trie/radix-trie.test.ts > RadixTrie > prefix search > should return empty array for non-existent prefix 10ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/emil/trie/radix-trie.test.ts > RadixTrie > prefix search > should respect maxResults parameter 10ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/emil/trie/radix-trie.test.ts > RadixTrie > prefix search > should include exact prefix match if it exists 8ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/emil/trie/radix-trie.test.ts > RadixTrie > fuzzy search > should find exact matches with highest score 28ms",
+          "status": "failed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/emil/trie/radix-trie.test.ts > RadixTrie > fuzzy search > should find partial matches 8ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/emil/trie/radix-trie.test.ts > RadixTrie > fuzzy search > should handle character-by-character matching 6ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/emil/trie/radix-trie.test.ts > RadixTrie > frequency tracking > should update frequency for existing keys 6ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/emil/trie/radix-trie.test.ts > RadixTrie > frequency tracking > should not crash when updating non-existent key 7ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/emil/trie/radix-trie.test.ts > RadixTrie > getAllKeys > should return all keys in the trie 6ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/emil/trie/radix-trie.test.ts > RadixTrie > performance > should handle large number of insertions efficiently 14ms",
+          "status": "passed",
+          "duration": 0.0
+        }
+      ]
+    },
+    {
+      "name": "tests/unit/emil/eid-registry/eid-registry.test.ts",
+      "type": "javascript",
+      "status": "failed",
+      "duration": 1.0820999145507812,
+      "command": [
+        "npm",
+        "test",
+        "--",
+        "tests/unit/emil/eid-registry/eid-registry.test.ts",
+        "--run"
+      ],
+      "individual_tests": [
+        {
+          "name": "tests/unit/emil/eid-registry/eid-registry.test.ts > EIDRegistry > initialization > should initialize empty 21ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/emil/eid-registry/eid-registry.test.ts > EIDRegistry > initialization > should initialize with historical data 11ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/emil/eid-registry/eid-registry.test.ts > EIDRegistry > addEID > should add new EID to registry 11ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/emil/eid-registry/eid-registry.test.ts > EIDRegistry > addEID > should update existing EID 11ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/emil/eid-registry/eid-registry.test.ts > EIDRegistry > addEID > should track recent EIDs 13ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/emil/eid-registry/eid-registry.test.ts > EIDRegistry > search > should find EIDs by prefix 8ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/emil/eid-registry/eid-registry.test.ts > EIDRegistry > search > should respect maxResults 7ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/emil/eid-registry/eid-registry.test.ts > EIDRegistry > search > should filter by namespace 7ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/emil/eid-registry/eid-registry.test.ts > EIDRegistry > search > should filter by radset 12ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/emil/eid-registry/eid-registry.test.ts > EIDRegistry > search > should sort alphabetically 8ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/emil/eid-registry/eid-registry.test.ts > EIDRegistry > hot EIDs > should track hot EIDs based on frequency 7ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/emil/eid-registry/eid-registry.test.ts > EIDRegistry > hot EIDs > should update hot scores on usage 6ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/emil/eid-registry/eid-registry.test.ts > EIDRegistry > hot EIDs > should detect trends 6ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/emil/eid-registry/eid-registry.test.ts > EIDRegistry > hierarchy > should build hierarchy from EIDs 6ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/emil/eid-registry/eid-registry.test.ts > EIDRegistry > recordUsage > should update frequency and recent list 7ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/emil/eid-registry/eid-registry.test.ts > EIDRegistry > recordUsage > should handle non-existent EID gracefully 7ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/emil/eid-registry/eid-registry.test.ts > EIDRegistry > state persistence > should export and import state 8ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/emil/eid-registry/eid-registry.test.ts > EIDRegistry > performance > should handle large number of EIDs efficiently 51ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/emil/eid-registry/eid-registry.test.ts > EIDRegistry > edge cases > should handle empty search query 8ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/emil/eid-registry/eid-registry.test.ts > EIDRegistry > edge cases > should handle special characters in EID 25ms",
+          "status": "failed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/emil/eid-registry/eid-registry.test.ts > EIDRegistry > edge cases > should maintain recent list size limit 8ms",
+          "status": "passed",
+          "duration": 0.0
+        }
+      ]
+    },
+    {
+      "name": "tests/integration/emil/integration.test.ts",
+      "type": "javascript",
+      "status": "failed",
+      "duration": 46.22557592391968,
+      "command": [
+        "npm",
+        "test",
+        "--",
+        "tests/integration/emil/integration.test.ts",
+        "--run"
+      ],
+      "individual_tests": [
+        {
+          "name": "tests/integration/emil/integration.test.ts > EMIL Integration Tests > EID Selection to Query Execution Flow > should execute query when EIDs are selected 100ms",
+          "status": "failed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/integration/emil/integration.test.ts > EMIL Integration Tests > EID Selection to Query Execution Flow > should handle search and selection flow 15ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/integration/emil/integration.test.ts > EMIL Integration Tests > Registry and UI Synchronization > should update hot EIDs when usage is recorded 15ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/integration/emil/integration.test.ts > EMIL Integration Tests > Registry and UI Synchronization > should maintain selection state across updates 28ms",
+          "status": "failed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/integration/emil/integration.test.ts > EMIL Integration Tests > Error Handling > should handle query execution errors gracefully 45152ms",
+          "status": "failed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/integration/emil/integration.test.ts > EMIL Integration Tests > Error Handling > should validate EID format 23ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/integration/emil/integration.test.ts > EMIL Integration Tests > Performance > should handle large EID selections efficiently 44ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/integration/emil/integration.test.ts > EMIL Integration Tests > State Persistence > should save and restore complete application state 34ms",
+          "status": "failed",
+          "duration": 0.0
+        }
+      ]
+    },
+    {
+      "name": "tests/unit/emil/query-engine/query-builder.test.ts",
+      "type": "javascript",
+      "status": "failed",
+      "duration": 1.250173807144165,
+      "command": [
+        "npm",
+        "test",
+        "--",
+        "tests/unit/emil/query-engine/query-builder.test.ts",
+        "--run"
+      ],
+      "individual_tests": [
+        {
+          "name": "tests/unit/emil/query-engine/query-builder.test.ts > ESQLQueryBuilder > buildFromIntent > should build health check query from intent 22ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/emil/query-engine/query-builder.test.ts > ESQLQueryBuilder > buildFromIntent > should use default parameters when not provided 11ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/emil/query-engine/query-builder.test.ts > ESQLQueryBuilder > buildFromIntent > should handle baseline comparison intent 31ms",
+          "status": "failed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/emil/query-engine/query-builder.test.ts > ESQLQueryBuilder > buildFromIntent > should calculate time window from context 32ms",
+          "status": "failed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/emil/query-engine/query-builder.test.ts > ESQLQueryBuilder > buildFromTemplate > should build query from template with parameters 8ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/emil/query-engine/query-builder.test.ts > ESQLQueryBuilder > buildFromTemplate > should throw error for unknown template 14ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/emil/query-engine/query-builder.test.ts > ESQLQueryBuilder > buildFromTemplate > should throw error for missing required parameters 7ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/emil/query-engine/query-builder.test.ts > ESQLQueryBuilder > parameter validation > should validate parameter types 8ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/emil/query-engine/query-builder.test.ts > ESQLQueryBuilder > parameter validation > should validate interval format 7ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/emil/query-engine/query-builder.test.ts > ESQLQueryBuilder > parameter validation > should validate percentage values 7ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/emil/query-engine/query-builder.test.ts > ESQLQueryBuilder > parameter validation > should format array parameters correctly 7ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/emil/query-engine/query-builder.test.ts > ESQLQueryBuilder > validateQuery > should validate valid query 7ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/emil/query-engine/query-builder.test.ts > ESQLQueryBuilder > validateQuery > should detect missing FROM clause 7ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/emil/query-engine/query-builder.test.ts > ESQLQueryBuilder > validateQuery > should detect unclosed brackets 6ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/emil/query-engine/query-builder.test.ts > ESQLQueryBuilder > validateQuery > should detect unresolved placeholders 7ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/emil/query-engine/query-builder.test.ts > ESQLQueryBuilder > parseQuery > should extract parameters from query template 7ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/emil/query-engine/query-builder.test.ts > ESQLQueryBuilder > parseQuery > should handle duplicate parameters 7ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/emil/query-engine/query-builder.test.ts > ESQLQueryBuilder > edge cases > should handle empty EID array 7ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/emil/query-engine/query-builder.test.ts > ESQLQueryBuilder > edge cases > should escape special characters in EIDs 28ms",
+          "status": "failed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/emil/query-engine/query-builder.test.ts > ESQLQueryBuilder > edge cases > should handle very long time ranges 7ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/emil/query-engine/query-builder.test.ts > ESQLQueryBuilder > edge cases > should clean up extra whitespace 8ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/emil/query-engine/query-builder.test.ts > ESQLQueryBuilder > performance > should build queries quickly 18ms",
+          "status": "passed",
+          "duration": 0.0
+        }
+      ]
+    },
+    {
+      "name": "tests/unit/emil/trie/radix-trie.test.ts",
+      "type": "javascript",
+      "status": "failed",
+      "duration": 0.9343669414520264,
+      "command": [
+        "npm",
+        "test",
+        "--",
+        "tests/unit/emil/trie/radix-trie.test.ts",
+        "--run"
+      ],
+      "individual_tests": [
+        {
+          "name": "tests/unit/emil/trie/radix-trie.test.ts > RadixTrie > insert and search > should insert and retrieve exact matches 22ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/emil/trie/radix-trie.test.ts > RadixTrie > insert and search > should handle empty key insertion 12ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/emil/trie/radix-trie.test.ts > RadixTrie > insert and search > should update existing keys 11ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/emil/trie/radix-trie.test.ts > RadixTrie > prefix search > should find all keys with given prefix 11ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/emil/trie/radix-trie.test.ts > RadixTrie > prefix search > should return empty array for non-existent prefix 13ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/emil/trie/radix-trie.test.ts > RadixTrie > prefix search > should respect maxResults parameter 8ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/emil/trie/radix-trie.test.ts > RadixTrie > prefix search > should include exact prefix match if it exists 8ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/emil/trie/radix-trie.test.ts > RadixTrie > fuzzy search > should find exact matches with highest score 30ms",
+          "status": "failed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/emil/trie/radix-trie.test.ts > RadixTrie > fuzzy search > should find partial matches 7ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/emil/trie/radix-trie.test.ts > RadixTrie > fuzzy search > should handle character-by-character matching 6ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/emil/trie/radix-trie.test.ts > RadixTrie > frequency tracking > should update frequency for existing keys 7ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/emil/trie/radix-trie.test.ts > RadixTrie > frequency tracking > should not crash when updating non-existent key 7ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/emil/trie/radix-trie.test.ts > RadixTrie > getAllKeys > should return all keys in the trie 7ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/emil/trie/radix-trie.test.ts > RadixTrie > performance > should handle large number of insertions efficiently 14ms",
+          "status": "passed",
+          "duration": 0.0
+        }
+      ]
+    },
+    {
+      "name": "tests/unit/emil/eid-registry/eid-registry.test.ts",
+      "type": "javascript",
+      "status": "failed",
+      "duration": 1.0317411422729492,
+      "command": [
+        "npm",
+        "test",
+        "--",
+        "tests/unit/emil/eid-registry/eid-registry.test.ts",
+        "--run"
+      ],
+      "individual_tests": [
+        {
+          "name": "tests/unit/emil/eid-registry/eid-registry.test.ts > EIDRegistry > initialization > should initialize empty 22ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/emil/eid-registry/eid-registry.test.ts > EIDRegistry > initialization > should initialize with historical data 11ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/emil/eid-registry/eid-registry.test.ts > EIDRegistry > addEID > should add new EID to registry 11ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/emil/eid-registry/eid-registry.test.ts > EIDRegistry > addEID > should update existing EID 10ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/emil/eid-registry/eid-registry.test.ts > EIDRegistry > addEID > should track recent EIDs 10ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/emil/eid-registry/eid-registry.test.ts > EIDRegistry > search > should find EIDs by prefix 10ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/emil/eid-registry/eid-registry.test.ts > EIDRegistry > search > should respect maxResults 8ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/emil/eid-registry/eid-registry.test.ts > EIDRegistry > search > should filter by namespace 7ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/emil/eid-registry/eid-registry.test.ts > EIDRegistry > search > should filter by radset 8ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/emil/eid-registry/eid-registry.test.ts > EIDRegistry > search > should sort alphabetically 13ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/emil/eid-registry/eid-registry.test.ts > EIDRegistry > hot EIDs > should track hot EIDs based on frequency 7ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/emil/eid-registry/eid-registry.test.ts > EIDRegistry > hot EIDs > should update hot scores on usage 6ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/emil/eid-registry/eid-registry.test.ts > EIDRegistry > hot EIDs > should detect trends 6ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/emil/eid-registry/eid-registry.test.ts > EIDRegistry > hierarchy > should build hierarchy from EIDs 6ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/emil/eid-registry/eid-registry.test.ts > EIDRegistry > recordUsage > should update frequency and recent list 6ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/emil/eid-registry/eid-registry.test.ts > EIDRegistry > recordUsage > should handle non-existent EID gracefully 7ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/emil/eid-registry/eid-registry.test.ts > EIDRegistry > state persistence > should export and import state 7ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/emil/eid-registry/eid-registry.test.ts > EIDRegistry > performance > should handle large number of EIDs efficiently 51ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/emil/eid-registry/eid-registry.test.ts > EIDRegistry > edge cases > should handle empty search query 7ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/emil/eid-registry/eid-registry.test.ts > EIDRegistry > edge cases > should handle special characters in EID 24ms",
+          "status": "failed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/unit/emil/eid-registry/eid-registry.test.ts > EIDRegistry > edge cases > should maintain recent list size limit 7ms",
+          "status": "passed",
+          "duration": 0.0
+        }
+      ]
+    },
+    {
+      "name": "tests/integration/emil/integration.test.ts",
+      "type": "javascript",
+      "status": "failed",
+      "duration": 46.24107909202576,
+      "command": [
+        "npm",
+        "test",
+        "--",
+        "tests/integration/emil/integration.test.ts",
+        "--run"
+      ],
+      "individual_tests": [
+        {
+          "name": "tests/integration/emil/integration.test.ts > EMIL Integration Tests > EID Selection to Query Execution Flow > should execute query when EIDs are selected 103ms",
+          "status": "failed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/integration/emil/integration.test.ts > EMIL Integration Tests > EID Selection to Query Execution Flow > should handle search and selection flow 14ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/integration/emil/integration.test.ts > EMIL Integration Tests > Registry and UI Synchronization > should update hot EIDs when usage is recorded 17ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/integration/emil/integration.test.ts > EMIL Integration Tests > Registry and UI Synchronization > should maintain selection state across updates 26ms",
+          "status": "failed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/integration/emil/integration.test.ts > EMIL Integration Tests > Error Handling > should handle query execution errors gracefully 45154ms",
+          "status": "failed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/integration/emil/integration.test.ts > EMIL Integration Tests > Error Handling > should validate EID format 24ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/integration/emil/integration.test.ts > EMIL Integration Tests > Performance > should handle large EID selections efficiently 40ms",
+          "status": "passed",
+          "duration": 0.0
+        },
+        {
+          "name": "tests/integration/emil/integration.test.ts > EMIL Integration Tests > State Persistence > should save and restore complete application state 35ms",
+          "status": "failed",
+          "duration": 0.0
+        }
+      ]
+    },
+    {
+      "name": "test_simple_process.py",
+      "type": "python",
+      "status": "skipped",
+      "duration": 0.03720402717590332,
+      "command": [
+        "/Users/balkhalil/miniconda3/bin/python",
+        "-m",
+        "pytest",
+        "test_simple_process.py",
+        "-v"
+      ],
+      "individual_tests": []
+    },
+    {
+      "name": "archive/unused-tests/test_data_models.py",
+      "type": "python",
+      "status": "skipped",
+      "duration": 0.016620159149169922,
+      "command": [
+        "/Users/balkhalil/miniconda3/bin/python",
+        "-m",
+        "pytest",
+        "archive/unused-tests/test_data_models.py",
+        "-v"
+      ],
+      "individual_tests": []
+    },
+    {
+      "name": "bin/test_env_validation.py",
+      "type": "python",
+      "status": "skipped",
+      "duration": 0.015857934951782227,
+      "command": [
+        "/Users/balkhalil/miniconda3/bin/python",
+        "-m",
+        "pytest",
+        "bin/test_env_validation.py",
+        "-v"
+      ],
+      "individual_tests": []
+    },
+    {
+      "name": "bin/test_formula_endpoint.py",
+      "type": "python",
+      "status": "skipped",
+      "duration": 0.015408992767333984,
+      "command": [
+        "/Users/balkhalil/miniconda3/bin/python",
+        "-m",
+        "pytest",
+        "bin/test_formula_endpoint.py",
+        "-v"
+      ],
+      "individual_tests": []
+    },
+    {
+      "name": "bin/test_full_integration_fixed.py",
+      "type": "python",
+      "status": "skipped",
+      "duration": 0.014777183532714844,
+      "command": [
+        "/Users/balkhalil/miniconda3/bin/python",
+        "-m",
+        "pytest",
+        "bin/test_full_integration_fixed.py",
+        "-v"
+      ],
+      "individual_tests": []
+    },
+    {
+      "name": "bin/test_baseline_manager.py",
+      "type": "python",
+      "status": "skipped",
+      "duration": 0.015501976013183594,
+      "command": [
+        "/Users/balkhalil/miniconda3/bin/python",
+        "-m",
+        "pytest",
+        "bin/test_baseline_manager.py",
+        "-v"
+      ],
+      "individual_tests": []
+    },
+    {
+      "name": "tests/test_refactored_python.py",
+      "type": "python",
+      "status": "skipped",
+      "duration": 0.01605510711669922,
+      "command": [
+        "/Users/balkhalil/miniconda3/bin/python",
+        "-m",
+        "pytest",
+        "tests/test_refactored_python.py",
+        "-v"
+      ],
+      "individual_tests": []
+    },
+    {
+      "name": "tests/test_validate_connections_production.py",
+      "type": "python",
+      "status": "skipped",
+      "duration": 0.014864206314086914,
+      "command": [
+        "/Users/balkhalil/miniconda3/bin/python",
+        "-m",
+        "pytest",
+        "tests/test_validate_connections_production.py",
+        "-v"
+      ],
+      "individual_tests": []
+    },
+    {
+      "name": "tests/test_production_enhancements.py",
+      "type": "python",
+      "status": "skipped",
+      "duration": 0.014219999313354492,
+      "command": [
+        "/Users/balkhalil/miniconda3/bin/python",
+        "-m",
+        "pytest",
+        "tests/test_production_enhancements.py",
+        "-v"
+      ],
+      "individual_tests": []
+    },
+    {
+      "name": "tests/test_rate_limit_fixed.py",
+      "type": "python",
+      "status": "skipped",
+      "duration": 0.014659643173217773,
+      "command": [
+        "/Users/balkhalil/miniconda3/bin/python",
+        "-m",
+        "pytest",
+        "tests/test_rate_limit_fixed.py",
+        "-v"
+      ],
+      "individual_tests": []
+    },
+    {
+      "name": "tests/test_metrics_endpoint.py",
+      "type": "python",
+      "status": "skipped",
+      "duration": 0.015112876892089844,
+      "command": [
+        "/Users/balkhalil/miniconda3/bin/python",
+        "-m",
+        "pytest",
+        "tests/test_metrics_endpoint.py",
+        "-v"
+      ],
+      "individual_tests": []
+    },
+    {
+      "name": "tests/test_validate_connections_enhanced.py",
+      "type": "python",
+      "status": "skipped",
+      "duration": 0.014323949813842773,
+      "command": [
+        "/Users/balkhalil/miniconda3/bin/python",
+        "-m",
+        "pytest",
+        "tests/test_validate_connections_enhanced.py",
+        "-v"
+      ],
+      "individual_tests": []
+    },
+    {
+      "name": "tests/test_kibana_endpoint.py",
+      "type": "python",
+      "status": "skipped",
+      "duration": 0.014503002166748047,
+      "command": [
+        "/Users/balkhalil/miniconda3/bin/python",
+        "-m",
+        "pytest",
+        "tests/test_kibana_endpoint.py",
+        "-v"
+      ],
+      "individual_tests": []
+    },
+    {
+      "name": "tests/test_github_pages_integration.py",
+      "type": "python",
+      "status": "skipped",
+      "duration": 0.014523744583129883,
+      "command": [
+        "/Users/balkhalil/miniconda3/bin/python",
+        "-m",
+        "pytest",
+        "tests/test_github_pages_integration.py",
+        "-v"
+      ],
+      "individual_tests": []
+    },
+    {
+      "name": "tests/test_dashboard_generation.py",
+      "type": "python",
+      "status": "skipped",
+      "duration": 0.014200210571289062,
+      "command": [
+        "/Users/balkhalil/miniconda3/bin/python",
+        "-m",
+        "pytest",
+        "tests/test_dashboard_generation.py",
+        "-v"
+      ],
+      "individual_tests": []
+    },
+    {
+      "name": "tests/test_server_endpoints.py",
+      "type": "python",
+      "status": "skipped",
+      "duration": 0.014789819717407227,
+      "command": [
+        "/Users/balkhalil/miniconda3/bin/python",
+        "-m",
+        "pytest",
+        "tests/test_server_endpoints.py",
+        "-v"
+      ],
+      "individual_tests": []
+    },
+    {
+      "name": "tests/test_dev_server_fastapi.py",
+      "type": "python",
+      "status": "skipped",
+      "duration": 0.015356779098510742,
+      "command": [
+        "/Users/balkhalil/miniconda3/bin/python",
+        "-m",
+        "pytest",
+        "tests/test_dev_server_fastapi.py",
+        "-v"
+      ],
+      "individual_tests": []
+    },
+    {
+      "name": "tests/test_server_production.py",
+      "type": "python",
+      "status": "skipped",
+      "duration": 0.014265060424804688,
+      "command": [
+        "/Users/balkhalil/miniconda3/bin/python",
+        "-m",
+        "pytest",
+        "tests/test_server_production.py",
+        "-v"
+      ],
+      "individual_tests": []
+    },
+    {
+      "name": "tests/test_cors_proxy.py",
+      "type": "python",
+      "status": "skipped",
+      "duration": 0.014122962951660156,
+      "command": [
+        "/Users/balkhalil/miniconda3/bin/python",
+        "-m",
+        "pytest",
+        "tests/test_cors_proxy.py",
+        "-v"
+      ],
+      "individual_tests": []
+    },
+    {
+      "name": "radar_simple_test.py",
+      "type": "python",
+      "status": "skipped",
+      "duration": 0.015075206756591797,
+      "command": [
+        "/Users/balkhalil/miniconda3/bin/python",
+        "-m",
+        "pytest",
+        "radar_simple_test.py",
+        "-v"
+      ],
+      "individual_tests": []
+    },
+    {
+      "name": "tests/test_bash_scripts.bats",
+      "type": "bash",
+      "status": "skipped",
+      "duration": 0,
+      "command": [
+        "bats",
+        "tests/test_bash_scripts.bats"
+      ],
+      "individual_tests": []
+    },
+    {
+      "name": "tests/test_refactored_bash.bats",
+      "type": "bash",
+      "status": "skipped",
+      "duration": 0,
+      "command": [
+        "bats",
+        "tests/test_refactored_bash.bats"
+      ],
+      "individual_tests": []
+    }
+  ]
+}

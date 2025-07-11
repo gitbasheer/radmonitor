@@ -484,28 +484,133 @@ async def execute_formula(
     formula_request: FormulaRequest,
     cookie: Optional[str] = Header(None, alias="X-Elastic-Cookie")
 ):
-    """Execute a formula and return results"""
-    # TODO: Implement formula to Elasticsearch query conversion
-    # For now, return mock response
-    return {
-        "success": True,
-        "formula": formula_request.formula,
-        "result": {
-            "value": 42,
-            "timestamp": datetime.now().isoformat()
-        },
-        "metadata": {
-            "execution_time": 0.123,
-            "query_generated": {
-                "size": 0,
-                "aggs": {
-                    "formula_result": {
-                        "sum": {"field": "value"}
+    """Execute formula and return results"""
+    try:
+        # First validate the formula
+        validation = await validate_formula(request, FormulaValidationRequest(formula=formula_request.formula))
+        if not validation["valid"]:
+            raise HTTPException(status_code=400, detail={
+                "error": "Invalid formula",
+                "details": validation["errors"]
+            })
+        
+        # Parse formula to ES query
+        query = {
+            "size": 0,
+            "aggs": {}
+        }
+        
+        # Apply time range filter
+        time_range = formula_request.time_range or "now-1h"
+        query["query"] = {
+            "bool": {
+                "filter": [
+                    {
+                        "range": {
+                            "@timestamp": {
+                                "gte": time_range
+                            }
+                        }
                     }
-                }
+                ]
             }
         }
-    }
+        
+        # Apply additional filters if provided
+        if formula_request.filters:
+            for field, value in formula_request.filters.items():
+                query["query"]["bool"]["filter"].append({
+                    "term": {field: value}
+                })
+        
+        # Simple parser for basic functions
+        formula_lower = formula_request.formula.lower()
+        
+        if formula_lower.startswith("sum("):
+            field = formula_request.formula[4:-1].strip()
+            query["aggs"]["result"] = {"sum": {"field": field}}
+        elif formula_lower.startswith("avg("):
+            field = formula_request.formula[4:-1].strip()
+            query["aggs"]["result"] = {"avg": {"field": field}}
+        elif formula_lower.startswith("count("):
+            # Count can be with or without field
+            content = formula_request.formula[6:-1].strip()
+            if content:
+                query["aggs"]["result"] = {"value_count": {"field": content}}
+            else:
+                query["aggs"]["result"] = {"value_count": {"field": "_id"}}
+        elif formula_lower.startswith("min("):
+            field = formula_request.formula[4:-1].strip()
+            query["aggs"]["result"] = {"min": {"field": field}}
+        elif formula_lower.startswith("max("):
+            field = formula_request.formula[4:-1].strip()
+            query["aggs"]["result"] = {"max": {"field": field}}
+        else:
+            # Complex formula - for now return error
+            raise HTTPException(status_code=400, detail={
+                "error": "Complex formulas not yet implemented",
+                "formula": formula_request.formula
+            })
+        
+        # Execute against Elasticsearch
+        start_time = time.time()
+        
+        client = get_http_client()
+        headers = {
+            "Authorization": f"ApiKey {ES_API_KEY}",
+            "Content-Type": "application/json"
+        }
+        
+        if cookie:
+            headers["Cookie"] = cookie
+        
+        response = await client.post(
+            f"{ES_URL}/traffic-*/_search",
+            headers=headers,
+            json=query,
+            timeout=30.0
+        )
+        
+        execution_time = time.time() - start_time
+        
+        if response.status_code != 200:
+            raise HTTPException(status_code=response.status_code, detail={
+                "error": "Elasticsearch query failed",
+                "details": response.text
+            })
+        
+        result_data = response.json()
+        
+        # Extract the aggregation result
+        agg_result = result_data.get("aggregations", {}).get("result", {})
+        value = agg_result.get("value", 0)
+        
+        # For count queries, ES returns the value directly
+        if "doc_count" in agg_result:
+            value = agg_result["doc_count"]
+        
+        return {
+            "success": True,
+            "formula": formula_request.formula,
+            "result": {
+                "value": value,
+                "timestamp": datetime.now().isoformat()
+            },
+            "metadata": {
+                "execution_time": round(execution_time, 3),
+                "query_generated": query,
+                "total_hits": result_data.get("hits", {}).get("total", {}).get("value", 0)
+            }
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Formula execution error: {str(e)}")
+        raise HTTPException(status_code=500, detail={
+            "error": "Formula execution failed",
+            "details": str(e)
+        })
 
 @app.post("/api/v1/formulas/validate")
 @limiter.limit("50/minute")
@@ -513,30 +618,67 @@ async def validate_formula(
     request: Request,
     validation_request: FormulaValidationRequest
 ):
-    """Validate a formula without executing it"""
-    # TODO: Implement formula validation logic
-    # For now, basic validation
-    try:
-        if not validation_request.formula:
-            raise ValueError("Formula cannot be empty")
-        
-        # Check for basic syntax
-        if validation_request.formula.count('(') != validation_request.formula.count(')'):
-            raise ValueError("Unmatched parentheses")
-        
-        return {
-            "valid": True,
-            "formula": validation_request.formula,
-            "errors": [],
-            "warnings": []
-        }
-    except ValueError as e:
-        return {
-            "valid": False,
-            "formula": validation_request.formula,
-            "errors": [str(e)],
-            "warnings": []
-        }
+    """Validate formula syntax"""
+    valid_functions = {"sum", "avg", "count", "min", "max", "if", "and", "or"}
+    errors = []
+    warnings = []
+
+    formula = validation_request.formula
+
+    # Basic validation
+    if not formula:
+        errors.append("Formula cannot be empty")
+    
+    # Check parentheses
+    if formula.count('(') != formula.count(')'):
+        errors.append("Unmatched parentheses")
+    
+    # Check for nested parentheses depth
+    max_depth = 0
+    current_depth = 0
+    for char in formula:
+        if char == '(':
+            current_depth += 1
+            max_depth = max(max_depth, current_depth)
+        elif char == ')':
+            current_depth -= 1
+            if current_depth < 0:
+                errors.append("Closing parenthesis without opening parenthesis")
+                break
+    
+    if max_depth > 10:
+        warnings.append(f"Formula has deep nesting ({max_depth} levels). Consider simplifying.")
+    
+    # Check function names
+    import re
+    functions_used = re.findall(r'(\w+)\s*\(', formula)
+    for func in functions_used:
+        if func.lower() not in valid_functions:
+            errors.append(f"Unknown function: {func}")
+    
+    # Check for common syntax errors
+    if '()' in formula:
+        errors.append("Empty parentheses found")
+    
+    # Check for invalid characters
+    invalid_chars = re.findall(r'[^a-zA-Z0-9\s\(\)\+\-\*\/\.,_=<>!&|]', formula)
+    if invalid_chars:
+        errors.append(f"Invalid characters found: {', '.join(set(invalid_chars))}")
+    
+    # Check for field references (basic validation)
+    field_refs = re.findall(r'[a-zA-Z_]\w*(?:\.[a-zA-Z_]\w*)*', formula)
+    for field in field_refs:
+        if field.lower() not in valid_functions and '.' in field:
+            # This looks like a field reference, add to context
+            if len(field.split('.')) > 5:
+                warnings.append(f"Deep field nesting in '{field}'. This may impact performance.")
+
+    return {
+        "valid": len(errors) == 0,
+        "formula": formula,
+        "errors": errors,
+        "warnings": warnings
+    }
 
 @app.post("/api/v1/formulas/natural-language")
 @limiter.limit("30/minute")
@@ -574,32 +716,72 @@ async def convert_natural_language(
 
 @app.get("/api/v1/formulas/functions")
 async def get_formula_functions():
-    """Get available formula functions"""
+    """Return available formula functions"""
     return {
         "functions": [
             {
-                "name": "count",
-                "category": "aggregation",
-                "description": "Count documents",
-                "syntax": "count([field])",
-                "examples": ["count()", "count(errors)"]
-            },
-            {
-                "name": "average",
-                "category": "aggregation",
-                "description": "Calculate average",
-                "syntax": "average(field)",
-                "examples": ["average(response_time)", "average(score)"]
-            },
-            {
                 "name": "sum",
-                "category": "aggregation",
-                "description": "Sum values",
-                "syntax": "sum(field)",
-                "examples": ["sum(revenue)", "sum(clicks)"]
+                "args": ["field"],
+                "description": "Sum numeric field values",
+                "example": "sum(event.count)",
+                "category": "aggregation"
+            },
+            {
+                "name": "avg",
+                "args": ["field"],
+                "description": "Average of numeric field values",
+                "example": "avg(response.time)",
+                "category": "aggregation"
+            },
+            {
+                "name": "count",
+                "args": [],
+                "description": "Count number of documents",
+                "example": "count()",
+                "category": "aggregation"
+            },
+            {
+                "name": "min",
+                "args": ["field"],
+                "description": "Minimum value of field",
+                "example": "min(price)",
+                "category": "aggregation"
+            },
+            {
+                "name": "max",
+                "args": ["field"],
+                "description": "Maximum value of field",
+                "example": "max(price)",
+                "category": "aggregation"
+            },
+            {
+                "name": "if",
+                "args": ["condition", "true_value", "false_value"],
+                "description": "Conditional logic",
+                "example": "if(status='error', 1, 0)",
+                "category": "logical"
+            },
+            {
+                "name": "and",
+                "args": ["condition1", "condition2"],
+                "description": "Logical AND operation",
+                "example": "and(status='active', region='US')",
+                "category": "logical"
+            },
+            {
+                "name": "or",
+                "args": ["condition1", "condition2"],
+                "description": "Logical OR operation",
+                "example": "or(status='error', status='warning')",
+                "category": "logical"
             }
         ],
-        "categories": ["aggregation", "math", "time", "comparison"]
+        "categories": {
+            "aggregation": "Functions that aggregate data across multiple documents",
+            "logical": "Functions for conditional and logical operations",
+            "math": "Mathematical operations (coming soon)",
+            "time": "Time-based calculations (coming soon)"
+        }
     }
 
 # ====================

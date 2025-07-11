@@ -5,6 +5,7 @@
 
 import { appStore } from '../stores/app-store.js';
 import { radTheme as theme } from '../theme/rad-theme.js';
+import DOMPurify from './../lib/dompurify.js';
 
 class LoadingOverlay {
   constructor() {
@@ -45,7 +46,7 @@ class LoadingOverlay {
     const { connection } = state;
     const { auth } = state;
 
-    this.overlay.innerHTML = `
+    this.overlay.innerHTML = DOMPurify.sanitize(`
       <div class="loading-content">
         <div class="loading-card">
           <div class="loading-animation">
@@ -73,7 +74,7 @@ class LoadingOverlay {
           ` : ''}
         </div>
       </div>
-    `;
+    `);
   }
 
   renderStatusItem(key, label, status) {

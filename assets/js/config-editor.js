@@ -5,6 +5,7 @@
 
 import { ConfigService } from './config-service.js';
 import TimeRangeUtils from './time-range-utils.js';
+import DOMPurify from './lib/dompurify.js';
 
 const ConfigEditor = {
     // Store current config for comparison
@@ -30,7 +31,7 @@ const ConfigEditor = {
             this.currentConfig = await ConfigService.getConfig();
 
             // Build the editor fields
-            fieldsEl.innerHTML = this.buildEditorFields(this.currentConfig);
+            fieldsEl.innerHTML = DOMPurify.sanitize(this.buildEditorFields(this.currentConfig));
 
             statusEl.textContent = '(✓) Configuration loaded';
             statusEl.style.color = '#28a745';

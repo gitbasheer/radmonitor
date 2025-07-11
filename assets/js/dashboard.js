@@ -10,36 +10,11 @@ import './stores/dom-effects.js'; // Auto-initializes DOM effects
 // Create global Dashboard instance
 const dashboard = new SimplifiedDashboard();
 
-// Initialize when DOM is ready
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', initializeDashboard);
-} else {
-  initializeDashboard();
-}
+// Dashboard initialization is now handled by main-clean.js
+// This prevents double initialization
 
-async function initializeDashboard() {
-  try {
-    console.log('🚀 Initializing RAD Monitor Dashboard...');
-    
-    // Initialize app store
-    const actions = useActions();
-    const initialized = await actions.initialize();
-    
-    if (initialized) {
-      // Initialize dashboard
-      await dashboard.init();
-      
-      // Make dashboard available globally for onclick handlers
-      window.Dashboard = dashboard;
-      
-      console.log('✅ Dashboard initialization complete');
-    } else {
-      console.log('⚠️ Dashboard initialization incomplete - authentication required');
-    }
-  } catch (error) {
-    console.error('❌ Dashboard initialization failed:', error);
-  }
-}
+// Export dashboard instance for use in main-clean.js
+window.SimplifiedDashboard = SimplifiedDashboard;
 
 // Export for use in other modules
 export { dashboard };

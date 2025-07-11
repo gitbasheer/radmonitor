@@ -1373,6 +1373,44 @@ export const DataLayer = (() => {
             logAction('PERFORMANCE_METRICS_RESET', {
                 timestamp: new Date().toISOString()
             });
+        },
+
+        // Cleanup all resources to prevent memory leaks
+        cleanup: () => {
+            logAction('DATA_LAYER_CLEANUP_START', {
+                responseCacheSize: queryState.responseCache.size,
+                parsedCacheSize: queryState.parsedCache.size,
+                activeQueriesCount: queryState.activeQueries.size,
+                listenerCounts: {
+                    stateChange: listeners.stateChange.length,
+                    searchComplete: listeners.searchComplete.length,
+                    error: listeners.error.length,
+                    actionTriggered: listeners.actionTriggered.length
+                }
+            });
+
+            // Clear all caches
+            queryState.responseCache.clear();
+            queryState.parsedCache.clear();
+            queryState.activeQueries.clear();
+            queryState.lastProcessedResults = null;
+
+            // Clear all event listeners
+            listeners.stateChange = [];
+            listeners.searchComplete = [];
+            listeners.error = [];
+            listeners.actionTriggered = [];
+
+            // Reset performance metrics
+            performanceMetrics.queryDurations = [];
+            performanceMetrics.cacheHits = 0;
+            performanceMetrics.cacheMisses = 0;
+            performanceMetrics.failedQueries = 0;
+            performanceMetrics.slowestQueryLastHour = null;
+            performanceMetrics.lastCorsHealthCheck = null;
+            performanceMetrics.corsProxyStatus = 'unknown';
+
+            console.log('🧹 DataLayer: All resources cleaned up');
         }
     };
 })();

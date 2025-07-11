@@ -6,6 +6,7 @@
 
 import { dataService } from './data-service.js';
 import './formula-builder/ui/enhanced-formula-editor.js';
+import DOMPurify from './lib/dompurify.js';
 
 // Constants
 const VALIDATION_DELAY = 500; // ms
@@ -256,7 +257,7 @@ export class FormulaEditorIntegration {
 
         // Disable button and show loading
         testBtn.disabled = true;
-        testBtn.innerHTML = '<span style="font-size: 14px;">⏳</span> Testing...';
+        testBtn.innerHTML = DOMPurify.sanitize('<span style="font-size: 14px;">⏳</span> Testing...');
 
         try {
             // First validate
@@ -283,7 +284,7 @@ export class FormulaEditorIntegration {
             if (result.success) {
                 // Show results
                 resultsEl.style.display = 'block';
-                resultsContent.innerHTML = this.formatTestResults(result);
+                resultsContent.innerHTML = DOMPurify.sanitize(this.formatTestResults(result));
                 this.updateStatus('(✓) Test successful', 'valid');
             } else {
                 throw new Error(result.error || 'Test failed');
@@ -292,12 +293,12 @@ export class FormulaEditorIntegration {
         } catch (error) {
             // Show error
             resultsEl.style.display = 'block';
-            resultsContent.innerHTML = `<strong style="color: #f44336;">Error:</strong> ${this.escapeHtml(error.message)}`;
+            resultsContent.innerHTML = DOMPurify.sanitize(`<strong style="color: #f44336;">Error:</strong> ${this.escapeHtml(error.message)}`);
             this.updateStatus(`(✗)Test failed: ${error.message}`, 'error');
         } finally {
             // Re-enable button
             testBtn.disabled = false;
-            testBtn.innerHTML = '<span style="font-size: 14px;">🧪</span> Test Formula';
+            testBtn.innerHTML = DOMPurify.sanitize('<span style="font-size: 14px;">🧪</span> Test Formula');
         }
     }
 

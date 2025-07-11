@@ -45,13 +45,40 @@ const ENDPOINTS = {
 /**
  * Get base URL based on environment
  */
-function getBaseUrl() {
-    // Check if FastAPI is available
-    if (window.FastAPIIntegration?.state?.serverAvailable) {
-        return window.FASTAPI_URL || window.API_URL || 'http://localhost:8000';
-    }
-    // Fallback to CORS proxy
-    return window.API_URL || 'http://localhost:8000';
+export function getBaseUrl() {
+    // Use configuration first, then environment variables, then defaults
+    const configUrl = config?.server?.url || config?.api?.url;
+    const envUrl = window.FASTAPI_URL || window.API_URL;
+    const defaultUrl = window.location.hostname === 'localhost' ? 'http://localhost:8000' : window.location.origin;
+
+    return configUrl || envUrl || defaultUrl;
+}
+
+/**
+ * Get API URL
+ */
+export function getApiUrl() {
+    return getBaseUrl();
+}
+
+/**
+ * Get Elasticsearch URL
+ */
+export function getElasticsearchUrl() {
+    return config?.elasticsearch?.url ||
+           config?.elasticsearchUrl ||
+           window.ELASTICSEARCH_URL ||
+           'https://usieventho-prod-usw2.es.us-west-2.aws.found.io:9243';
+}
+
+/**
+ * Get Kibana URL
+ */
+export function getKibanaUrl() {
+    return config?.kibana?.url ||
+           config?.kibanaUrl ||
+           window.KIBANA_URL ||
+           'https://usieventho-prod-usw2.kb.us-west-2.aws.found.io:9243';
 }
 
 /**
@@ -63,6 +90,14 @@ async function apiRequest(endpoint, options = {}) {
         'Content-Type': 'application/json',
         ...options.headers
     };
+
+    // Add authentication cookie if available
+    if (window.CentralizedAuth && window.CentralizedAuth.getCookie) {
+        const cookie = window.CentralizedAuth.getCookie();
+        if (cookie) {
+            headers['X-Elastic-Cookie'] = cookie;
+        }
+    }
 
     try {
         const response = await fetch(url, {
@@ -170,8 +205,8 @@ async function loadProductionConfig() {
         },
         elasticsearch: {
             directConnection: false,
-            url: window.ELASTICSEARCH_URL || 'https://usieventho-prod-usw2.es.us-west-2.aws.found.io:9243',
-            kibanaUrl: window.KIBANA_URL || 'https://usieventho-prod-usw2.kb.us-west-2.aws.found.io:9243',
+            url: getElasticsearchUrl(),
+            kibanaUrl: getKibanaUrl(),
             path: '/api/console/proxy?path=traffic-*/_search&method=POST',
             corsRequired: false
         }
@@ -345,8 +380,8 @@ function getDefaultConfig() {
         theme: 'light',
         maxEventsDisplay: 200,
         elasticCookie: null,
-        kibanaUrl: window.KIBANA_URL || 'https://usieventho-prod-usw2.kb.us-west-2.aws.found.io:9243',
-        elasticsearchUrl: window.ELASTICSEARCH_URL || 'https://usieventho-prod-usw2.es.us-west-2.aws.found.io:9243',
+        kibanaUrl: getKibanaUrl(),
+        elasticsearchUrl: getElasticsearchUrl(),
         elasticsearchPath: '/traffic-*/_search',
         corsProxyPort: 8000,
         debug: false,
@@ -886,6 +921,9 @@ export const ConfigService = {
     setPresetTimeRange,
     getCurrentConfigFromDOM,
     loadConfigurationIntoDOM,
+    getApiUrl,
+    getElasticsearchUrl,
+    getKibanaUrl,
     // Expose internals for debugging
     _debug: {
         config: () => config,

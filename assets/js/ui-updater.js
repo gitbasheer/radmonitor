@@ -4,9 +4,10 @@
  */
 
 // Import dependencies
-import { ConfigService } from './config-service.js';
+import { ConfigService, getKibanaUrl } from './config-service.js';
 import apiClient from './api-client-unified.js';
 import DataLayer from './data-layer.js';
+import DOMPurify from './lib/dompurify.js';
 
 /**
  * Update summary cards with statistics
@@ -31,7 +32,7 @@ export function updateDataTable(results) {
     const tbody = document.querySelector('table tbody');
     if (!tbody) return;
 
-    tbody.innerHTML = '';
+    tbody.innerHTML = ''; // Safe - clearing content only
 
     for (const item of results) {
         const score = item.score || 0;
@@ -67,7 +68,7 @@ export function updateDataTable(results) {
         const row = document.createElement('tr');
         // Store rad_type as data attribute for easier filtering
         row.dataset.radType = radType;
-        row.innerHTML = `
+        row.innerHTML = DOMPurify.sanitize(`
             <td><a href="${kibanaUrl}" target="_blank" class="event-link">
                 <span class="event-name">${eventId}</span>
             </a></td>
@@ -77,7 +78,7 @@ export function updateDataTable(results) {
             <td class="number">${current.toLocaleString()}</td>
             <td class="number">${baseline.toLocaleString()}</td>
             <td><span class="impact ${impact_class}">${impact}</span></td>
-        `;
+        `);
         tbody.appendChild(row);
     }
 
@@ -91,7 +92,7 @@ export function updateDataTable(results) {
  * Build Kibana URL for event
  */
 export function buildKibanaUrl(event_id) {
-    const base_url = window.KIBANA_URL || "https://usieventho-prod-usw2.kb.us-west-2.aws.found.io:9243";
+    const base_url = getKibanaUrl();
     const discover_path = "/app/discover#/";
 
     const params =
@@ -173,17 +174,17 @@ export async function updateApiStatus() {
         // Update main status message (only if no auth error is showing)
         if (statusEl) {
             if (!proxyRunning) {
-                statusEl.innerHTML = `Start CORS proxy for real-time | <a href="#" onclick="Dashboard.showApiSetupInstructions(); return false;" style="color: #333;">Instructions</a>`;
+                statusEl.innerHTML = DOMPurify.sanitize(`Start CORS proxy for real-time | <a href="#" onclick="Dashboard.showApiSetupInstructions(); return false;" style="color: #333;">Instructions</a>`);
             } else if (!hasCookie) {
-                statusEl.innerHTML = `CORS proxy ready - need cookie | <a href="#" onclick="Dashboard.setCookieForRealtime(); return false;" style="color: #333;">Set Cookie</a> | <a href="#" onclick="Dashboard.showApiSetupInstructions(); return false;" style="color: #333;">Setup</a>`;
+                statusEl.innerHTML = DOMPurify.sanitize(`CORS proxy ready - need cookie | <a href="#" onclick="Dashboard.setCookieForRealtime(); return false;" style="color: #333;">Set Cookie</a> | <a href="#" onclick="Dashboard.showApiSetupInstructions(); return false;" style="color: #333;">Setup</a>`);
             } else {
                 // We have both proxy and cookie
                 if (fastAPIWorking) {
                     // FastAPI is working, so auth is good
-                    statusEl.innerHTML = `Ready for real-time! | <a href="#" onclick="Dashboard.testApiConnection(); return false;" style="color: #333;">Test API</a> | <a href="#" onclick="Dashboard.showApiSetupInstructions(); return false;" style="color: #333;">Setup</a>`;
+                    statusEl.innerHTML = DOMPurify.sanitize(`Ready for real-time! | <a href="#" onclick="Dashboard.testApiConnection(); return false;" style="color: #333;">Test API</a> | <a href="#" onclick="Dashboard.showApiSetupInstructions(); return false;" style="color: #333;">Setup</a>`);
                 } else {
                     // Test legacy auth with timeout
-                    statusEl.innerHTML = `Testing authentication... | <a href="#" onclick="Dashboard.setCookieForRealtime(); return false;" style="color: #333;">Update Cookie</a>`;
+                    statusEl.innerHTML = DOMPurify.sanitize(`Testing authentication... | <a href="#" onclick="Dashboard.setCookieForRealtime(); return false;" style="color: #333;">Update Cookie</a>`);
 
                     // Add timeout to auth test to prevent hanging
                     const authTestPromise = apiClient.testAuthentication();
@@ -194,12 +195,12 @@ export async function updateApiStatus() {
                     try {
                         const testResult = await Promise.race([authTestPromise, timeoutPromise]);
                         if (testResult.success) {
-                            statusEl.innerHTML = `Ready for real-time! | <a href="#" onclick="Dashboard.testApiConnection(); return false;" style="color: #333;">Test API</a> | <a href="#" onclick="Dashboard.showApiSetupInstructions(); return false;" style="color: #333;">Setup</a>`;
+                            statusEl.innerHTML = DOMPurify.sanitize(`Ready for real-time! | <a href="#" onclick="Dashboard.testApiConnection(); return false;" style="color: #333;">Test API</a> | <a href="#" onclick="Dashboard.showApiSetupInstructions(); return false;" style="color: #333;">Setup</a>`);
                         } else {
-                            statusEl.innerHTML = `Cookie invalid - need valid cookie | <a href="#" onclick="Dashboard.setCookieForRealtime(); return false;" style="color: #d32f2f;">Fix Cookie</a> | <a href="#" onclick="Dashboard.showApiSetupInstructions(); return false;" style="color: #333;">Help</a>`;
+                            statusEl.innerHTML = DOMPurify.sanitize(`Cookie invalid - need valid cookie | <a href="#" onclick="Dashboard.setCookieForRealtime(); return false;" style="color: #d32f2f;">Fix Cookie</a> | <a href="#" onclick="Dashboard.showApiSetupInstructions(); return false;" style="color: #333;">Help</a>`);
                         }
                     } catch (error) {
-                        statusEl.innerHTML = `Cookie test failed | <a href="#" onclick="Dashboard.setCookieForRealtime(); return false;" style="color: #d32f2f;">Fix Cookie</a> | <a href="#" onclick="Dashboard.showApiSetupInstructions(); return false;" style="color: #333;">Help</a>`;
+                        statusEl.innerHTML = DOMPurify.sanitize(`Cookie test failed | <a href="#" onclick="Dashboard.setCookieForRealtime(); return false;" style="color: #d32f2f;">Fix Cookie</a> | <a href="#" onclick="Dashboard.showApiSetupInstructions(); return false;" style="color: #333;">Help</a>`);
                     }
                 }
             }
@@ -216,15 +217,15 @@ export async function updateApiStatus() {
 
         if (statusEl) {
             if (!hasCookie) {
-                statusEl.innerHTML = `Auto-refresh: 45 minutes | <a href="#" onclick="Dashboard.setCookieForRealtime(); return false;" style="color: #333;">Enable Real-time</a>`;
+                statusEl.innerHTML = DOMPurify.sanitize(`Auto-refresh: 45 minutes | <a href="#" onclick="Dashboard.setCookieForRealtime(); return false;" style="color: #333;">Enable Real-time</a>`);
             } else {
                 // We have a cookie
                 if (fastAPIWorking) {
                     // FastAPI is working, so auth is good
-                    statusEl.innerHTML = `Real-time enabled | <a href="#" onclick="Dashboard.testApiConnection(); return false;" style="color: #333;">Test API</a> | <a href="#" onclick="Dashboard.setCookieForRealtime(); return false;" style="color: #333;">Update Cookie</a>`;
+                    statusEl.innerHTML = DOMPurify.sanitize(`Real-time enabled | <a href="#" onclick="Dashboard.testApiConnection(); return false;" style="color: #333;">Test API</a> | <a href="#" onclick="Dashboard.setCookieForRealtime(); return false;" style="color: #333;">Update Cookie</a>`);
                 } else {
                     // Test legacy auth with timeout
-                    statusEl.innerHTML = `Testing authentication... | <a href="#" onclick="Dashboard.setCookieForRealtime(); return false;" style="color: #333;">Update Cookie</a>`;
+                    statusEl.innerHTML = DOMPurify.sanitize(`Testing authentication... | <a href="#" onclick="Dashboard.setCookieForRealtime(); return false;" style="color: #333;">Update Cookie</a>`);
 
                     // Add timeout to auth test to prevent hanging
                     const authTestPromise = apiClient.testAuthentication();
@@ -235,12 +236,12 @@ export async function updateApiStatus() {
                     try {
                         const testResult = await Promise.race([authTestPromise, timeoutPromise]);
                         if (testResult.success) {
-                            statusEl.innerHTML = `Real-time enabled | <a href="#" onclick="Dashboard.testApiConnection(); return false;" style="color: #333;">Test API</a> | <a href="#" onclick="Dashboard.setCookieForRealtime(); return false;" style="color: #333;">Update Cookie</a>`;
+                            statusEl.innerHTML = DOMPurify.sanitize(`Real-time enabled | <a href="#" onclick="Dashboard.testApiConnection(); return false;" style="color: #333;">Test API</a> | <a href="#" onclick="Dashboard.setCookieForRealtime(); return false;" style="color: #333;">Update Cookie</a>`);
                         } else {
-                            statusEl.innerHTML = `Cookie invalid - need valid cookie | <a href="#" onclick="Dashboard.setCookieForRealtime(); return false;" style="color: #d32f2f;">Fix Cookie</a>`;
+                            statusEl.innerHTML = DOMPurify.sanitize(`Cookie invalid - need valid cookie | <a href="#" onclick="Dashboard.setCookieForRealtime(); return false;" style="color: #d32f2f;">Fix Cookie</a>`);
                         }
                     } catch (error) {
-                        statusEl.innerHTML = `Cookie test failed | <a href="#" onclick="Dashboard.setCookieForRealtime(); return false;" style="color: #d32f2f;">Fix Cookie</a>`;
+                        statusEl.innerHTML = DOMPurify.sanitize(`Cookie test failed | <a href="#" onclick="Dashboard.setCookieForRealtime(); return false;" style="color: #d32f2f;">Fix Cookie</a>`);
                     }
                 }
             }
@@ -257,7 +258,7 @@ export async function updateApiStatus() {
 export function setAuthenticationError(message) {
     const statusEl = document.getElementById('refreshStatus');
     if (statusEl) {
-        statusEl.innerHTML = message;
+        statusEl.innerHTML = DOMPurify.sanitize(message);
         statusEl.dataset.authRequired = 'true';
         statusEl.dataset.authErrorTime = Date.now().toString();
     }
@@ -417,12 +418,12 @@ export function updateProxyStatusIndicator(isRunning, errorMessage = null) {
                 align-items: center;
                 justify-content: space-between;
             `;
-            banner.innerHTML = `
+            banner.innerHTML = DOMPurify.sanitize(`
                 <span>⚠️ CORS proxy is not running. Real-time data updates are unavailable.</span>
                 <a href="#" onclick="Dashboard.showApiSetupInstructions(); return false;" style="color: #856404; text-decoration: underline;">
                     Setup Instructions
                 </a>
-            `;
+            `);
 
             const container = document.querySelector('.container');
             const footer = container.querySelector('.footer-content') || container.querySelector('footer');
@@ -487,7 +488,7 @@ export function updatePerformanceWidget() {
         : 0;
 
     // Update widget content
-    widget.innerHTML = `
+    widget.innerHTML = DOMPurify.sanitize(`
         <div style="display: flex; gap: 30px;">
             <div>
                 <strong style="color: #333;">Avg Query Time:</strong>
@@ -519,7 +520,7 @@ export function updatePerformanceWidget() {
                 View Details →
             </a>
         </div>
-    `;
+    `);
 }
 
 /**
@@ -530,7 +531,7 @@ export function initializeRadTypeFilters() {
     if (!container) return;
 
     // Clear existing buttons
-    container.innerHTML = '';
+    container.innerHTML = ''; // Safe - clearing content only
 
     // Get RAD types from config
     const config = ConfigService.getConfig();

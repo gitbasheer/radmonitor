@@ -10,6 +10,7 @@
 
 import { EnhancedFormulaParser } from '../core/enhanced-ast-parser.js';
 import { FUNCTION_METADATA } from '../core/formula-functions.js';
+import DOMPurify from './../../lib/dompurify.js';
 
 // Editor configuration
 const EDITOR_CONFIG = {
@@ -82,7 +83,7 @@ export class EnhancedFormulaEditor extends HTMLElement {
   }
 
   render() {
-    this.shadowRoot.innerHTML = `
+    this.shadowRoot.innerHTML = DOMPurify.sanitize(`
       <style>
         :host {
           --editor-bg: #ffffff;
@@ -413,7 +414,7 @@ export class EnhancedFormulaEditor extends HTMLElement {
           </div>
         </div>
       </div>
-    `;
+    `);
 
     // Cache DOM elements
     this.editorInput = this.shadowRoot.querySelector('.editor-input');
@@ -646,7 +647,7 @@ export class EnhancedFormulaEditor extends HTMLElement {
     this.lastParseResult = this.parser.parse(this.value);
 
     // Update syntax highlighting
-    this.syntaxLayer.innerHTML = this.renderSyntaxHighlight();
+    this.syntaxLayer.innerHTML = DOMPurify.sanitize(this.renderSyntaxHighlight());
 
     // Update status
     const parseTime = performance.now() - startTime;
@@ -681,7 +682,7 @@ export class EnhancedFormulaEditor extends HTMLElement {
 
     // Update autocomplete UI
     if (this.suggestions.length > 0) {
-      this.autocompleteList.innerHTML = this.renderAutocomplete();
+      this.autocompleteList.innerHTML = DOMPurify.sanitize(this.renderAutocomplete());
       this.showAutocomplete();
       this.selectedSuggestion = 0;
     } else {
@@ -917,7 +918,7 @@ export class EnhancedFormulaEditor extends HTMLElement {
   // UI updates
   updateLineNumbers() {
     const lines = this.value.split('\n').length;
-    this.lineNumbers.innerHTML = this.renderLineNumbers();
+    this.lineNumbers.innerHTML = DOMPurify.sanitize(this.renderLineNumbers());
   }
 
   updateCursorPosition() {
@@ -1073,9 +1074,15 @@ export class EnhancedFormulaEditor extends HTMLElement {
   }
 
   escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
+    // Escape HTML entities without using innerHTML
+    const escapeMap = {
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#39;'
+    };
+    return text.replace(/[&<>"']/g, char => escapeMap[char]);
   }
 
   escapeRegex(text) {

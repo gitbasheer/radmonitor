@@ -17,6 +17,8 @@
     <link rel="stylesheet" href="assets/css/dashboard-antares.css">
     <!-- Formula Builder with Antares implementation -->
     <link rel="stylesheet" href="assets/css/formula-builder-antares.css">
+    <!-- Dark Theme -->
+    <link rel="stylesheet" href="assets/css/dark-theme.css">
 
     <!-- CORS Direct Override (must load FIRST to override API client) -->
     <!-- <script src="assets/js/cors-direct-override.js"></script> -->
@@ -143,6 +145,10 @@
             <div class="header">
                 <h1>RAD Traffic Health Monitor</h1>
                 <div class="header-controls">
+                    <button id="themeToggleBtn" class="ux-button ux-button--tertiary theme-toggle" onclick="toggleTheme()" title="Toggle theme">
+                        <span class="theme-icon-light">🌙</span>
+                        <span class="theme-icon-dark">☀️</span>
+                    </button>
                     <button id="howItWorksBtn" class="ux-button ux-button--tertiary" onclick="showHowItWorksModal()">How It Works</button>
                     <div class="timestamp">Last updated: <span id="lastUpdate">Never</span></div>
                 </div>
@@ -279,6 +285,27 @@
             gap: 20px;
         }
 
+        /* Theme Toggle Button */
+        .theme-toggle {
+            padding: 0.5rem !important;
+            font-size: 1.25rem !important;
+            min-width: auto !important;
+            width: 40px !important;
+            height: 40px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            border-radius: 8px !important;
+        }
+
+        body:not(.dark-theme) .theme-icon-dark {
+            display: none;
+        }
+
+        body.dark-theme .theme-icon-light {
+            display: none;
+        }
+
         /* Use ux-modal classes from uxcore-bundle.css */
         .modal {
             position: fixed;
@@ -405,6 +432,25 @@
 
     <script>
         // How It Works Modal Functions
+        // Theme Management
+        function initTheme() {
+            const savedTheme = localStorage.getItem('rad-monitor-theme');
+            if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.body.classList.add('dark-theme');
+            }
+        }
+
+        function toggleTheme() {
+            const isDark = document.body.classList.toggle('dark-theme');
+            localStorage.setItem('rad-monitor-theme', isDark ? 'dark' : 'light');
+            
+            // Dispatch event for any components that need to update
+            window.dispatchEvent(new CustomEvent('themeChanged', { detail: { isDark } }));
+        }
+
+        // Initialize theme on page load
+        document.addEventListener('DOMContentLoaded', initTheme);
+
         function showHowItWorksModal() {
             const modal = document.getElementById('howItWorksModal');
             const content = document.getElementById('howItWorksContent');

@@ -11,11 +11,23 @@ import './components/loading-overlay.js';
 import './components/auth-overlay.js';
 
 // Import existing services that we'll integrate with the store
+import { CentralizedAuth } from './centralized-auth.js';
 import { authService } from './auth-service.js';
 import { ConfigService } from './config-service.js';
 import { apiClient } from './api-client-simplified.js';
 import { dataService } from './data-service.js';
-import { dashboard } from './dashboard-simplified.js';
+import { SimplifiedDashboard } from './dashboard-simplified.js';
+import DOMPurify from './lib/dompurify.js';
+
+// Initialize centralized authentication
+window.CentralizedAuth = CentralizedAuth;
+const centralizedAuthPromise = CentralizedAuth.init().then(auth => {
+  console.log('✅ CentralizedAuth initialized', auth);
+  return auth;
+}).catch(err => {
+  console.error('❌ CentralizedAuth initialization failed:', err);
+  return null;
+});
 
 // Import config components
 import ConfigEditor from './config-editor.js';
@@ -25,6 +37,14 @@ import ConfigManager from './config-manager.js';
 import './formula-editor-integration.js';
 import './visual-formula-builder-integration.js';
 import './ai-formula-integration.js';
+
+// Import DOM effects which auto-initializes
+import './stores/dom-effects.js';
+
+// Import debug helper in development
+if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+  import('./stores/debug-helper.js').catch(console.error);
+}
 
 // Enhanced RADMonitor API with store integration
 window.RADMonitor = {
@@ -115,7 +135,7 @@ Examples:
 4. Copy its value
 5. Run: RADMonitor.setAuth("YOUR_COOKIE_VALUE")
 
-Or use: http://localhost:8000/kibana-cookie-sync.html
+Or use: ${getApiUrl()}/kibana-cookie-sync.html
 
 For testing without Kibana:
 RADMonitor.loadTestData() - Load mock data
@@ -186,7 +206,7 @@ class DashboardIntegration {
     const tableBody = document.getElementById('tableBody');
     if (!tableBody) return;
 
-    tableBody.innerHTML = events.map(event => `
+    tableBody.innerHTML = DOMPurify.sanitize(events.map(event => `
       <tr>
         <td>
           <a href="${event.kibanaUrl}" target="_blank" class="event-link">
@@ -210,7 +230,7 @@ class DashboardIntegration {
           <span class="impact ${event.impact.toLowerCase()}">${event.impact}</span>
         </td>
       </tr>
-    `).join('');
+    `).join(''));
   }
 
   updateFilters(filters) {
@@ -255,28 +275,55 @@ class DashboardIntegration {
   }
 }
 
-// Initialize everything when DOM is ready
+// Single initialization point
+let initialized = false;
+let dashboardInstance = null;
+let dashboardIntegration = null;
+
 async function initialize() {
+  // Prevent double initialization
+  if (initialized) {
+    console.log('⚠️ App already initialized, skipping...');
+    return;
+  }
+  initialized = true;
+
   console.log('🚀 RAD Monitor v3.0 (Clean Vanilla + Zustand)');
   console.log('💡 Type RADMonitor.help() for available commands');
 
   try {
-    // Initialize dashboard integration
-    new DashboardIntegration();
-
-    // Make essential modules globally available
-    window.dashboard = dashboard;
-    window.Dashboard = dashboard;
-    window.ConfigEditor = ConfigEditor;
-    window.ConfigManager = ConfigManager;
-    window.ConfigService = ConfigService;
-
+    // Wait for CentralizedAuth to be ready first
+    console.log('⏳ Waiting for CentralizedAuth to initialize...');
+    await centralizedAuthPromise;
+    
     // Start the app initialization
     const { initialize: initApp } = useActions();
-    await initApp();
-
+    const success = await initApp();
+    
+    if (success) {
+      // Create dashboard instance only after successful initialization
+      dashboardInstance = new SimplifiedDashboard();
+      await dashboardInstance.init();
+      
+      // Initialize dashboard integration for store updates
+      dashboardIntegration = new DashboardIntegration();
+      
+      // Make essential modules globally available
+      window.dashboard = dashboardInstance;
+      window.Dashboard = dashboardInstance;
+      window.ConfigEditor = ConfigEditor;
+      window.ConfigManager = ConfigManager;
+      window.ConfigService = ConfigService;
+      
+      // Update RADMonitor API
+      window.RADMonitor.refresh = () => dashboardInstance.refresh();
+      
+      console.log('✅ Dashboard initialization complete');
+    } else {
+      console.log('⚠️ Initialization incomplete - authentication required');
+    }
   } catch (error) {
-    console.error('(✗) Failed to initialize:', error);
+    console.error('❌ Failed to initialize:', error);
   }
 }
 
@@ -290,13 +337,4 @@ if (document.readyState === 'loading') {
 // Development mode helpers
 if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
   console.log('🔧 Development mode active');
-
-  // Auto-load test data after a delay if not authenticated
-  setTimeout(() => {
-    const state = appStore.getState();
-    if (!state.auth.isAuthenticated && state.data.events.length === 0) {
-      console.log('🧪 Loading test data for development');
-      window.RADMonitor.loadTestData();
-    }
-  }, 3000);
 }

@@ -8,9 +8,9 @@ import { authService } from './auth-service.js';
 import { dataService } from './data-service.js';
 import { apiClient } from './api-client-simplified.js';
 import { EventEmitter } from './event-emitter.js';
-import { renderAuthPrompt } from './components/auth-prompt.js';
 import { connectionManager } from './connection-status-manager.js';
 import './types.js'; // Import type definitions
+import DOMPurify from './lib/dompurify.js';
 
 export class SimplifiedDashboard {
     constructor() {
@@ -333,7 +333,7 @@ export class SimplifiedDashboard {
     showError(message) {
         const statusEl = document.getElementById('refreshStatus');
         if (statusEl) {
-            statusEl.innerHTML = `<span style="color: #d32f2f;">(✗) ${message}</span>`;
+            statusEl.innerHTML = DOMPurify.sanitize(`<span style="color: #d32f2f;">(✗) ${message}</span>`);
         }
     }
 
@@ -348,16 +348,17 @@ export class SimplifiedDashboard {
     }
 
     /**
-     * Show authentication prompt using centralized component
+     * Show authentication prompt using app store
      */
     showAuthPrompt() {
-        const container = document.getElementById('events-container') || document.querySelector('.grid-container');
-        if (container) {
-            renderAuthPrompt(container);
+        // Use the app store to show auth prompt
+        if (window.appStore) {
+            const { showAuthPrompt } = window.appStore.getState().actions;
+            showAuthPrompt();
         }
 
         // Also update the status
-        this.showError('Authentication required - see instructions below');
+        this.showError('Authentication required');
     }
 
     /**
@@ -412,7 +413,8 @@ export class SimplifiedDashboard {
             }
 
                             // Now test the actual connection
-                const success = await apiClient.testConnection();
+                const result = await apiClient.testConnection();
+                const success = result.success || result === true;
 
                 if (success) {
                     console.log('(✓)API connection successful');
@@ -612,7 +614,7 @@ class DashboardTable {
             const fragment = document.createDocumentFragment();
 
             // Clear existing rows
-            this.tbody.innerHTML = '';
+            this.tbody.innerHTML = ''; // Safe - clearing content only
 
             // Render rows
             data.forEach(item => {
@@ -637,7 +639,7 @@ class DashboardTable {
         row.dataset.eventId = item.id;
         row.dataset.radType = item.radType || item.rad_type;
 
-        row.innerHTML = `
+        row.innerHTML = DOMPurify.sanitize(`
             <td>
                 <a href="${item.kibanaUrl || item.kibana_url}" target="_blank" class="event-link">
                     <span class="event-name">${item.name}</span>
@@ -665,7 +667,7 @@ class DashboardTable {
                     ${item.impact}
                 </span>
             </td>
-        `;
+        `);
 
         return row;
     }

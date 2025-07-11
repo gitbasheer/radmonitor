@@ -5,6 +5,7 @@
 
 import { appStore } from '../stores/app-store.js';
 import { radTheme as theme } from '../theme/rad-theme.js';
+import DOMPurify from './../lib/dompurify.js';
 
 class AuthOverlay {
   constructor() {
@@ -32,22 +33,30 @@ class AuthOverlay {
   }
 
   subscribeToStore() {
-    setTimeout(() => {
-      this.unsubscribe = appStore.subscribe((state) => {
-        if (state.ui.showAuthPrompt) {
-          this.updateContent(state);
-          this.show();
-        } else {
-          this.hide();
-        }
-      });
-    }, 100);
+    // Subscribe immediately
+    this.unsubscribe = appStore.subscribe((state) => {
+      if (state.ui.showAuthPrompt) {
+        this.updateContent(state);
+        this.show();
+      } else {
+        this.hide();
+      }
+    });
+    
+    // Also check current state immediately
+    const currentState = appStore.getState();
+    if (currentState.ui.showAuthPrompt) {
+      this.updateContent(currentState);
+      this.show();
+    } else {
+      this.hide();
+    }
   }
 
   updateContent(state) {
     const { error } = state.auth;
 
-    this.overlay.innerHTML = `
+    this.overlay.innerHTML = DOMPurify.sanitize(`
       <div class="ux-modal__dialog ux-modal__dialog--medium">
         <div class="ux-modal__content">
           <div class="ux-modal__header">
@@ -119,7 +128,7 @@ class AuthOverlay {
           </div>
         </div>
       </div>
-    `;
+    `);
   }
 
   addEventListeners() {
@@ -214,6 +223,7 @@ class AuthOverlay {
   }
 
   show() {
+    console.log('🔓 AuthOverlay.show() called');
     if (this.overlay) {
       this.overlay.style.display = 'flex';
       // Force reflow to ensure the display change is applied before opacity transition
@@ -231,6 +241,7 @@ class AuthOverlay {
   }
 
   hide() {
+    console.log('🔒 AuthOverlay.hide() called');
     if (this.overlay) {
       this.overlay.style.opacity = '0';
       // Wait for transition to complete before hiding

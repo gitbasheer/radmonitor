@@ -156,14 +156,15 @@ assets/js/
   - Baseline comparisons
   - Custom formula queries
 
-#### Redis Cache
-- **URL**: Configured via REDIS_URL
+#### Redis Cache (Optional)
+- **URL**: Configured via REDIS_URL (optional - leave empty to use local cache)
 - **TTL**: 5 minutes (configurable)
 - **Usage**:
   - Query result caching
   - Session management
   - Rate limit tracking
   - WebSocket state
+- **Fallback**: In-memory cache when Redis is not available
 
 ### 4. Configuration System
 
@@ -182,7 +183,7 @@ config/
 API_URL=https://api.example.com
 ELASTICSEARCH_URL=https://es.example.com
 KIBANA_URL=https://kb.example.com
-REDIS_URL=redis://localhost:6379
+REDIS_URL=redis://localhost:6379  # Optional - leave empty for local cache
 
 # Security
 SECRET_KEY=<secure-random-key>
@@ -268,7 +269,7 @@ Execute → Return results → Update visualization
 - **Language**: Python 3.8+
 - **Framework**: FastAPI 0.104+
 - **Server**: Uvicorn with uvloop
-- **Cache**: Redis with aioredis
+- **Cache**: Redis with aioredis (optional) / In-memory fallback
 - **Monitoring**: Prometheus metrics
 - **Logging**: structlog (JSON format)
 
@@ -486,8 +487,8 @@ kubectl apply -f k8s/
 ## Performance & Scaling
 
 ### 1. Caching Strategy
-- **Redis Cache**: 5-minute TTL for queries
-- **Local Cache**: In-memory fallback
+- **Redis Cache**: 5-minute TTL for queries (when Redis is configured)
+- **Local Cache**: In-memory cache (default when Redis not available)
 - **CDN Cache**: Static assets cached globally
 - **Browser Cache**: Aggressive caching headers
 

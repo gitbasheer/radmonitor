@@ -5,6 +5,7 @@
  */
 
 import { cryptoUtils } from './crypto-utils.js';
+import { getApiUrl } from './config-service.js';
 
 export const CentralizedAuth = (() => {
     'use strict';
@@ -15,6 +16,59 @@ export const CentralizedAuth = (() => {
 
     // Legacy keys for migration
     const LEGACY_KEYS = ['elasticCookie', 'elastic_cookie'];
+    
+    /**
+     * Parse cookie input from various formats
+     * Handles:
+     * - Raw cookie: Fe26.2**...
+     * - Cookie with sid prefix: sid=Fe26.2**...
+     * - JSON with cookie field: {"cookie": "Fe26.2**..."}
+     * - JSON with nested structure: {"data": {"cookie": "..."}}
+     */
+    function parseCookieInput(input) {
+        if (!input || typeof input !== 'string') {
+            throw new Error('Invalid input: must be a non-empty string');
+        }
+        
+        const trimmed = input.trim();
+        
+        // Try to parse as JSON first
+        try {
+            const parsed = JSON.parse(trimmed);
+            
+            // Look for cookie in various JSON structures
+            if (parsed.cookie) {
+                return parsed.cookie;
+            }
+            if (parsed.data && parsed.data.cookie) {
+                return parsed.data.cookie;
+            }
+            if (parsed.elasticCookie) {
+                return parsed.elasticCookie;
+            }
+            if (parsed.elastic_cookie) {
+                return parsed.elastic_cookie;
+            }
+            
+            // If JSON but no cookie field, throw error
+            throw new Error('JSON input does not contain a cookie field');
+        } catch (jsonError) {
+            // Not JSON, treat as raw cookie
+            // Remove any surrounding quotes if present
+            let cookie = trimmed;
+            if ((cookie.startsWith('"') && cookie.endsWith('"')) || 
+                (cookie.startsWith("'") && cookie.endsWith("'"))) {
+                cookie = cookie.slice(1, -1);
+            }
+            
+            // Validate it looks like a cookie
+            if (!cookie.startsWith('Fe26.2') && !cookie.startsWith('sid=')) {
+                throw new Error('Invalid cookie format. Cookie should start with "Fe26.2**" or "sid=Fe26.2**"');
+            }
+            
+            return cookie;
+        }
+    }
 
     let currentAuth = null;
     let authCheckTimer = null;
@@ -46,12 +100,32 @@ export const CentralizedAuth = (() => {
     async function migrateLegacyKeys() {
         for (const legacyKey of LEGACY_KEYS) {
             try {
-                const legacyData = localStorage.getItem(legacyKey);
+const legacyData = localStorage.getItem(legacyKey);
                 if (legacyData) {
-                    const parsed = JSON.parse(legacyData);
-
-                    // Check if it's a valid cookie format
-                    if (parsed.cookie && parsed.expires) {
+                    let parsed;
+                    let cookieValue;
+                    
+                    try {
+                        parsed = JSON.parse(legacyData);
+                        // Check if it's a valid cookie format
+                        if (parsed.cookie && parsed.expires) {
+                            cookieValue = parsed.cookie;
+                        }
+                    } catch (jsonError) {
+                        // It might be a raw cookie value
+                        if (legacyData.startsWith('Fe26.2') || legacyData.startsWith('sid=')) {
+                            cookieValue = legacyData;
+                            // Create minimal parsed structure for migration
+                            parsed = {
+                                cookie: cookieValue,
+                                expires: new Date(Date.now() + COOKIE_LIFESPAN).toISOString()
+                            };
+                        } else {
+                            throw jsonError; // Not a valid format
+                        }
+                    }
+                    
+                    if (cookieValue) {
                         const expiresAt = new Date(parsed.expires);
                         if (expiresAt > new Date()) {
                             // Valid legacy cookie found - migrate it
@@ -100,17 +174,18 @@ export const CentralizedAuth = (() => {
     /**
      * Set cookie (from user input)
      */
-    async function setCookie(cookieValue, options = {}) {
-        const cookie = cookieValue.trim();
-
-        // Validate format
-        if (!cookie.startsWith('Fe26.2') && !cookie.startsWith('sid=')) {
-            throw new Error('Invalid cookie format');
+async function setCookie(cookieValue, options = {}) {
+        // Use the centralized parser
+        let parsedCookie;
+        try {
+            parsedCookie = parseCookieInput(cookieValue);
+        } catch (parseError) {
+            throw new Error(`Cookie parsing failed: ${parseError.message}`);
         }
 
         // Create auth object
         const auth = {
-            cookie: cookie,
+cookie: parsedCookie,
             createdAt: new Date().toISOString(),
             expiresAt: new Date(Date.now() + COOKIE_LIFESPAN).toISOString(),
             source: options.source || 'user-input',
@@ -119,7 +194,7 @@ export const CentralizedAuth = (() => {
 
         // Validate by making a test request
         if (!options.skipValidation) {
-            const isValid = await validateCookie(cookie);
+const isValid = await validateCookie(parsedCookie);
             if (!isValid) {
                 throw new Error('Could not verify cookie with the server - please check server is running and cookie is valid');
             }
@@ -205,7 +280,7 @@ export const CentralizedAuth = (() => {
 
             if (isLocalhost) {
                 // Use auth status endpoint for validation - simpler and more appropriate
-                const apiUrl = window.API_URL || window.FASTAPI_URL || 'http://localhost:8000';
+                const apiUrl = getApiUrl();
                 response = await fetch(`${apiUrl}/api/v1/auth/status`, {
                     method: 'GET',
                     headers: {
@@ -384,10 +459,26 @@ export const CentralizedAuth = (() => {
         });
     }
 
+    /**
+     * Get cookie formatted for API requests
+     * Ensures it has the 'sid=' prefix if needed
+     */
+    function getCookieForRequest() {
+        const cookie = getCookie();
+        if (!cookie) return null;
+        
+        // Add sid= prefix if not present
+        if (cookie.startsWith('Fe26.2')) {
+            return `sid=${cookie}`;
+        }
+        return cookie;
+    }
+    
     // Public API
     return {
         init,
         getCookie,
+        getCookieForRequest,
         setCookie,
         deleteCookie,
         clearAuth,
@@ -395,6 +486,7 @@ export const CentralizedAuth = (() => {
         exportAuth,
         importAuth,
         migrateLegacyKeys,
+        parseCookieInput, // Export for use by other modules
 
         // Events to listen for:
         // - authUpdated: Cookie was updated

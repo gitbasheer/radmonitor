@@ -68,15 +68,49 @@ export const appStore = createStore((set, get) => ({
 
       try {
         // Check centralized auth first
+        let authStatus = null;
         let storedCookie = null;
+        
         if (window.CentralizedAuth) {
-            storedCookie = window.CentralizedAuth.getCookie();
-        } else {
-            // Fallback to localStorage
-            storedCookie = localStorage.getItem('elastic_cookie');
+            authStatus = window.CentralizedAuth.getStatus();
+            console.log('🔍 CentralizedAuth status:', authStatus);
+            
+            if (authStatus.hasAuth && !authStatus.expired) {
+                storedCookie = window.CentralizedAuth.getCookie();
+                console.log('🔑 Got cookie from CentralizedAuth');
+            }
+        }
+        
+        // If no cookie from CentralizedAuth, check other sources
+        if (!storedCookie) {
+            console.log('⚠️ No cookie from CentralizedAuth, checking other sources...');
+            
+            // Try multiple storage keys
+            const possibleKeys = ['elastic_cookie', 'elasticCookie', 'rad_monitor_auth'];
+            for (const key of possibleKeys) {
+                const value = localStorage.getItem(key);
+                if (value) {
+                    try {
+                        // Try to parse if it's JSON
+                        const parsed = JSON.parse(value);
+                        if (parsed.cookie) {
+                            storedCookie = parsed.cookie;
+                            break;
+                        }
+                    } catch {
+                        // Not JSON, use as-is if it looks like a cookie
+                        if (value.startsWith('sid=') || value.startsWith('Fe26.2')) {
+                            storedCookie = value;
+                            break;
+                        }
+                    }
+                }
+            }
         }
 
         if (storedCookie) {
+          console.log('✅ Found stored cookie, authenticating...');
+          
           // Ensure minimum time has passed to prevent flash
           const elapsed = Date.now() - startTime;
           if (elapsed < 300) {
@@ -93,6 +127,7 @@ export const appStore = createStore((set, get) => ({
             },
             ui: { ...state.ui, showAuthPrompt: false }
           }));
+          console.log('🔐 Auth state updated: authenticated=true, showAuthPrompt=false');
           return true;
         }
 
@@ -137,6 +172,7 @@ export const appStore = createStore((set, get) => ({
           await new Promise(resolve => setTimeout(resolve, 300 - elapsed));
         }
 
+        console.log('⚠️ No authentication found, showing auth prompt');
         set((state) => ({
           auth: {
             ...state.auth,

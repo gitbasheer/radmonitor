@@ -30,33 +30,48 @@ class CryptoUtils {
             
             request.onsuccess = async (event) => {
                 const db = event.target.result;
-                const transaction = db.transaction([storeName], 'readwrite');
-                const store = transaction.objectStore(storeName);
                 
-                const getRequest = store.get('encryptionKey');
-                
-                getRequest.onsuccess = async () => {
-                    let key = getRequest.result;
+                try {
+                    // First, check if key exists
+                    const readTransaction = db.transaction([storeName], 'readonly');
+                    const readStore = readTransaction.objectStore(storeName);
+                    const getRequest = readStore.get('encryptionKey');
                     
-                    if (!key) {
-                        // Generate new key
-                        key = await crypto.subtle.generateKey(
-                            {
-                                name: 'AES-GCM',
-                                length: 256
-                            },
-                            true,
-                            ['encrypt', 'decrypt']
-                        );
+                    getRequest.onsuccess = async () => {
+                        let key = getRequest.result;
                         
-                        // Store the key
-                        store.put(key, 'encryptionKey');
-                    }
+                        if (!key) {
+                            // Generate new key
+                            key = await crypto.subtle.generateKey(
+                                {
+                                    name: 'AES-GCM',
+                                    length: 256
+                                },
+                                true,
+                                ['encrypt', 'decrypt']
+                            );
+                            
+                            // Store the key in a separate transaction
+                            const writeTransaction = db.transaction([storeName], 'readwrite');
+                            const writeStore = writeTransaction.objectStore(storeName);
+                            const putRequest = writeStore.put(key, 'encryptionKey');
+                            
+                            putRequest.onsuccess = () => {
+                                resolve(key);
+                            };
+                            
+                            putRequest.onerror = () => {
+                                reject(putRequest.error);
+                            };
+                        } else {
+                            resolve(key);
+                        }
+                    };
                     
-                    resolve(key);
-                };
-                
-                getRequest.onerror = () => reject(getRequest.error);
+                    getRequest.onerror = () => reject(getRequest.error);
+                } catch (error) {
+                    reject(error);
+                }
             };
         });
     }

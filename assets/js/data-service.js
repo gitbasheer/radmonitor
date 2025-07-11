@@ -158,13 +158,19 @@ export class DataService extends EventEmitter {
             }
 
             // Update state with backend-processed data
+            console.log('📊 Dashboard data received:', result);
+            const processedData = result.data || [];
+            const stats = result.stats || this.calculateStats(processedData);
+            
             this.setState({
-                data: result.data || [],
-                stats: result.stats || this.calculateStats(result.data),
+                data: processedData,
+                stats: stats,
                 lastUpdate: new Date().toISOString(),
                 loading: false,
                 error: null
             });
+            
+            console.log('📊 State updated with', processedData.length, 'events');
 
             // Emit update event
             this.emit('dataUpdated', this.state);

@@ -1,0 +1,91 @@
+app_name: RAD Monitor
+environment: development
+debug: true
+elasticsearch:
+  url: !!python/object:pydantic.networks.HttpUrl
+    _url: !!python/object/new:pydantic_core._pydantic_core.Url
+    - https://usieventho-prod-usw2.es.us-west-2.aws.found.io:9243/
+  cookie: null
+  index_pattern: traffic-*
+  timeout: 30
+  verify_ssl: true
+kibana:
+  url: !!python/object:pydantic.networks.HttpUrl
+    _url: !!python/object/new:pydantic_core._pydantic_core.Url
+    - https://usieventho-prod-usw2.kb.us-west-2.aws.found.io:9243/
+  discover_path: /app/discover#/
+  search_path: /api/console/proxy?path=traffic-*/_search&method=POST
+processing:
+  baseline_start: '2025-06-01'
+  baseline_end: '2025-06-09'
+  current_time_range: now-12h
+  high_volume_threshold: 1000
+  medium_volume_threshold: 100
+  critical_threshold: -80
+  warning_threshold: -50
+  min_daily_volume: 100
+dashboard:
+  refresh_interval: 300
+  max_events_display: 200
+  enable_websocket: true
+  theme: light
+  console_chart_width: 30
+  console_top_results: 20
+cors_proxy:
+  enabled: true
+  port: 8889
+  allowed_origins:
+  - http://localhost:3000
+  - http://localhost:8000
+  proxy_timeout: 30
+proxy:
+  type: netlify
+  enabled: false
+  url: null
+  timeout: 30000
+server:
+  host: 0.0.0.0
+  port: 8000
+  workers: 1
+  reload: true
+  log_level: INFO
+security:
+  secret_key: !!python/object:pydantic.types.SecretStr
+    _secret_value: ''
+  algorithm: HS256
+  access_token_expire_minutes: 30
+  allowed_hosts:
+  - localhost
+  - 127.0.0.1
+  enable_docs: true
+  require_auth: false
+redis:
+  enabled: false
+  url: redis://localhost:6379
+  ttl: 300
+  max_connections: 10
+rad_types:
+  venture_feed:
+    pattern: pandc.vnext.recommendations.feed.feed*
+    display_name: Venture Feed
+    enabled: true
+    color: '#4CAF50'
+    description: Venture recommendations feed
+  venture_metrics:
+    pattern: pandc.vnext.recommendations.metricsevolved*
+    display_name: Venture Metrics
+    enabled: true
+    color: '#9C27B0'
+    description: Venture metrics evolved events
+  cart_recommendations:
+    pattern: pandc.vnext.recommendations.cart*
+    display_name: Cart Recommendations
+    enabled: false
+    color: '#2196F3'
+    description: Shopping cart recommendations
+  product_recommendations:
+    pattern: pandc.vnext.recommendations.product*
+    display_name: Product Recommendations
+    enabled: false
+    color: '#FF9800'
+    description: Product page recommendations

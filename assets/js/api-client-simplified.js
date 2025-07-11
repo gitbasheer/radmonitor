@@ -4,6 +4,7 @@
  */
 
 import { authService } from './auth-service.js';
+import { getApiUrl } from './config-service.js';
 
 export class SimplifiedAPIClient {
     constructor() {
@@ -337,7 +338,7 @@ export class SimplifiedAPIClient {
             // Simple health check instead of full query
             // Note: health endpoint is at root, not under /api/v1
             const baseUrl = window.location.hostname === 'localhost'
-                ? (window.API_URL || window.FASTAPI_URL || 'http://localhost:8000')
+                ? getApiUrl()
                 : '';
             const url = `${baseUrl}/health`;
 
@@ -357,7 +358,6 @@ export class SimplifiedAPIClient {
             const success = data.status === 'healthy' || data.status === 'degraded';
 
             if (success) {
-                console.log('(✓)API connection successful:', data.message);
                 if (data.elasticsearch_status === 'disconnected') {
                     console.warn('⚠️ Elasticsearch is disconnected');
                 }
@@ -365,7 +365,7 @@ export class SimplifiedAPIClient {
                 console.log('(✗) API connection failed:', data.message);
             }
 
-            return success;
+            return { success, message: data.message };
         } catch (error) {
             console.error('(✗) Connection test error:', error);
             return false;

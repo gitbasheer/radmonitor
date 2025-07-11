@@ -1,0 +1,29 @@
+# Docker Compose override for development
+# Usage: docker-compose -f docker-compose.yml -f docker-compose.dev.yml up
+
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    environment:
+      - ENVIRONMENT=development
+      - DEBUG=true
+      - SERVER__RELOAD=true
+      - SERVER__LOG_LEVEL=DEBUG
+    volumes:
+      # Mount source code for hot reload
+      - ./bin:/app/bin
+      - ./config:/app/config
+      - ./assets:/app/assets
+      - ./index.html:/app/index.html
+      - ./tests:/app/tests
+    ports:
+      - "8000:8000"
+    command: python -m uvicorn bin.server:app --host 0.0.0.0 --port 8000 --reload
+
+  # Redis enabled by default in dev
+  redis:
+    profiles: []  # Remove profile to always start in dev

@@ -35,50 +35,53 @@ from pybreaker import CircuitBreaker
 import structlog
 from dotenv import load_dotenv
 from prometheus_client import Counter, Histogram, Gauge, generate_latest
-import aioredis
 from asyncio import Lock
 import hashlib
+
+# Try to import aioredis, but make it optional
+try:
+    import aioredis
+    HAS_REDIS = True
+except ImportError:
+    HAS_REDIS = False
+    logger = None  # Will be initialized later
 
 # Load environment variables
 load_dotenv()
 
 # ====================
-# Environment Validation - Must happen first!
+# Configuration Loading - Must happen first!
 # ====================
 
-# Add the parent directory to the path to import env_validator
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+# Add the parent directory to the path to import config
+parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, parent_dir)
 
 try:
-    from env_validator import validate_environment, EnvValidationError
+    from config import get_config
+    
+    # Load configuration
+    config = get_config()
+    print("✅ Configuration loaded successfully\n")
 
-    # Validate environment variables at startup
-    validated_env = validate_environment()
-    print("✅ Environment validation completed successfully\n")
-
-except EnvValidationError as e:
-    print(f"❌ Environment validation failed:\n{e}", file=sys.stderr)
-    sys.exit(1)
 except Exception as e:
-    print(f"❌ Failed to validate environment: {e}", file=sys.stderr)
+    print(f"❌ Failed to load configuration: {e}", file=sys.stderr)
     sys.exit(1)
 
 # ====================
 # Security Configuration
 # ====================
 
-# Security settings - Now using validated values
-SECRET_KEY = validated_env.get("SECRET_KEY", secrets.token_urlsafe(32))
+# Security settings - Now using config values
+SECRET_KEY = config.security.secret_key or secrets.token_urlsafe(32)
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = validated_env.get("ACCESS_TOKEN_EXPIRE_MINUTES", 30)
+ACCESS_TOKEN_EXPIRE_MINUTES = config.security.access_token_expire_minutes
 
-# CORS settings - Using validated list
-ALLOWED_ORIGINS = validated_env.get("ALLOWED_ORIGINS", ["http://localhost:3000", "http://localhost:8000"])
-ALLOWED_ORIGINS = [origin.strip() for origin in ALLOWED_ORIGINS if origin.strip()]
+# CORS settings - Using config
+ALLOWED_ORIGINS = config.cors_proxy.allowed_origins if hasattr(config, 'cors_proxy') else ["http://localhost:3000", "http://localhost:8000"]
 
-# Trusted hosts - Using validated list
-ALLOWED_HOSTS = validated_env.get("ALLOWED_HOSTS", ["localhost", "127.0.0.1"])
-ALLOWED_HOSTS = [host.strip() for host in ALLOWED_HOSTS if host.strip()]
+# Trusted hosts - Using config
+ALLOWED_HOSTS = config.security.allowed_hosts
 
 # ====================
 # Local Settings Implementation
@@ -116,11 +119,9 @@ class Settings:
         else:
             raise RuntimeError(f"Settings file not found: {config_path}")
 
-                # Apply validated environment variable overrides
-        self.elasticsearch_url = validated_env.get('ELASTICSEARCH_URL',
-            self._settings.get('elasticsearch', {}).get('url'))
-        self.kibana_url = validated_env.get('KIBANA_URL',
-            self._settings.get('kibana', {}).get('url'))
+        # Apply config values
+        self.elasticsearch_url = config.elasticsearch.url
+        self.kibana_url = config.kibana.url
 
     def _get_url_setting(self, env_var: str, default: str) -> str:
         """Get and validate URL settings"""
@@ -151,7 +152,7 @@ def get_settings():
 # ====================
 
 # Configure structured logging for production
-log_level = validated_env.get("LOG_LEVEL", "INFO")
+log_level = config.server.log_level
 structlog.configure(
     processors=[
         structlog.stdlib.filter_by_level,
@@ -162,7 +163,7 @@ structlog.configure(
         structlog.processors.StackInfoRenderer(),
         structlog.processors.format_exc_info,
         structlog.processors.UnicodeDecoder(),
-        structlog.processors.JSONRenderer() if validated_env.get("ENVIRONMENT") == "production" else structlog.dev.ConsoleRenderer()
+        structlog.processors.JSONRenderer() if config.environment == "production" else structlog.dev.ConsoleRenderer()
     ],
     context_class=dict,
     logger_factory=structlog.stdlib.LoggerFactory(),
@@ -189,9 +190,9 @@ elasticsearch_errors = Counter('rad_monitor_elasticsearch_errors_total', 'Elasti
 
 class DashboardConfig(BaseModel):
     """Dashboard configuration with strict validation"""
-    baseline_start: constr(regex=r'^\d{4}-\d{2}-\d{2}$') = Field(..., description="Baseline start date (YYYY-MM-DD)")
-    baseline_end: constr(regex=r'^\d{4}-\d{2}-\d{2}$') = Field(..., description="Baseline end date (YYYY-MM-DD)")
-    time_range: constr(regex=r'^(now-\d+[hdwM]|last_\d+_days)$') = Field(default="now-12h", description="Valid time range")
+    baseline_start: constr(pattern=r'^\d{4}-\d{2}-\d{2}$') = Field(..., description="Baseline start date (YYYY-MM-DD)")
+    baseline_end: constr(pattern=r'^\d{4}-\d{2}-\d{2}$') = Field(..., description="Baseline end date (YYYY-MM-DD)")
+    time_range: constr(pattern=r'^(now-\d+[hdwM]|last_\d+_days)$') = Field(default="now-12h", description="Valid time range")
     critical_threshold: int = Field(default=-80, le=0, ge=-100, description="Critical threshold (-100 to 0)")
     warning_threshold: int = Field(default=-50, le=0, ge=-100, description="Warning threshold (-100 to 0)")
     high_volume_threshold: int = Field(default=1000, ge=1, le=1000000, description="High volume threshold")
@@ -242,7 +243,7 @@ class ElasticsearchQuery(BaseModel):
 
 class WebSocketMessage(BaseModel):
     """Validated WebSocket message"""
-    type: constr(regex=r'^(ping|subscribe|unsubscribe|query)$')
+    type: constr(pattern=r'^(ping|subscribe|unsubscribe|query)$')
     data: Dict[str, Any]
     timestamp: Optional[str] = None
 
@@ -261,7 +262,7 @@ security = HTTPBearer(auto_error=False)
 
 async def verify_token(credentials: Optional[HTTPAuthorizationCredentials] = Depends(security)):
     """Verify authentication token"""
-    if validated_env.get("DISABLE_AUTH", False):
+    if not config.security.require_auth or config.security.disable_auth:
         # Allow disabling auth for development only
         return {"user": "dev", "roles": ["admin"]}
 
@@ -274,7 +275,7 @@ async def verify_token(credentials: Optional[HTTPAuthorizationCredentials] = Dep
 
     # In production, implement proper JWT validation here
     # For now, validate against environment variable
-    valid_tokens = validated_env.get("API_TOKENS", [])
+    valid_tokens = config.security.api_tokens or []
     valid_tokens = [token.strip() for token in valid_tokens if token.strip()]
 
     if not valid_tokens or credentials.credentials not in valid_tokens:
@@ -301,7 +302,17 @@ class AppState:
 
     async def init_redis(self):
         """Initialize Redis connection"""
-        redis_url = validated_env.get("REDIS_URL", "redis://localhost:6379")
+        redis_url = config.redis.url
+        
+        # Skip Redis if URL not provided or aioredis not available
+        if not redis_url:
+            logger.info("Redis URL not provided, using local cache only")
+            return
+            
+        if not HAS_REDIS:
+            logger.warning("aioredis not installed, using local cache only")
+            return
+            
         try:
             self.redis_client = await aioredis.create_redis_pool(redis_url)
             logger.info("Redis connection established")
@@ -394,7 +405,7 @@ class HTTPClientPool:
             self.client = httpx.AsyncClient(
                 timeout=httpx.Timeout(30.0),
                 limits=httpx.Limits(max_keepalive_connections=20, max_connections=100),
-                verify=validated_env.get("VERIFY_SSL", True)
+                verify=config.security.verify_ssl
             )
         return self.client
 
@@ -413,7 +424,7 @@ async def lifespan(app: FastAPI):
     """Application lifespan management"""
         # Startup
     logger.info("Starting RAD Monitor Production Server",
-                environment=validated_env.get("ENVIRONMENT", "production"))
+                environment=config.environment)
 
     # Initialize Redis
     await app_state.init_redis()
@@ -454,8 +465,8 @@ app = FastAPI(
     description="Production-ready server with security and monitoring",
     version="3.0.0",
     lifespan=lifespan,
-    docs_url="/docs" if validated_env.get("ENABLE_DOCS", False) else None,
-    redoc_url="/redoc" if validated_env.get("ENABLE_DOCS", False) else None,
+    docs_url="/docs" if config.security.enable_docs else None,
+    redoc_url="/redoc" if config.security.enable_docs else None,
 )
 
 # Add exception handler for rate limiting
@@ -480,10 +491,14 @@ async def add_security_headers(request: Request, call_next):
 @app.middleware("http")
 async def add_request_id(request: Request, call_next):
     request_id = request.headers.get("X-Request-ID", str(uuid.uuid4()))
-    with structlog.contextvars.bind_contextvars(request_id=request_id):
+    # Bind request ID to context
+    structlog.contextvars.bind_contextvars(request_id=request_id)
+    try:
         response = await call_next(request)
         response.headers["X-Request-ID"] = request_id
         return response
+    finally:
+        structlog.contextvars.clear_contextvars()
 
 # Metrics middleware
 @app.middleware("http")
@@ -562,6 +577,15 @@ async def read_index():
 # Health & Monitoring Endpoints
 # ====================
 
+@app.get("/health")
+async def health():
+    """Basic health check - no auth required"""
+    return {
+        "status": "healthy",
+        "timestamp": datetime.now().isoformat(),
+        "message": "API is running"
+    }
+
 @app.get("/health/live")
 async def liveness():
     """Kubernetes liveness probe"""
@@ -618,6 +642,116 @@ async def metrics():
 # ====================
 # API Endpoints with Authentication
 # ====================
+
+@app.get("/api/v1/config/settings")
+@limiter.limit("30/minute")
+async def get_config_settings(
+    request: Request,
+    x_elastic_cookie: Optional[str] = Header(None)
+):
+    """Get configuration settings - supports cookie auth for frontend"""
+    # For development, allow unauthenticated access or cookie-based auth
+    if not config.security.require_auth or config.security.disable_auth or x_elastic_cookie:
+        settings = get_settings()
+        
+        # Convert to frontend-expected format
+        return {
+            "baselineStart": settings.get('processing', {}).get('baseline_start', '2025-06-01'),
+            "baselineEnd": settings.get('processing', {}).get('baseline_end', '2025-06-09'),
+            "currentTimeRange": settings.get('processing', {}).get('current_time_range', 'now-12h'),
+            "highVolumeThreshold": settings.get('processing', {}).get('high_volume_threshold', 1000),
+            "mediumVolumeThreshold": settings.get('processing', {}).get('medium_volume_threshold', 100),
+            "criticalThreshold": settings.get('processing', {}).get('critical_threshold', -80),
+            "warningThreshold": settings.get('processing', {}).get('warning_threshold', -50),
+            "minDailyVolume": settings.get('processing', {}).get('min_daily_volume', 50),
+            "autoRefreshEnabled": settings.get('dashboard', {}).get('enable_websocket', True),
+            "autoRefreshInterval": settings.get('dashboard', {}).get('refresh_interval', 45) * 1000,
+            "theme": settings.get('dashboard', {}).get('theme', 'light'),
+            "maxEventsDisplay": settings.get('dashboard', {}).get('max_events_display', 100),
+            "elasticsearchUrl": config.elasticsearch.url,
+            "kibanaUrl": config.kibana.url,
+            "corsProxyPort": 3001,
+            "debug": config.environment == "development",
+            "appName": "RAD Monitor Dashboard",
+            "rad_types": settings.get('rad_types', {})
+        }
+    
+    # Otherwise require auth
+    raise HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Authentication required",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+
+@app.post("/api/v1/config/settings")
+@limiter.limit("10/minute")
+async def update_config_settings(
+    request: Request,
+    config_data: dict,
+    x_elastic_cookie: Optional[str] = Header(None)
+):
+    """Update configuration settings"""
+    if config.security.require_auth and not (config.security.disable_auth or x_elastic_cookie):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication required",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    
+    # In production, this would update persistent storage
+    # For now, just return success
+    return {"status": "success", "message": "Configuration updated"}
+
+@app.get("/api/v1/auth/status")
+@limiter.limit("60/minute")
+async def get_auth_status(
+    request: Request,
+    x_elastic_cookie: Optional[str] = Header(None)
+):
+    """Check authentication status - used by frontend to validate cookies"""
+    if not config.security.require_auth or config.security.disable_auth:
+        # Auth disabled, always return authenticated
+        return {
+            "authenticated": True,
+            "method": "disabled",
+            "message": "Authentication is disabled"
+        }
+    
+    if x_elastic_cookie:
+        # For now, just check if cookie is present and has valid format
+        # In production, you would validate against Elasticsearch
+        is_valid = x_elastic_cookie.startswith('sid=Fe26.2') or x_elastic_cookie.startswith('Fe26.2')
+        
+        if is_valid:
+            return {
+                "authenticated": True,
+                "method": "cookie",
+                "message": "Authenticated via cookie"
+            }
+        else:
+            return {
+                "authenticated": False,
+                "method": "cookie",
+                "message": "Invalid cookie format"
+            }
+    
+    # Check for Bearer token
+    auth_header = request.headers.get("Authorization")
+    if auth_header and auth_header.startswith("Bearer "):
+        token = auth_header.split(" ")[1]
+        valid_tokens = config.security.api_tokens or []
+        if token in valid_tokens:
+            return {
+                "authenticated": True,
+                "method": "bearer",
+                "message": "Authenticated via API token"
+            }
+    
+    return {
+        "authenticated": False,
+        "method": None,
+        "message": "No valid authentication provided"
+    }
 
 @app.get("/api/v1/dashboard/config")
 @limiter.limit("30/minute")
@@ -706,8 +840,8 @@ async def websocket_endpoint(
 ):
     """Secure WebSocket endpoint"""
     # Validate token
-    if not validated_env.get("DISABLE_AUTH", False):
-        valid_tokens = validated_env.get("API_TOKENS", [])
+    if config.security.require_auth and not config.security.disable_auth:
+        valid_tokens = config.security.api_tokens or []
         if not token or token not in valid_tokens:
             await websocket.close(code=1008, reason="Unauthorized")
             return
@@ -836,27 +970,67 @@ async def shutdown():
 
 if __name__ == "__main__":
     # Production configuration
-    SERVER_PORT = validated_env.get("SERVER_PORT", 8000)
-    SERVER_HOST = validated_env.get("SERVER_HOST", "0.0.0.0")
-    WORKERS = validated_env.get("WORKERS", 4)
+    SERVER_PORT = config.server.port
+    SERVER_HOST = config.server.host
+    WORKERS = config.server.workers
 
-    # Set up signal handlers
-    signal.signal(signal.SIGINT, signal_handler)
-    signal.signal(signal.SIGTERM, signal_handler)
+    async def run_server():
+        # Configure uvicorn for production
+        uvicorn_config = uvicorn.Config(
+            app,
+            host=SERVER_HOST,
+            port=SERVER_PORT,
+            workers=1,  # Use 1 worker to prevent port conflicts, scale with process manager instead
+            loop="asyncio",
+            log_level=log_level.lower(),
+            access_log=False,  # Use structured logging instead
+            use_colors=False,
+            server_header=False,  # Don't expose server info
+            date_header=False,  # Managed by proxy
+        )
 
-    # Configure uvicorn for production
-    config = uvicorn.Config(
-        app,
-        host=SERVER_HOST,
-        port=SERVER_PORT,
-        workers=WORKERS,
-        loop="uvloop",
-        log_level=log_level.lower(),
-        access_log=False,  # Use structured logging instead
-        use_colors=False,
-        server_header=False,  # Don't expose server info
-        date_header=False,  # Managed by proxy
-    )
+        server = uvicorn.Server(uvicorn_config)
+        
+        # Set up signal handlers for graceful shutdown
+        loop = asyncio.get_event_loop()
+        
+        def handle_signal(sig):
+            logger.info(f"Received signal {sig}, initiating graceful shutdown...")
+            server.should_exit = True
 
-    server = uvicorn.Server(config)
-    server.run()
+        # Register signal handlers
+        for sig in [signal.SIGTERM, signal.SIGINT]:
+            loop.add_signal_handler(sig, handle_signal, sig)
+
+        try:
+            await server.serve()
+        except Exception as e:
+            logger.error(f"Server error: {e}")
+        finally:
+            # Clean up signal handlers
+            for sig in [signal.SIGTERM, signal.SIGINT]:
+                try:
+                    loop.remove_signal_handler(sig)
+                except:
+                    pass
+            
+            # Close WebSocket connections
+            for ws in list(app_state.websocket_clients):
+                try:
+                    await ws.close()
+                except:
+                    pass
+            
+            # Wait a moment for cleanup
+            await asyncio.sleep(0.1)
+            logger.info("Server shutdown complete")
+
+    # Run the server
+    try:
+        asyncio.run(run_server())
+    except KeyboardInterrupt:
+        logger.info("Keyboard interrupt received")
+    except Exception as e:
+        logger.error(f"Server failed to start: {e}")
+    finally:
+        logger.info("Production server stopped")

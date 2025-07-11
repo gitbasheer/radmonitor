@@ -6,13 +6,21 @@
   "type": "module",
   "scripts": {
     "start": "python3 bin/server.py",
-    "dev": "python3 bin/server.py",
+    "dev": "concurrently \"npm run dev:server\" \"npm run dev:vite\"",
+    "dev:server": "python3 bin/cleanup_server.py && python3 bin/server.py",
+    "dev:vite": "vite",
     "dev:direct": "python3 bin/server.py",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
     "start:simple": "python3 bin/simple-server.py",
-    "start:production": "python3 bin/server_production.py",
+    "start:production": "python3 bin/cleanup_server.py && python3 bin/server_production.py",
+    "cleanup:server": "python3 bin/cleanup_server.py",
     "test": "vitest",
     "test:ui": "vitest --ui",
     "test:coverage": "vitest --coverage",
+    "test:emil": "vitest --run assets/js/emil",
+    "test:store": "vitest --run tests/stores/app-store.test.js",
+    "build:emil": "tsc -p assets/js/emil/tsconfig.json",
     "cleanup": "./cleanup-legacy.sh"
   },
   "engines": {
@@ -45,8 +53,17 @@
     "zustand": "^5.0.6"
   },
   "devDependencies": {
+    "@types/dompurify": "^3.0.5",
+    "@types/node": "^20.0.0",
     "@vitest/ui": "^3.2.4",
+    "concurrently": "^8.2.2",
+    "dompurify": "^3.2.6",
     "jsdom": "^26.1.0",
+    "typescript": "^5.0.0",
+    "vite": "^5.0.10",
     "vitest": "^3.2.4"
+  },
+  "overrides": {
+    "axios": "^1.10.0"
   }
 }

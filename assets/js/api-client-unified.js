@@ -5,7 +5,7 @@
  */
 
 import TimeRangeUtils from './time-range-utils.js';
-import { ConfigService } from './config-service.js';
+import { ConfigService, getApiUrl, getElasticsearchUrl } from './config-service.js';
 import { cryptoUtils } from './crypto-utils.js';
 
 /**
@@ -23,20 +23,8 @@ export class UnifiedAPIClient {
         // Get configuration
         const config = window.ConfigService?.getConfig() || {};
 
-        // Base URLs - check for production API URL
-        if (this.isProduction && config.server?.url) {
-            // Use configured production server URL
-            this.baseUrl = config.server.url;
-        } else if (this.isProduction && window.PRODUCTION_API_URL) {
-            // Fall back to window variable
-            this.baseUrl = window.PRODUCTION_API_URL;
-        } else if (this.isLocalDev) {
-            // Local development
-            this.baseUrl = window.API_URL || window.FASTAPI_URL || 'http://localhost:8000';
-        } else {
-            // Default to same origin
-            this.baseUrl = window.location.origin;
-        }
+        // Base URLs - use ConfigService method
+        this.baseUrl = getApiUrl();
 
         this.apiV1 = `${this.baseUrl}/api/v1`;
 
@@ -46,7 +34,7 @@ export class UnifiedAPIClient {
             const wsHost = this.baseUrl.replace(/^https?:\/\//, '');
             this.wsUrl = `${wsProtocol}://${wsHost}/ws`;
         } else {
-            this.wsUrl = this.isLocalDev ? (window.FASTAPI_WS_URL || 'ws://localhost:8000/ws') : null;
+            this.wsUrl = null;
         }
 
         // Production mode now uses FastAPI server
@@ -79,7 +67,15 @@ export class UnifiedAPIClient {
      * Get authentication cookie from various sources
      */
     async getElasticCookie() {
-        // Check localStorage first
+        // Use CentralizedAuth if available
+        if (window.CentralizedAuth) {
+            const cookie = window.CentralizedAuth.getCookie();
+            if (cookie) {
+                return cookie;
+            }
+        }
+        
+        // Fallback to legacy method (for compatibility)
         const saved = localStorage.getItem('elasticCookie');
         if (saved) {
             try {
@@ -119,6 +115,18 @@ export class UnifiedAPIClient {
     async saveElasticCookie(cookie) {
         if (!cookie || !cookie.trim()) return false;
 
+        // Use CentralizedAuth if available
+        if (window.CentralizedAuth) {
+            try {
+                await window.CentralizedAuth.setCookie(cookie, { source: 'api-client' });
+                return true;
+            } catch (error) {
+                console.error('Failed to save cookie via CentralizedAuth:', error);
+                return false;
+            }
+        }
+
+        // Fallback to legacy method
         const cookieData = {
             cookie: cookie.trim(),
             expires: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
@@ -420,7 +428,7 @@ export class UnifiedAPIClient {
             }
 
             // Send everything securely in request body
-            const esUrl = config.elasticsearch?.url || window.ELASTICSEARCH_URL || 'https://usieventho-prod-usw2.kb.us-west-2.aws.found.io:9243';
+            const esUrl = getElasticsearchUrl();
             const esPath = config.elasticsearch?.path || '/api/console/proxy?path=traffic-*/_search&method=POST';
 
             const requestBody = {

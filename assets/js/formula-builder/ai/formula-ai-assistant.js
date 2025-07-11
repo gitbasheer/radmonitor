@@ -10,6 +10,7 @@
 import { FUNCTION_METADATA, FORMULA_PATTERNS } from '../core/formula-functions.js';
 import { EnhancedFormulaParser } from '../core/enhanced-ast-parser.js';
 import { EnhancedFormulaValidator } from '../core/enhanced-validator.js';
+import DOMPurify from './../../lib/dompurify.js';
 
 // AI Configuration
 const AI_CONFIG = {
@@ -20,7 +21,7 @@ const AI_CONFIG = {
   // SECURITY: API keys must never be exposed in client-side code
   // Authentication should be handled by the backend server
   // The backend should validate user sessions and proxy AI requests
-  
+
   // Cache configuration
   cacheEnabled: true,
   cacheTTL: 3600000, // 1 hour
@@ -557,7 +558,7 @@ export class AIFormulaInput extends HTMLElement {
   }
 
   render() {
-    this.shadowRoot.innerHTML = `
+    this.shadowRoot.innerHTML = DOMPurify.sanitize(`
       <style>
         :host {
           display: block;
@@ -775,7 +776,7 @@ export class AIFormulaInput extends HTMLElement {
           </div>
         </div>
       </div>
-    `;
+    `);
 
     this.nlInput = this.shadowRoot.querySelector('.nl-input');
     this.generateButton = this.shadowRoot.querySelector('[data-action="generate"]');
@@ -810,7 +811,7 @@ export class AIFormulaInput extends HTMLElement {
 
     this.isProcessing = true;
     this.generateButton.disabled = true;
-    this.generateButton.querySelector('.button-text').innerHTML = '<span class="spinner"></span> Generating...';
+    this.generateButton.querySelector('.button-text').innerHTML = DOMPurify.sanitize('<span class="spinner"></span> Generating...');
 
     try {
       const result = await this.ai.generateFormula(input);
@@ -826,13 +827,13 @@ export class AIFormulaInput extends HTMLElement {
 
   displayResult(result) {
     if (!result.formula) {
-      this.resultContent.innerHTML = `
+      this.resultContent.innerHTML = DOMPurify.sanitize(`
         <div style="color: #ef4444; font-size: 0.875rem;">
           ${result.explanation || 'Could not generate a formula from your description.'}
         </div>
-      `;
+      `);
     } else {
-      this.resultContent.innerHTML = `
+      this.resultContent.innerHTML = DOMPurify.sanitize(`
         <div class="result-formula">${result.formula}</div>
         <div class="result-explanation">${result.explanation}</div>
         <div class="result-confidence">
@@ -858,7 +859,7 @@ export class AIFormulaInput extends HTMLElement {
             `).join('')}
           </div>
         ` : ''}
-      `;
+      `);
 
       // Dispatch event with generated formula
       this.dispatchEvent(new CustomEvent('formula-generated', {
@@ -870,11 +871,11 @@ export class AIFormulaInput extends HTMLElement {
   }
 
   displayError(message) {
-    this.resultContent.innerHTML = `
+    this.resultContent.innerHTML = DOMPurify.sanitize(`
       <div style="color: #ef4444; font-size: 0.875rem;">
         Error: ${message}
       </div>
-    `;
+    `);
     this.resultContainer.classList.add('visible');
   }
 

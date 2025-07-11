@@ -83,7 +83,8 @@ cd vh-rad-traffic-monitor
 npm install
 ```
 
-#### First Time Setup (Python Environment)
+#### First Time Setup (NEW: Simplified Configuration)
+
 ```bash
 # Create and activate Python virtual environment
 python -m venv venv
@@ -91,7 +92,19 @@ source venv/bin/activate  # On Windows: venv\Scripts\activate
 
 # Install Python dependencies
 pip install -r requirements.txt
+
+# Quick setup with configuration wizard
+python bin/config_cli.py setup
+
+# Or use the environment setup script
+./scripts/setup/setup_env.sh development
 ```
+
+The new configuration system provides:
+- **YAML-based configuration** with `config/config.yaml`
+- **Environment variable overrides** using `SECTION__KEY` format
+- **Configuration CLI** for easy management
+- **Docker Compose** for containerized deployment
 
 #### Environment Validation (NEW)
 
@@ -112,6 +125,8 @@ If configuration is missing, you'll see:
 See [Environment Validation Guide](docs/ENVIRONMENT_VALIDATION.md) for details.
 
 #### Daily Development
+
+**Option 1: Traditional Setup**
 ```bash
 # After initial setup, just run:
 npm run dev
@@ -120,10 +135,23 @@ npm run dev
 # Includes: API endpoints + WebSocket + Static files + Multi-RAD support
 ```
 
+**Option 2: Docker Development (NEW)**
+```bash
+# Start development with Docker
+./scripts/docker/start-dev.sh
+
+# View logs
+docker-compose -f docker-compose.yml -f docker-compose.dev.yml logs -f app
+
+# Stop services
+docker-compose -f docker-compose.yml -f docker-compose.dev.yml down
+```
+
 **Quick Reference:**
 - `npm run dev` = Starts unified server via `bin/server.py`
 - `npm test` = Run test suite (requires ES6 migration completion)
 - `npm run build` = Generate static production build
+- `./scripts/docker/start-dev.sh` = Start with Docker Compose
 
 ## Key Files & URLs
 
@@ -205,11 +233,123 @@ npm run test:all      # Everything
 npm run generate
 ```
 
+## Test Baseline Management
+
+The project includes a comprehensive test baseline system for managing test execution and tracking progress at both file and individual test levels:
+
+```bash
+# Create a new test baseline (runs all tests and records results)
+python bin/test_baseline_manager.py create
+
+# Check current baseline status
+python bin/test_baseline_manager.py status
+
+# Run only INDIVIDUAL tests that passed in the baseline (NEW!)
+python bin/test_baseline_manager.py passed
+
+# Run only INDIVIDUAL tests that failed in the baseline (NEW!)
+python bin/test_baseline_manager.py failed
+
+# Run only test FILES that passed in the baseline
+python bin/test_baseline_manager.py passed-files
+
+# Run only test FILES that failed in the baseline
+python bin/test_baseline_manager.py failed-files
+
+# Show detailed individual test names (verbose mode)
+python bin/test_baseline_manager.py status -v
+```
+
+**Key Features:**
+- **Individual Test Tracking**: Extracts specific test names from Vitest, Pytest, and BATS output
+- **Granular Test Execution**: Run specific individual tests that passed/failed, not just entire files
+- **Smart Test Grouping**: Groups individual tests by file and runs only necessary files
+- **Dual-Level Control**: Choose between individual test level or file level execution
+- **Progress Tracking**: Monitor improvement at individual test case level
+
+**Sample Output (Individual Test Mode):**
+```
+🟢 Running 592 passed individual tests from baseline...
+
+Running individual tests from 30 test files...
+
+Running individual tests from: tests/uiUpdates.test.js
+  Target tests: 11
+    ✓ should update summary card counts
+    ✓ should update timestamp
+    ✓ should handle empty results
+    ✓ should handle missing DOM elements gracefully
+    ✓ should call updateTable with results
+    ✓ should handle positive scores correctly
+    ... (5 more passed tests)
+```
+
+**Baseline Statistics:**
+```
+📊 Test Baseline Status
+Total test files: 65
+Total individual tests: 287
+
+Test Files:
+  ✓ Passed: 12 (18.5%)
+  ✗ Failed: 53 (81.5%)
+
+Individual Tests:
+  ✓ Passed: 156 (54.4%)
+  ✗ Failed: 131 (45.6%)
+```
+
+For complete documentation, see [README_test_baseline.md](README_test_baseline.md).
+
 ## Configuration
 
-The important stuff lives in these files:
+### NEW: Centralized Configuration Management
 
-**`config/production.json`** - This gets deployed to GitHub Pages
+The application now uses a centralized YAML-based configuration system:
+
+**Main configuration file**: `config/config.yaml`
+```yaml
+app_name: RAD Monitor
+environment: development
+
+elasticsearch:
+  url: https://usieventho-prod-usw2.es.us-west-2.aws.found.io:9243/
+  cookie: null  # Set via ELASTICSEARCH__COOKIE env var
+  index_pattern: traffic-*
+
+server:
+  host: 0.0.0.0
+  port: 8000
+  workers: 1
+```
+
+**Key features:**
+- Single source of truth for all settings
+- Environment variable overrides using `SECTION__KEY` format
+- Type validation with Pydantic
+- Easy environment switching
+- Configuration CLI for management
+
+**Quick commands:**
+```bash
+# Show current config
+python bin/config_cli.py show
+
+# Set a value
+python bin/config_cli.py set server.port 8080
+
+# Validate configuration
+python bin/config_cli.py validate
+
+# Interactive setup
+python bin/config_cli.py setup
+```
+
+See [Configuration Guide](docs/CONFIGURATION_GUIDE.md) for complete documentation.
+
+### Legacy Configuration Files
+
+**`config/production.json`** - Still used for GitHub Pages deployment
 ```json
 {
   "corsProxy": {
@@ -228,23 +368,42 @@ The important stuff lives in these files:
 
 ## Production Deployment
 
-### New: FastAPI Server Deployment
+### FastAPI Server Deployment (Enhanced)
 
-The production system now uses a FastAPI server for enhanced features:
+The production system now uses a FastAPI server with improved configuration management:
 
-#### 1. Prepare Environment
+#### 1. Prepare Environment (NEW: Simplified)
 ```bash
-# Copy and configure production environment
-cp .env.production.example .env.production
-# Edit .env.production with your values:
-# - API_URL: Your production server URL
-# - ELASTICSEARCH_URL: Your Elasticsearch endpoint
-# - KIBANA_URL: Your Kibana endpoint
-# - ALLOWED_ORIGINS: Comma-separated list of allowed domains
-# - SECRET_KEY: Generate with: openssl rand -hex 32
+# Setup production configuration
+./scripts/setup/setup_env.sh production
+
+# Set required environment variables
+export ELASTICSEARCH__COOKIE=your_production_cookie
+export SECURITY__SECRET_KEY=$(openssl rand -hex 32)
+export ALLOWED_HOSTS='["production.domain.com"]'
 ```
 
 #### 2. Deploy Server
+
+**Option A: Docker Compose (Recommended)**
+```bash
+# Start production with all services
+./scripts/docker/start-prod.sh
+
+# Services included:
+# - Main application (with 4 workers)
+# - Redis for caching
+# - Nginx reverse proxy
+# - Prometheus monitoring
+# - Grafana dashboards
+
+# Access:
+# - Application: https://your-domain.com
+# - Prometheus: http://your-domain.com:9090
+# - Grafana: http://your-domain.com:3001
+```
+
+**Option B: Traditional Deployment**
 ```bash
 # Run deployment script
 ./deploy-production.sh
@@ -253,29 +412,24 @@ cp .env.production.example .env.production
 # For systemd service:
 CREATE_SYSTEMD_SERVICE=true ./deploy-production.sh
 
-# For Docker deployment:
-DEPLOY_WITH_DOCKER=true ./deploy-production.sh
+# Manual with uvicorn:
+uvicorn bin.server:app --host 0.0.0.0 --port 8000 --workers 4
 ```
 
-#### 3. Server Options
+#### 3. Management Commands
 
-**Option A: Systemd Service (Linux)**
 ```bash
-sudo systemctl start rad-monitor
-sudo systemctl status rad-monitor
-sudo journalctl -u rad-monitor -f
-```
+# View logs
+docker-compose --profile production logs -f app
 
-**Option B: Docker Compose**
-```bash
-docker-compose -f docker-compose.prod.yml up -d
-docker-compose -f docker-compose.prod.yml logs -f
-```
+# Backup configuration
+docker-compose run --rm config-cli backup
 
-**Option C: Process Manager (PM2)**
-```bash
-pm2 start bin/server_production.py --name rad-monitor
-pm2 logs rad-monitor
+# Update configuration
+docker-compose run --rm config-cli set server.workers 8
+
+# Health check
+curl https://your-domain.com/health
 ```
 
 ### GitHub Pages (Static Files)

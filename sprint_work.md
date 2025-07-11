@@ -27,20 +27,39 @@ Fix all memory leaks and performance issues that are causing the application to 
 
 ### Specific Tasks
 - [ ] Add LRU eviction (50-item limit) to all unbounded caches:
-  - `assets/js/data-layer.js` (responseCache, parsedCache)
-  - `assets/js/api-client-unified.js` (metrics object)
-  - `assets/js/config-service.js` (listeners array)
-  - `assets/js/formula-builder/core/formula-functions.js` (audit for unbounded collections)
-  - `assets/js/formula-builder/core/formula-experiment-manager.js` (unbounded Map growth)
+  - `assets/js/data-layer.js` (lines 19-24) - responseCache and parsedCache Maps
+  - `assets/js/api-client-unified.js` (line 61) - metrics object
+  - `assets/js/config-service.js` (line 8) - listeners array
+  - `assets/js/formula-builder/core/formula-functions.js` - audit for unbounded collections
+  - `assets/js/formula-builder/core/formula-experiment-manager.js` (lines 282-286) - unbounded Map growth
 - [ ] Clean up all event listeners and timers:
-  - `dashboard-simplified.js`, `data-layer.js`, `api-client-unified.js`, `connection-status-manager.js`, `search-filter.js`, `ui-updater.js`, `main-clean.js`, `dashboard.js`, `formula-event-tracker.js`, `enhanced-formula-editor.js`, `formula-experiment-manager.js`, `validation-worker.js`
+  - `dashboard-simplified.js` (lines 566-588) - cancel requestAnimationFrame on destroy
+  - `data-layer.js` (lines 876-901) - implement removeEventListener mechanism
+  - `api-client-unified.js` (lines 619-637, 545-588) - WebSocket handlers and wsReconnectInterval
+  - `connection-status-manager.js` (lines 62-73) - 10+ window event listeners
+  - `search-filter.js` (lines 19-29) - input event listeners cleanup
+  - `ui-updater.js` (lines 341-377) - listeners on dynamically created elements
+  - `enhanced-formula-editor.js` (lines 630-640) - syntaxHighlightTimer
+  - `formula-event-tracker.js` (line 317) - interval cleanup
+  - `formula-experiment-manager.js`, `validation-worker.js` - audit for cleanup
 - [ ] Remove global references and DOM leaks:
-  - `main-clean.js`, `dashboard.js`, `connection-status-manager.js`, `ui-updater.js`, `formula-event-tracker.js`, `formula-experiment-manager.js`
+  - `main-clean.js` (line 153) - unsubscribe DashboardIntegration store subscription
+  - `dashboard.js` (line 33) - remove or manage global window.Dashboard reference
+  - `connection-status-manager.js` (line 27) - DOM refs in this.elements.loadingItems
+  - `ui-updater.js` (lines 341-377) - event listeners on dynamic elements
+- [ ] Fix Web Workers and background tasks:
+  - `validation-worker.js` (lines 186-189) - insufficient cache cleanup
+  - `formula-experiment-manager.js` (lines 282-286) - unbounded Map growth
+- [ ] Fix LocalStorage accumulation issues:
+  - `formula-experiment-manager.js` (lines 295-297) - no size limit
+  - Multiple files using unencrypted localStorage (coordinate with Agent 3)
 - [ ] Implement and integrate ResourceManager pattern for centralized cleanup
 - [ ] Process large datasets in chunks (avoid blocking UI)
-- [ ] Debounce regex tokenization in formula editor
-- [ ] Optimize O(n²) loops and DOM updates (use DocumentFragment)
-- [ ] Fix LocalStorage accumulation issues in formula-experiment-manager.js
+- [ ] Debounce regex tokenization in formula editor (lines 971-1032 in enhanced-formula-editor.js)
+- [ ] Optimize O(n²) loops and DOM updates:
+  - `data-layer.js` (lines 850-863) - bucket counting algorithm
+  - `ui-updater.js` (lines 30-88) - use DocumentFragment for bulk DOM updates
+  - `enhanced-visual-builder.js` (lines 1403-1418) - cache DOM queries
 - [ ] Test with Chrome DevTools Memory Profiler and large datasets
 
 ### Definition of Done
@@ -64,6 +83,7 @@ Fix all memory leaks and performance issues that are causing the application to 
 Standardize all cookie storage to use encrypted storage and fix the inconsistent authentication implementation across the codebase.
 
 ### Specific Tasks
+- [ ] **CRITICAL: Fix environment validation system** - `bin/env_validator.py` has syntax error preventing startup validation
 - [ ] Update all remaining files to use centralized encrypted storage and a single key ('rad_monitor_auth'):
   - `config-editor.js` (line 323)
   - `auth-service.js` (lines 54, 120, 207, 222)
@@ -78,11 +98,14 @@ Standardize all cookie storage to use encrypted storage and fix the inconsistent
 - [ ] Add rate limiting per IP address
 - [ ] Fix XSS vulnerabilities (replace all uses of innerHTML with safe DOM manipulation):
   - `ui-updater.js`, `formula-builder/ui/enhanced-visual-builder.js`, `components/auth-overlay.js`
+  - **61 files using innerHTML found** - comprehensive audit needed
 - [ ] Add comprehensive input validation for all user input (formula builder, search filters, API params)
+- [ ] Remove eval() usage in formula builder (security vulnerability)
 - [ ] Audit and remove any API keys or secrets from client-side code
 - [ ] Ensure all auth tokens are httpOnly and secure in production
 - [ ] Implement proper error handling to prevent information leakage
 - [ ] Create security regression and penetration tests
+- [ ] Add automated security scanning and vulnerability detection
 - [ ] **All cookie storage and authentication configuration must use centralized encrypted storage and be validated via `env_validator.py`.**
 - [ ] **No sensitive data should be logged; automated grep-based tests should be run to enforce this.**
 - [ ] **All new security-related environment variables must be added to `env_validator.py` and documented.**
@@ -109,17 +132,32 @@ Replace all hardcoded URLs, ports, and endpoints with proper environment variabl
 
 ### Specific Tasks
 - [ ] Update all known files and run a comprehensive search for hardcoded URLs/ports (at least 11 files):
-  - `config-service.js` (lines 48, 51)
-  - `ui-updater.js` (line 94)
-  - `api-client-unified.js` (lines 35, 49, 422)
-  - `centralized-auth.js` (lines 150, 158)
-  - `fastapi-integration.js` (lines 38-39)
-  - `cors-direct-override.js` (line 48)
-  - `direct-elasticsearch-client.js` (line 8)
-  - `api-client-simplified.js` (line 340)
+  - `config-service.js` (lines 48, 51) - hardcoded `http://localhost:8000`
+  - `ui-updater.js` (line 94) - hardcoded Kibana URL
+  - `api-client-unified.js` (lines 35, 49, 422) - localhost, WebSocket, and Elasticsearch URLs
+  - `centralized-auth.js` (lines 150, 158) - auth endpoints and Netlify proxy URL
+  - `fastapi-integration.js` (lines 38-39) - API and WebSocket URLs
+  - `cors-direct-override.js` (line 48) - hardcoded Elasticsearch URL
+  - `direct-elasticsearch-client.js` (line 8) - hardcoded Elasticsearch URL
+  - `api-client-simplified.js` (line 340) - hardcoded URLs
   - Chrome extension files (background.js, popup.js)
-  - `bin/server.py`, `bin/generate_dashboard.py`, `bin/server_production.py` (verify all use validated_env)
-  - Test files and scripts
+  - `bin/server.py` (lines 82, 84, 140, 363), `bin/generate_dashboard.py` (lines 90, 92, 587), `bin/server_production.py` (lines 76, 304) - verify all use validated_env
+  - Test files and scripts in `scripts/setup/init-config.js`
+- [ ] Remove 60+ unnecessary files identified in cleanup analysis:
+  - All temporary/analysis documentation (*_AUDIT_RESULTS.md, *_SUMMARY.md, *_STATUS.md, POST_MORTEM_*.md, etc.)
+  - All radar/AI experiment files (radar_*.py, connect_radar_*.py, radar_*.json, etc.)
+  - All test/demo HTML files from root (move to tests/)
+  - All temporary files (distributed_ai_backup_*.tar.gz, *-test-results.json, *.pre-antares)
+  - Chrome extension directory (unless specifically required)
+- [ ] Consolidate duplicate code:
+  - Keep api-client-unified.js, remove api-client-simplified.js
+  - Keep server_production.py, remove server.py, server_enhanced.py, simple-server.py
+  - Keep validate_connections_production.py, remove other validation scripts
+  - Determine primary dashboard implementation and remove others
+- [ ] Refactor monolithic files:
+  - Split `api-client-unified.js` (751 lines) into auth, api, websocket, cache modules
+  - Split `config-service.js` (843 lines) into config-loader, config-validator, config-store
+  - Split `data-layer.js` (1365 lines) into data-fetch, data-process, data-cache, data-events
 - [ ] Add all new URL variables to `bin/env_validator.py` and document them in `docs/ENVIRONMENT_VALIDATION.md`
 - [ ] Ensure all URL references use `ConfigService.getApiUrl()` or validated_env
 - [ ] Update WebSocket URLs to use environment configuration
@@ -145,14 +183,20 @@ Replace all hardcoded URLs, ports, and endpoints with proper environment variabl
 **Estimated Effort:** 3-4 days
 
 ### Specific Tasks
+- [ ] **CRITICAL: Fix dashboard module import crisis** - Multiple tests failing with "Failed to resolve import '../src/dashboard.js'"
+- [ ] **CRITICAL: Fix missing Python modules** - `cors_proxy`, `dev_server_fastapi`, `data.processors` causing test failures
 - [ ] Fix all broken tests listed in `tests/BROKEN_TESTS_TODO.md`
 - [ ] Update tests that rely on hardcoded URLs
+- [ ] **Fix test success rate from 86% to 95%+** - Currently 351/406 tests passing
 - [ ] Add security, integration, and memory leak tests (including for cookie encryption, XSS, input validation, error message sanitization, pre-configured cookie blocking)
 - [ ] Achieve 80%+ code coverage on critical paths
 - [ ] Add integration tests for formula builder with fixed imports
 - [ ] Move test HTML files from root to tests directory
 - [ ] Add test coverage reporting and CI integration
 - [ ] Create test data fixtures and mock services
+- [ ] Add end-to-end testing framework (Cypress/Playwright)
+- [ ] Add performance testing and benchmarking
+- [ ] Add security regression tests and penetration testing
 - [ ] Document all testing best practices and troubleshooting
 - [ ] **Test suite for environment validation is in `bin/test_env_validation.py`.**
 - [ ] **Tests must cover configuration errors, missing/invalid environment variables, and fail-fast behavior.**
@@ -175,7 +219,9 @@ Replace all hardcoded URLs, ports, and endpoints with proper environment variabl
 **Estimated Effort:** 3-4 days
 
 ### Specific Tasks
+- [ ] **CRITICAL: Fix GitHub Actions CI/CD pipeline** - `brb-github/workflows/test-deployment.yml` references deleted `src/` directory
 - [ ] Review and enhance `deploy-production.sh` (add rollback, health checks, validation)
+- [ ] **Add Docker configuration** - Create Dockerfile, docker-compose.yml for containerized deployment
 - [ ] Add blue-green deployment support
 - [ ] Implement comprehensive monitoring (Grafana, Prometheus, OpenTelemetry, log aggregation)
 - [ ] Set up alerting rules (high error rates, memory usage, response time, WebSocket failures, auth failures)
@@ -184,6 +230,8 @@ Replace all hardcoded URLs, ports, and endpoints with proper environment variabl
 - [ ] Make Redis and Prometheus optional (server should warn, not crash)
 - [ ] Optimize Docker images, configure CDN, request caching, connection pooling, compression
 - [ ] Create Terraform/Kubernetes/Ansible infrastructure as code
+- [ ] **Add centralized log aggregation system** - Currently logs scattered across multiple files
+- [ ] **Implement application performance monitoring (APM)** - Missing OpenTelemetry integration
 - [ ] Update all deployment and monitoring documentation
 - [ ] Add all new environment variables to `env_validator.py` and documentation
 - [ ] **All deployment and monitoring scripts must ensure environment validation passes before proceeding.**
@@ -208,13 +256,16 @@ Replace all hardcoded URLs, ports, and endpoints with proper environment variabl
 **Estimated Effort:** 3-4 days
 
 ### Specific Tasks
+- [ ] **CRITICAL: Fix missing Python modules** - `cors_proxy`, `dev_server_fastapi`, `data.processors` breaking backend functionality
 - [ ] Fix import paths and exports for `enhanced-ast-parser.js` and `enhanced-validator.js` (modules now exist, but may need alignment)
 - [ ] Ensure all formula builder imports are resolved and the feature loads without errors
 - [ ] Consolidate API client implementations (migrate to single API abstraction layer, remove deprecated files)
+- [ ] **Fix package.json server reference** - Currently points to wrong server implementation
 - [ ] Implement all required formula builder API endpoints in backend (`server_production.py`)
 - [ ] Add OpenAPI/Swagger documentation for all endpoints
 - [ ] Connect formula builder UI to backend API, implement real-time validation and execution
 - [ ] Add formula execution with live preview, autocomplete, templates, and visual builder option
+- [ ] **Integrate MCP services** - 6 MCP service directories exist but not integrated
 - [ ] Add unit, integration, and performance tests for formula builder
 - [ ] Update all formula builder documentation
 
@@ -278,13 +329,18 @@ Replace all hardcoded URLs, ports, and endpoints with proper environment variabl
 
 ### Definition of "Production Ready"
 1. All CRITICAL tickets resolved
-2. Zero known security vulnerabilities (all cookies encrypted, no hardcoded URLs, no sensitive logging)
-3. Memory stable over 24-hour test (30+ memory leaks identified, must all be fixed)
-4. Successfully deploys to staging environment
-5. All critical path tests passing
-6. Monitoring and alerting configured
-7. Documentation complete and up to date
-8. Formula Builder functional with OpenAPI docs
-9. All hardcoded URLs replaced with config and validated
-10. All 30+ memory leaks fixed and verified with heap profiler
-11. Cookie storage standardized to single encrypted key across all files
+2. **Environment validation system working** (currently broken - syntax error in env_validator.py)
+3. **Test success rate 95%+** (currently 86% - 351/406 tests passing)
+4. **CI/CD pipeline functional** (currently broken - GitHub Actions references deleted directories)
+5. Zero known security vulnerabilities (all cookies encrypted, no hardcoded URLs, no sensitive logging)
+6. Memory stable over 24-hour test (30+ memory leaks identified, must all be fixed)
+7. Successfully deploys to staging environment
+8. All critical path tests passing
+9. Monitoring and alerting configured
+10. Documentation complete and up to date
+11. Formula Builder functional with OpenAPI docs
+12. All hardcoded URLs replaced with config and validated
+13. All 30+ memory leaks fixed and verified with heap profiler
+14. Cookie storage standardized to single encrypted key across all files
+15. **Docker containerization ready** (currently missing)
+16. **Missing Python modules resolved** (cors_proxy, dev_server_fastapi, data.processors)

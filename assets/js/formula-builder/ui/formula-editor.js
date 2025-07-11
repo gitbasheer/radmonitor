@@ -4,6 +4,7 @@
 
 import { FunctionCategories, getFunctionsByCategory } from '../core/formula-types.js';
 import { parseFormula } from '../core/formula-parser.js';
+import DOMPurify from './../../lib/dompurify.js';
 
 export class FormulaEditor {
   constructor(container, options = {}) {
@@ -31,7 +32,7 @@ export class FormulaEditor {
   }
 
   createDOM() {
-    this.container.innerHTML = `
+    this.container.innerHTML = DOMPurify.sanitize(`
       <div class="formula-editor-container">
         <div class="formula-builder-section">
           <div class="function-palette">
@@ -102,7 +103,7 @@ export class FormulaEditor {
           </div>
         </div>
       </div>
-    `;
+    `);
 
     // Cache DOM references
     this.elements = {
@@ -195,7 +196,7 @@ export class FormulaEditor {
       </div>
     `).join('');
 
-    this.elements.functionList.innerHTML = html;
+    this.elements.functionList.innerHTML = DOMPurify.sanitize(html);
 
     // Add click handlers to function items
     this.container.querySelectorAll('.function-item').forEach(item => {
@@ -357,12 +358,12 @@ export class FormulaEditor {
 
   updateASTView(ast) {
     const astView = this.container.querySelector('.ast-view');
-    astView.innerHTML = `<pre>${JSON.stringify(ast, null, 2)}</pre>`;
+    astView.innerHTML = DOMPurify.sanitize(`<pre>${JSON.stringify(ast, null, 2)}</pre>`);
   }
 
   updateQueryView(query) {
     const queryView = this.container.querySelector('.query-view');
-    queryView.innerHTML = `<pre>${JSON.stringify(query, null, 2)}</pre>`;
+    queryView.innerHTML = DOMPurify.sanitize(`<pre>${JSON.stringify(query, null, 2)}</pre>`);
   }
 
   updateMathView(formula) {
@@ -370,12 +371,12 @@ export class FormulaEditor {
 
     // This is a simplified math view - you could enhance it with actual math rendering
     const mathExpression = this.formulaToMath(formula);
-    mathView.innerHTML = `
+    mathView.innerHTML = DOMPurify.sanitize(`
       <div class="math-expression">
         <h4>Mathematical Expression:</h4>
         <div class="math-content">${mathExpression}</div>
       </div>
-    `;
+    `);
   }
 
   formulaToMath(formula) {
@@ -392,9 +393,9 @@ export class FormulaEditor {
   }
 
   clearPreview() {
-    this.container.querySelector('.ast-view').innerHTML = '<p>Enter a formula to see the AST</p>';
-    this.container.querySelector('.query-view').innerHTML = '<p>Enter a formula to see the query</p>';
-    this.container.querySelector('.math-view').innerHTML = '<p>Enter a formula to see the math</p>';
+    this.container.querySelector('.ast-view').innerHTML = DOMPurify.sanitize('<p>Enter a formula to see the AST</p>');
+    this.container.querySelector('.query-view').innerHTML = DOMPurify.sanitize('<p>Enter a formula to see the query</p>');
+    this.container.querySelector('.math-view').innerHTML = DOMPurify.sanitize('<p>Enter a formula to see the math</p>');
   }
 
   validateFormula() {

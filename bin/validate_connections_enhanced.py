@@ -592,7 +592,7 @@ except Exception as e:
                     env_content = f.read()
 
                 # Check for common configuration patterns
-                if any(key in env_content for key in ["ES_COOKIE", "ELASTIC_COOKIE", "API_TOKEN"]):
+                if any(key in env_content for key in ["ELASTIC_COOKIE", "API_TOKEN"]):
                     self.result.add_pass("Environment variables configured")
                 else:
                     self.result.add_warning(

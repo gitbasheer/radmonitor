@@ -3,6 +3,8 @@
  * This provides immediate functionality while proxy issues are resolved
  */
 
+import { getElasticsearchUrl } from './config-service.js';
+
 // Override immediately when script loads - ONLY FOR PRODUCTION
 (function() {
     // Only apply override in production (GitHub Pages)
@@ -45,7 +47,7 @@
                 }
 
                 // Direct Elasticsearch connection
-                const esUrl = window.ELASTICSEARCH_URL || 'https://usieventho-prod-usw2.kb.us-west-2.aws.found.io:9243';
+                const esUrl = getElasticsearchUrl();
                 const esPath = '/elasticsearch/usi*/_search';
 
                 try {

@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EMIL Phase 2 - ES|QL Integration Demo</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: white;
+            padding: 24px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            margin-bottom: 24px;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 8px;
+            color: #0066cc;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 16px;
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+
+        .eid-section {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .section-header {
+            padding: 16px 20px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e0e0e0;
+            font-weight: 600;
+        }
+
+        .eid-selector-wrapper {
+            height: 600px;
+        }
+
+        .query-section {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .flow-diagram {
+            background: white;
+            padding: 24px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .flow-steps {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 16px;
+        }
+
+        .flow-step {
+            flex: 1;
+            text-align: center;
+            padding: 16px;
+            background: #f5f5f5;
+            border-radius: 8px;
+            position: relative;
+        }
+
+        .flow-step.active {
+            background: #e3f2fd;
+            border: 2px solid #0066cc;
+        }
+
+        .flow-step.completed {
+            background: #e8f5e9;
+        }
+
+        .flow-arrow {
+            position: absolute;
+            right: -20px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 20px;
+            color: #999;
+        }
+
+        .flow-step:last-child .flow-arrow {
+            display: none;
+        }
+
+        .flow-icon {
+            font-size: 32px;
+            margin-bottom: 8px;
+        }
+
+        .flow-label {
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .flow-status {
+            font-size: 12px;
+            color: #666;
+            margin-top: 4px;
+        }
+
+        .demo-controls {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            margin-bottom: 24px;
+        }
+
+        .control-group {
+            margin-bottom: 16px;
+        }
+
+        .control-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .control-buttons {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .control-buttons button {
+            padding: 8px 16px;
+            border: 1px solid #ccc;
+            background: white;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .control-buttons button:hover {
+            background: #f5f5f5;
+        }
+
+        .control-buttons button.active {
+            background: #0066cc;
+            color: white;
+            border-color: #0066cc;
+        }
+
+        .query-preview {
+            background: #f8f9fa;
+            padding: 16px;
+            border-radius: 4px;
+            margin-top: 16px;
+            font-family: monospace;
+            font-size: 12px;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+            display: none;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-top: 16px;
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #0066cc;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .backend-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 4px 12px;
+            background: #fff3cd;
+            border: 1px solid #ffeeba;
+            border-radius: 4px;
+            font-size: 12px;
+            color: #856404;
+        }
+
+        .backend-indicator.connected {
+            background: #d4edda;
+            border-color: #c3e6cb;
+            color: #155724;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #ffc107;
+        }
+
+        .backend-indicator.connected .status-dot {
+            background: #28a745;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>EMIL Phase 2 - ES|QL Query Integration</h1>
+            <p>Select EIDs → Execute ES|QL Templates → View Results</p>
+        </div>
+
+        <div class="flow-diagram">
+            <h3>End-to-End Query Flow</h3>
+            <div class="flow-steps">
+                <div class="flow-step" id="step-select">
+                    <div class="flow-icon">🎯</div>
+                    <div class="flow-label">Select EIDs</div>
+                    <div class="flow-status">Ready</div>
+                    <div class="flow-arrow">→</div>
+                </div>
+                <div class="flow-step" id="step-template">
+                    <div class="flow-icon">📝</div>
+                    <div class="flow-label">Choose Template</div>
+                    <div class="flow-status">Waiting</div>
+                    <div class="flow-arrow">→</div>
+                </div>
+                <div class="flow-step" id="step-build">
+                    <div class="flow-icon">🔧</div>
+                    <div class="flow-label">Build Query</div>
+                    <div class="flow-status">Waiting</div>
+                    <div class="flow-arrow">→</div>
+                </div>
+                <div class="flow-step" id="step-execute">
+                    <div class="flow-icon">⚡</div>
+                    <div class="flow-label">Execute</div>
+                    <div class="flow-status">Waiting</div>
+                    <div class="flow-arrow">→</div>
+                </div>
+                <div class="flow-step" id="step-results">
+                    <div class="flow-icon">📊</div>
+                    <div class="flow-label">View Results</div>
+                    <div class="flow-status">Waiting</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="demo-controls">
+            <div class="control-group">
+                <label>
+                    Backend Mode:
+                    <span id="backend-status" class="backend-indicator">
+                        <span class="status-dot"></span>
+                        <span>Mock Mode (No ES connection required)</span>
+                    </span>
+                </label>
+                <div class="control-buttons">
+                    <button id="mode-mock" class="active">Mock Mode</button>
+                    <button id="mode-real">Real Backend</button>
+                </div>
+            </div>
+
+            <div class="control-group">
+                <label>Pre-built Scenarios:</label>
+                <div class="control-buttons">
+                    <button id="scenario-health">Health Check Scenario</button>
+                    <button id="scenario-baseline">Baseline Comparison</button>
+                    <button id="scenario-performance">Performance Analysis</button>
+                    <button id="scenario-multiple">Multi-EID Analysis</button>
+                </div>
+            </div>
+
+            <div class="query-preview" id="query-preview"></div>
+
+            <div class="stats">
+                <div class="stat">
+                    <div class="stat-value" id="stat-queries">0</div>
+                    <div class="stat-label">Queries Executed</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value" id="stat-cache-hits">0</div>
+                    <div class="stat-label">Cache Hits</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value" id="stat-avg-time">0ms</div>
+                    <div class="stat-label">Avg Response Time</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value" id="stat-templates">5</div>
+                    <div class="stat-label">Templates Available</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="main-grid">
+            <div class="eid-section">
+                <div class="section-header">EID Selection</div>
+                <div id="eid-selector" class="eid-selector-wrapper"></div>
+            </div>
+
+            <div class="query-section">
+                <div class="eid-section">
+                    <div class="section-header">Query Actions</div>
+                    <div id="query-panel"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { 
+            initializeEMIL, 
+            ESQLExecutor, 
+            QueryPanel,
+            ESQLQueryBuilder,
+            getTemplateIds
+        } from './assets/js/emil/index.js';
+
+        // Global state
+        let emil = null;
+        let executor = null;
+        let queryPanel = null;
+        let stats = {
+            queries: 0,
+            cacheHits: 0,
+            totalTime: 0
+        };
+
+        // Initialize EMIL with ES|QL
+        async function init() {
+            try {
+                // Initialize core EMIL
+                const selectorContainer = document.getElementById('eid-selector');
+                emil = await initializeEMIL({
+                    container: selectorContainer,
+                    mockData: true
+                });
+
+                // Initialize ES|QL executor
+                executor = new ESQLExecutor({
+                    mockMode: true,
+                    esqlEndpoint: '/api/v1/esql/query'
+                });
+
+                // Initialize query panel
+                const panelContainer = document.getElementById('query-panel');
+                queryPanel = new QueryPanel({
+                    container: panelContainer,
+                    executor,
+                    onQueryStart: () => updateFlowStep('execute', 'active', 'Executing...'),
+                    onQueryComplete: () => {
+                        updateFlowStep('execute', 'completed', 'Done');
+                        updateFlowStep('results', 'completed', 'Displayed');
+                        updateStats();
+                    }
+                });
+
+                // Wire up EID selection
+                emil.selector.options.onSelectionChange = (eids) => {
+                    queryPanel.updateEIDs(eids);
+                    if (eids.length > 0) {
+                        updateFlowStep('select', 'completed', `${eids.length} selected`);
+                        updateFlowStep('template', 'active', 'Ready');
+                    } else {
+                        resetFlow();
+                    }
+                };
+
+                // Display template count
+                document.getElementById('stat-templates').textContent = getTemplateIds().length;
+
+                // Attach control listeners
+                attachControlListeners();
+
+            } catch (error) {
+                console.error('Failed to initialize EMIL:', error);
+                alert('Initialization failed: ' + error.message);
+            }
+        }
+
+        // Update flow diagram
+        function updateFlowStep(stepId, status, statusText) {
+            const step = document.getElementById(`step-${stepId}`);
+            if (!step) return;
+
+            // Remove all status classes
+            step.classList.remove('active', 'completed');
+            
+            // Add new status
+            if (status) {
+                step.classList.add(status);
+            }
+
+            // Update status text
+            const statusEl = step.querySelector('.flow-status');
+            if (statusEl && statusText) {
+                statusEl.textContent = statusText;
+            }
+        }
+
+        // Reset flow diagram
+        function resetFlow() {
+            const steps = ['select', 'template', 'build', 'execute', 'results'];
+            steps.forEach(step => {
+                updateFlowStep(step, '', step === 'select' ? 'Ready' : 'Waiting');
+            });
+        }
+
+        // Update statistics
+        function updateStats() {
+            stats.queries++;
+            document.getElementById('stat-queries').textContent = stats.queries;
+
+            const cacheStats = executor.getCacheStats();
+            document.getElementById('stat-cache-hits').textContent = stats.cacheHits;
+
+            if (stats.queries > 0) {
+                const avgTime = Math.round(stats.totalTime / stats.queries);
+                document.getElementById('stat-avg-time').textContent = `${avgTime}ms`;
+            }
+        }
+
+        // Attach control event listeners
+        function attachControlListeners() {
+            // Backend mode toggle
+            document.getElementById('mode-mock').addEventListener('click', () => {
+                setBackendMode(true);
+            });
+
+            document.getElementById('mode-real').addEventListener('click', () => {
+                setBackendMode(false);
+            });
+
+            // Scenario buttons
+            document.getElementById('scenario-health').addEventListener('click', () => {
+                runScenario('health');
+            });
+
+            document.getElementById('scenario-baseline').addEventListener('click', () => {
+                runScenario('baseline');
+            });
+
+            document.getElementById('scenario-performance').addEventListener('click', () => {
+                runScenario('performance');
+            });
+
+            document.getElementById('scenario-multiple').addEventListener('click', () => {
+                runScenario('multiple');
+            });
+        }
+
+        // Set backend mode
+        function setBackendMode(mockMode) {
+            executor = new ESQLExecutor({
+                mockMode,
+                esqlEndpoint: mockMode ? undefined : '/api/v1/esql/query'
+            });
+
+            // Update query panel
+            queryPanel = new QueryPanel({
+                container: document.getElementById('query-panel'),
+                executor,
+                onQueryStart: () => updateFlowStep('execute', 'active', 'Executing...'),
+                onQueryComplete: () => {
+                    updateFlowStep('execute', 'completed', 'Done');
+                    updateFlowStep('results', 'completed', 'Displayed');
+                    updateStats();
+                }
+            });
+
+            // Update UI
+            document.getElementById('mode-mock').classList.toggle('active', mockMode);
+            document.getElementById('mode-real').classList.toggle('active', !mockMode);
+
+            const indicator = document.getElementById('backend-status');
+            if (mockMode) {
+                indicator.className = 'backend-indicator';
+                indicator.innerHTML = '<span class="status-dot"></span><span>Mock Mode (No ES connection required)</span>';
+            } else {
+                indicator.className = 'backend-indicator connected';
+                indicator.innerHTML = '<span class="status-dot"></span><span>Connected to Elasticsearch</span>';
+            }
+        }
+
+        // Run pre-built scenarios
+        async function runScenario(scenario) {
+            resetFlow();
+
+            let eids = [];
+            let action = '';
+
+            switch (scenario) {
+                case 'health':
+                    eids = ['pandc.vnext.recommendations.view', 'pandc.vnext.discovery.search'];
+                    action = 'health-check';
+                    break;
+
+                case 'baseline':
+                    eids = ['pandc.vnext.recommendations.click'];
+                    action = 'baseline-compare';
+                    break;
+
+                case 'performance':
+                    eids = ['pandc.vnext.cart.add', 'pandc.vnext.checkout.success'];
+                    action = 'performance';
+                    break;
+
+                case 'multiple':
+                    eids = [
+                        'pandc.vnext.recommendations.view',
+                        'pandc.vnext.recommendations.click',
+                        'pandc.vnext.discovery.search',
+                        'pandc.vnext.feed.impression'
+                    ];
+                    action = 'trend-analysis';
+                    break;
+            }
+
+            // Select EIDs
+            emil.selector.setSelectedEIDs(eids);
+            updateFlowStep('select', 'completed', `${eids.length} selected`);
+
+            // Show query preview
+            updateFlowStep('template', 'active', 'Building...');
+            
+            try {
+                const query = ESQLQueryBuilder.buildFromIntent({
+                    action: action as any,
+                    eids,
+                    parameters: {}
+                });
+
+                const preview = document.getElementById('query-preview');
+                preview.textContent = query;
+                preview.style.display = 'block';
+
+                updateFlowStep('template', 'completed', 'Template selected');
+                updateFlowStep('build', 'completed', 'Query built');
+
+                // Auto-execute after delay
+                setTimeout(() => {
+                    const button = document.querySelector(`[data-action="${action}"]`);
+                    if (button) {
+                        button.click();
+                    }
+                }, 1000);
+
+            } catch (error) {
+                console.error('Scenario failed:', error);
+                alert('Scenario failed: ' + error.message);
+            }
+        }
+
+        // Initialize on load
+        init();
+    </script>
+</body>
+</html>

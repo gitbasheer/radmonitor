@@ -212,21 +212,12 @@ class EnvironmentValidator:
             EnvVar(
                 name="ELASTIC_COOKIE",
                 description="Authentication cookie for Elasticsearch",
-                level=ValidationLevel.OPTIONAL,  # Changed to optional to check with ES_COOKIE
-                sensitive=True,
-                example="sid=Fe26.2**your-cookie-here**"
-            ),
-            EnvVar(
-                name="ES_COOKIE",
-                description="Alternative name for Elasticsearch cookie",
-                level=ValidationLevel.OPTIONAL,
+                level=ValidationLevel.REQUIRED,
                 sensitive=True,
                 example="sid=Fe26.2**your-cookie-here**"
             ),
 
             # === Kibana Configuration ===
-            EnvVar(
-                name="KIBANA_URL",
                 description="Kibana endpoint URL",
                 level=ValidationLevel.REQUIRED,
                 validator=self.validate_url,
@@ -363,10 +354,9 @@ class EnvironmentValidator:
             # === Optional Features ===
             EnvVar(
                 name="REDIS_URL",
-                description="Redis URL for caching",
+                description="Redis URL for caching (leave empty to use local cache only)",
                 level=ValidationLevel.OPTIONAL,
-                default="redis://localhost:6379",
-                validator=self.validate_url,
+                validator=lambda v: v == "" or self.validate_url(v),
                 example="redis://localhost:6379/0"
             ),
             EnvVar(
@@ -429,16 +419,12 @@ class EnvironmentValidator:
         for var in variables:
             self._validate_variable(var)
 
-        # Special validation: Ensure at least one cookie is provided
-        if not self.validated_vars.get("ELASTIC_COOKIE") and not self.validated_vars.get("ES_COOKIE"):
+        # Special validation: Ensure cookie is provided
+        if not self.validated_vars.get("ELASTIC_COOKIE"):
             self.errors.append(
-                "Authentication cookie missing: Either ELASTIC_COOKIE or ES_COOKIE must be set"
+                "Authentication cookie missing: ELASTIC_COOKIE must be set"
                 "\n    Example: ELASTIC_COOKIE=sid=Fe26.2**your-cookie-here**"
             )
-        else:
-            # If ES_COOKIE is set but not ELASTIC_COOKIE, copy it over for compatibility
-            if self.validated_vars.get("ES_COOKIE") and not self.validated_vars.get("ELASTIC_COOKIE"):
-                self.validated_vars["ELASTIC_COOKIE"] = self.validated_vars["ES_COOKIE"]
 
         # Print summary
         self._print_summary()

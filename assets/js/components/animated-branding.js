@@ -4,6 +4,7 @@
  */
 
 import { radTheme as theme } from '../theme/rad-theme.js';
+import DOMPurify from './../lib/dompurify.js';
 
 /**
  * Create animated text with letter-by-letter animation
@@ -104,7 +105,7 @@ export function initAnimatedBranding(container, options = {}) {
     if (!element) return;
     
     // Create and insert branding
-    element.innerHTML = createAnimatedBranding(title, subtitle);
+    element.innerHTML = DOMPurify.sanitize(createAnimatedBranding(title, subtitle));
     
     // Auto-animate if enabled
     if (autoAnimate) {

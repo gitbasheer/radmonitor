@@ -4,6 +4,7 @@
  */
 
 import { UXComponents } from './components/ux-components.js';
+import DOMPurify from './lib/dompurify.js';
 
 class DashboardUXMigration {
   constructor() {
@@ -272,12 +273,12 @@ class DashboardUXMigration {
 
       // Create content container
       const contentContainer = document.createElement('div');
-      contentContainer.innerHTML = `
+      contentContainer.innerHTML = DOMPurify.sanitize(`
         <div id="configEditorFields">
           <!-- Config fields will be loaded here -->
         </div>
         <div id="configEditorStatus" style="margin: 15px 0 10px 0; font-size: 13px; color: #666; text-align: center;"></div>
-      `;
+      `);
 
       // Create UXCore modal controller
       window.advancedEditorModalController = UXComponents.createModal({

@@ -17,7 +17,7 @@ from pathlib import Path
 
 # Test configuration
 TEST_ENV = {
-    'ES_COOKIE': 'test_cookie_integration',
+    'ELASTIC_COOKIE': 'test_cookie_integration',
     'BASELINE_START': '2024-01-01T00:00:00',
     'BASELINE_END': '2024-01-07T00:00:00',
     'CURRENT_TIME_RANGE': 'now-12h',

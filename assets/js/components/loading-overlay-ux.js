@@ -5,6 +5,7 @@
 
 import { UXComponents } from './ux-components.js';
 import { appStore, useUI, useConnection } from '../stores/app-store.js';
+import DOMPurify from './../lib/dompurify.js';
 
 class LoadingOverlayUX {
   constructor() {
@@ -127,7 +128,7 @@ class LoadingOverlayUX {
       const newContent = this.createStatusContent();
       const cardBody = this.statusCard.querySelector('.ux-card__body');
       if (cardBody) {
-        cardBody.innerHTML = '';
+        cardBody.innerHTML = ''; // Safe - clearing content only
         cardBody.appendChild(newContent);
       }
     }

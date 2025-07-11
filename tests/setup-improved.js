@@ -147,6 +147,13 @@ let testEnvironment;
 
 // Initialize test environment before all tests
 beforeEach(() => {
+  // Mock ResizeObserver for tests
+  global.ResizeObserver = vi.fn().mockImplementation(() => ({
+    observe: vi.fn(),
+    unobserve: vi.fn(),
+    disconnect: vi.fn()
+  }));
+
   // Set up comprehensive test environment
   testEnvironment = setupTestEnvironment({
     hostname: 'localhost',

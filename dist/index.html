@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RAD Monitor - Traffic Health Dashboard</title>
+    <link rel="icon" href="/favicon.ico" type="image/x-icon">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+
+    <!-- Antares Design System CSS -->
+    <!-- UXCore Bundle CSS for vanilla JS usage -->
+    <!-- Dashboard CSS with Antares implementation -->
+    <!-- Formula Builder with Antares implementation -->
+    <!-- Dark Theme -->
+
+    <!-- CORS Direct Override (must load FIRST to override API client) -->
+    <!-- <script src="assets/js/cors-direct-override.js"></script> -->
+
+    <!-- Production Helper (must load before main.js) -->
+    <!-- <script src="assets/js/production-helper.js"></script> -->
+
+    <!-- JavaScript Entry Point -->
+  <script type="module" crossorigin src="/assets/main-CvYcDr9Z.js"></script>
+  <link rel="modulepreload" crossorigin href="/assets/vanilla-Das_YOyF.js">
+  <link rel="stylesheet" crossorigin href="/assets/main-BkLWBciG.css">
+</head>
+<body>
+    <!-- Loading Overlay will be created dynamically by LoadingOverlay component -->
+
+    <!-- Main App Content (hidden until authenticated) -->
+    <div id="mainAppContent" class="main-app-content" style="display: none;">
+        <!-- Hidden input for server-side cookie -->
+        <input type="hidden" id="elasticCookie" value="">
+
+        <!-- Sidebar Control Panel -->
+        <div class="control-panel">
+        <div class="control-header">
+            CONTROL PANEL
+        </div>
+
+        <div class="control-content">
+            <!-- Connection Status -->
+            <div class="control-section">
+                <label class="control-label">System Status</label>
+                <div id="connectionStatus" class="connection-status-panel">
+                    <div class="main-status">
+                        <span class="status-dot"></span>
+                        <span class="status-text">Initializing...</span>
+                    </div>
+                    <div class="status-details">
+                        <div class="status-item">
+                            <span class="status-label">API:</span>
+                            <span id="apiStatus" class="status-value">Checking...</span>
+                        </div>
+                        <div class="status-item" id="websocketStatusItem" style="display: none;">
+                            <span class="status-label">WebSocket:</span>
+                            <span id="websocketStatus" class="status-value">Not connected</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-label">Data:</span>
+                            <span id="dataStatus" class="status-value">Ready</span>
+                        </div>
+                    </div>
+                </div>
+                <div style="margin-top: 10px;">
+                    <button onclick="Dashboard.testApiConnection()" class="ux-button ux-button--secondary" style="width: 100%;">Test All Connections</button>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="control-section">
+                <label class="control-label">Quick Actions</label>
+                <button onclick="Dashboard.refresh()" class="ux-button ux-button--primary" style="width: 100%; margin-bottom: 8px;" disabled>
+                    REFRESH DATA
+                </button>
+                <button onclick="showAdvancedEditor()" class="ux-button ux-button--secondary" style="width: 100%;" disabled>
+                    CONFIGURATION
+                </button>
+                <div class="refresh-status" id="refreshStatus" style="margin-top: 8px; text-align: center; font-size: 12px; color: #666;">Ready</div>
+            </div>
+
+            <!-- Additional Options -->
+            <div class="control-section">
+                <label class="control-label">Tools</label>
+                <button onclick="ConfigManager.exportConfiguration()" class="ux-button ux-button--secondary" style="width: 100%; margin-bottom: 5px;">Export Config</button>
+                <button onclick="Dashboard.showApiSetupInstructions()" class="ux-button ux-button--secondary" style="width: 100%;">Help</button>
+            </div>
+
+            <!-- Custom Formulas -->
+            <div class="control-section">
+                <label class="control-label">Custom Formulas</label>
+                <div id="formulaEditorContainer" style="margin-top: 10px;">
+                    <!-- Formula editor will be inserted here -->
+                    <enhanced-formula-editor id="formulaEditor"></enhanced-formula-editor>
+
+                    <!-- Validation messages -->
+                    <div id="formulaValidation" style="margin-top: 8px; font-size: 12px; min-height: 20px;">
+                        <span id="formulaStatus" class="formula-status">Formula builder ready</span>
+                    </div>
+
+                    <!-- Test button -->
+                    <button id="testFormulaBtn" onclick="testFormula()" class="ux-button ux-button--primary" style="width: 100%; margin-top: 8px;" disabled>
+                        Test Formula
+                    </button>
+
+                    <!-- Results preview -->
+                    <div id="formulaResults" style="margin-top: 8px; max-height: 150px; overflow-y: auto; display: none;">
+                        <div style="font-size: 11px; background: #f8f8f8; padding: 8px; border-radius: 4px; border: 1px solid #e0e0e0;">
+                            <div id="formulaResultsContent"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Current Configuration -->
+            <div class="control-section">
+                <label class="control-label">Active Configuration</label>
+                <div class="config-summary">
+                    <div class="config-item">
+                        <span class="config-label">Time Range:</span>
+                        <span id="quickTimeRange" class="config-value">now-12h</span>
+                    </div>
+                    <div class="config-item">
+                        <span class="config-label">Baseline:</span>
+                        <span id="quickBaseline" class="config-value">Auto-detected</span>
+                    </div>
+                    <div class="config-item">
+                        <span class="config-label">Environment:</span>
+                        <span id="quickEnvironment" class="config-value">Production</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content Area -->
+    <div class="main-content">
+        <div class="container">
+            <!-- Header -->
+            <div class="header">
+                <h1>RAD Traffic Health Monitor</h1>
+                <div class="header-controls">
+                    <button id="themeToggleBtn" class="ux-button ux-button--tertiary theme-toggle" onclick="toggleTheme()" title="Toggle theme">
+                        <span class="theme-icon-light">🌙</span>
+                        <span class="theme-icon-dark">☀️</span>
+                    </button>
+                    <button id="howItWorksBtn" class="ux-button ux-button--tertiary" onclick="showHowItWorksModal()">How It Works</button>
+                    <div class="timestamp">Last updated: <span id="lastUpdate">Never</span></div>
+                </div>
+            </div>
+
+            <div class="content">
+                <!-- Summary Cards -->
+                <div class="summary">
+                    <div class="card critical">
+                        <div class="label">CRITICAL</div>
+                        <div id="criticalCount" class="value">0</div>
+                        <div class="subtitle">Traffic dropped &gt;80%</div>
+                    </div>
+                    <div class="card warning">
+                        <div class="label">WARNING</div>
+                        <div id="warningCount" class="value">0</div>
+                        <div class="subtitle">Traffic dropped 50-80%</div>
+                    </div>
+                    <div class="card normal">
+                        <div class="label">NORMAL</div>
+                        <div id="normalCount" class="value">0</div>
+                        <div class="subtitle">Traffic as expected</div>
+                    </div>
+                    <div class="card increased">
+                        <div class="label">INCREASED</div>
+                        <div id="increasedCount" class="value">0</div>
+                        <div class="subtitle">Traffic higher than usual</div>
+                    </div>
+                </div>
+
+                <!-- Search and Filters -->
+                <div class="filters">
+                    <input type="text" id="searchInput" placeholder="Search events..." class="search-input">
+                    <div class="filter-buttons">
+                        <button class="filter-btn active" data-filter="all">ALL</button>
+                        <button class="filter-btn" data-filter="critical">CRITICAL</button>
+                        <button class="filter-btn" data-filter="warning">WARNING</button>
+                        <button class="filter-btn" data-filter="normal">NORMAL</button>
+                        <button class="filter-btn" data-filter="increased">INCREASED</button>
+                    </div>
+                </div>
+
+                <!-- RAD Type Filters -->
+                <div class="rad-filters" style="margin-top: 10px;">
+                    <label style="font-weight: 600; margin-right: 10px;">RAD Types:</label>
+                    <div id="radTypeButtons" class="filter-buttons" style="display: inline-flex;">
+                        <!-- RAD type buttons will be dynamically inserted here -->
+                    </div>
+                </div>
+
+                <!-- Loading Indicator -->
+                <div id="loadingIndicator" class="loading" style="display: none;">
+                    <div class="spinner"></div>
+                    <span>Loading data...</span>
+                </div>
+
+                <!-- Results Info -->
+                <div id="resultsInfo" class="results-info"></div>
+
+                <!-- Data Table -->
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th data-sort="event_id" style="width: 35%">Traffic Event Identifier</th>
+                            <th data-sort="rad_type" style="width: 12%">RAD Type</th>
+                            <th data-sort="status" style="width: 10%">Health Status</th>
+                            <th data-sort="score" style="width: 8%">Change %</th>
+                            <th data-sort="current" style="width: 10%; text-align: right">Current Count</th>
+                            <th data-sort="baseline12h" style="width: 10%; text-align: right">Expected Count</th>
+                            <th data-sort="change" style="width: 15%">Business Impact</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody">
+                        <!-- Data rows will be inserted here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hidden elements for compatibility -->
+    <div style="display: none;">
+
+        <!-- Hidden form elements for ConfigEditor compatibility -->
+        <button id="testApiBtn">Test API</button>
+    </div>
+
+    <!-- How It Works Modal -->
+    <div id="howItWorksModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>How RAD Monitor Works</h2>
+                <span class="close" onclick="closeHowItWorksModal()">&times;</span>
+            </div>
+            <div class="modal-body" id="howItWorksContent">
+                <!-- Content will be loaded dynamically -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Advanced Editor Modal -->
+    <div id="advancedEditorModal" class="modal" style="display: none;">
+        <div class="modal-content" style="max-width: 900px; max-height: 90vh; overflow-y: auto;">
+            <div class="modal-header">
+                <h2>Configuration Settings</h2>
+                <span class="close" onclick="closeAdvancedEditor()">&times;</span>
+            </div>
+            <div class="modal-body" style="padding: 20px;">
+                <div id="configEditorFields">
+                    <!-- Config fields will be loaded here -->
+                </div>
+                <div id="configEditorStatus" style="margin: 15px 0 10px 0; font-size: 13px; color: #666; text-align: center;"></div>
+                <div style="margin-top: 15px; display: flex; gap: 10px; justify-content: center;">
+                    <button onclick="ConfigEditor.saveConfig()" class="ux-button ux-button--primary">Apply Changes</button>
+                    <button onclick="ConfigEditor.resetToDefaults()" class="ux-button ux-button--secondary">Reset to Defaults</button>
+                    <button onclick="closeAdvancedEditor()" class="ux-button ux-button--secondary">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        /* Clean, simple styling using GoDaddy colors */
+        .container .header {
+            display: flex !important;
+            justify-content: space-between !important;
+            align-items: center !important;
+            margin-bottom: 30px;
+        }
+
+        .header-controls {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        /* Theme Toggle Button */
+        .theme-toggle {
+            padding: 0.5rem !important;
+            font-size: 1.25rem !important;
+            min-width: auto !important;
+            width: 40px !important;
+            height: 40px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            border-radius: 8px !important;
+        }
+
+        body:not(.dark-theme) .theme-icon-dark {
+            display: none;
+        }
+
+        body.dark-theme .theme-icon-light {
+            display: none;
+        }
+
+        /* Use ux-modal classes from uxcore-bundle.css */
+        .modal {
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            backdrop-filter: blur(2px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background-color: white;
+            border-radius: 0.5rem;
+            width: 90%;
+            max-width: 900px;
+            max-height: 85vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--gd-color-border-secondary, #e8e8e8);
+        }
+
+        .modal-header h2 {
+            margin: 0;
+            color: var(--gd-color-text-primary, #111);
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .close {
+            color: var(--gd-color-text-secondary, #666);
+            font-size: 1.5rem;
+            font-weight: bold;
+            cursor: pointer;
+            padding: 0.25rem;
+            line-height: 1;
+            border: none;
+            background: none;
+            transition: opacity 0.2s;
+        }
+
+        .close:hover {
+            opacity: 0.7;
+        }
+
+        .modal-body {
+            padding: 1.5rem;
+            color: var(--gd-color-text-primary, #111);
+        }
+
+        /* Clean info sections */
+        .math-section {
+            margin-bottom: 1.5rem;
+            padding: 1rem;
+            background: var(--gd-color-background-secondary, #f5f5f5);
+            border-radius: 0.5rem;
+            border-left: 4px solid var(--gd-color-brand-primary, #ff6900);
+        }
+
+        .math-section h3 {
+            margin: 0 0 0.75rem 0;
+            color: var(--gd-color-text-primary, #111);
+            font-size: 1.125rem;
+            font-weight: 600;
+        }
+
+        .formula {
+            background: white;
+            padding: 0.75rem 1rem;
+            border-radius: 0.25rem;
+            font-family: monospace;
+            margin: 0.5rem 0;
+            border: 1px solid var(--gd-color-border-primary, #d4d4d4);
+            font-size: 0.875rem;
+        }
+
+        .example {
+            background: var(--gd-color-warning-background, #fffbe6);
+            padding: 1rem;
+            border-radius: 0.25rem;
+            margin: 0.5rem 0;
+            font-size: 0.875rem;
+        }
+
+        .example strong {
+            color: var(--gd-color-warning-text, #ffb900);
+        }
+
+        /* Clean button styling extension */
+        .ux-button {
+            width: 100%;
+        }
+
+        /* Simplify control panel */
+        .control-panel {
+            background: white;
+            border-right: 1px solid var(--gd-color-border-primary, #d4d4d4);
+        }
+
+        .control-header {
+            background: var(--gd-color-background-secondary, #f5f5f5);
+            border-bottom: 1px solid var(--gd-color-border-primary, #d4d4d4);
+            font-weight: 600;
+            color: var(--gd-color-text-primary, #111);
+        }
+
+        /* Clean timestamp styling */
+        .timestamp {
+            color: var(--gd-color-text-secondary, #666);
+            font-size: 0.875rem;
+        }
+    </style>
+
+    <script>
+        // How It Works Modal Functions
+        // Theme Management
+        function initTheme() {
+            const savedTheme = localStorage.getItem('rad-monitor-theme');
+            if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.body.classList.add('dark-theme');
+            }
+        }
+
+        function toggleTheme() {
+            const isDark = document.body.classList.toggle('dark-theme');
+            localStorage.setItem('rad-monitor-theme', isDark ? 'dark' : 'light');
+            
+            // Dispatch event for any components that need to update
+            window.dispatchEvent(new CustomEvent('themeChanged', { detail: { isDark } }));
+        }
+
+        // Initialize theme on page load
+        document.addEventListener('DOMContentLoaded', initTheme);
+
+        function showHowItWorksModal() {
+            const modal = document.getElementById('howItWorksModal');
+            const content = document.getElementById('howItWorksContent');
+
+            // Load the content
+            content.innerHTML = generateHowItWorksContent();
+
+            // Show modal
+            modal.style.display = 'block';
+
+            // Close on outside click
+            modal.onclick = function(event) {
+                if (event.target === modal) {
+                    closeHowItWorksModal();
+                }
+            };
+        }
+
+        function closeHowItWorksModal() {
+            document.getElementById('howItWorksModal').style.display = 'none';
+        }
+
+        // Advanced Editor Modal Functions
+        async function showAdvancedEditor() {
+            const modal = document.getElementById('advancedEditorModal');
+
+            // Load the configuration
+            await ConfigEditor.loadConfig();
+
+            // Show modal
+            modal.style.display = 'block';
+
+            // Close on outside click
+            modal.onclick = function(event) {
+                if (event.target === modal) {
+                    closeAdvancedEditor();
+                }
+            };
+        }
+
+        function closeAdvancedEditor() {
+            document.getElementById('advancedEditorModal').style.display = 'none';
+        }
+
+        function generateHowItWorksContent() {
+            return `
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                    <div>
+                        <div class="math-section" style="margin-bottom: 15px; padding: 15px;">
+                            <h3 style="margin: 0 0 10px 0; font-size: 16px;">📊 How We Calculate</h3>
+                            <div class="formula" style="margin: 8px 0; padding: 8px; font-size: 12px;">
+                            <strong>Expected = Daily Avg × (Hours ÷ 24)</strong><br>
+                            <strong>Ratio = Current ÷ Expected</strong><br>
+                            <strong>Score:</strong> See volume rules →
+                            </div>
+                            <div class="example" style="margin: 8px 0; padding: 10px; font-size: 12px;">
+                                <strong>📉 Visual Example:</strong><br>
+                                Baseline: ████████████ 1000/day<br>
+                                Current:  ██ 100 (expected 500)<br>
+                                Ratio: 0.2 → Score: -80% = CRITICAL 🚨
+                            </div>
+                        </div>
+
+                        <div class="math-section" style="margin-bottom: 15px; padding: 15px;">
+                            <h3 style="margin: 0 0 10px 0; font-size: 16px;">🚨 Status Thresholds</h3>
+                            <ul style="margin: 5px 0; padding-left: 20px; font-size: 13px;">
+                                <li><strong style="color: #d32f2f;">CRITICAL:</strong> ≤ -80% drop</li>
+                                <li><strong style="color: #f57c00;">WARNING:</strong> -50% to -80% drop</li>
+                                <li><strong style="color: #388e3c;">NORMAL:</strong> -50% to 0%</li>
+                                <li><strong style="color: #1976d2;">INCREASED:</strong> > 0%</li>
+                            </ul>
+                        </div>
+
+                        <div class="math-section" style="padding: 15px;">
+                            <h3 style="margin: 0 0 10px 0; font-size: 16px;">⚠️ Common Gotchas</h3>
+                            <ul style="margin: 5px 0; padding-left: 20px; font-size: 13px;">
+                                <li>Weekend traffic differs from weekdays</li>
+                                <li>Marketing campaigns skew baselines</li>
+                                <li>Exclude maintenance windows</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="math-section" style="margin-bottom: 15px; padding: 15px;">
+                            <h3 style="margin: 0 0 10px 0; font-size: 16px;">🎛️ Configuration Tips</h3>
+                            <div style="font-size: 13px;">
+                                <p style="margin: 5px 0;"><strong>Quick Detection:</strong><br>
+                                • Time: now-6h • Base: 3-5 days</p>
+                                <p style="margin: 5px 0;"><strong>Stable Monitoring:</strong><br>
+                                • Time: now-24h • Base: 7-10 days</p>
+                                <p style="margin: 5px 0;"><strong>Investigation:</strong><br>
+                                • Time: "24h ago to 8h ago"</p>
+                            </div>
+                        </div>
+
+                        <div class="math-section" style="margin-bottom: 15px; padding: 15px;">
+                            <h3 style="margin: 0 0 10px 0; font-size: 16px;">📈 Volume-Based Scoring</h3>
+                            <div style="font-size: 13px;">
+                                <p style="margin: 5px 0;"><strong>High (≥1000/day):</strong><br>
+                                • Ratio < 0.5: Score = (1-ratio) × -100<br>
+                                • Else: Score = (ratio-1) × 100</p>
+                                <p style="margin: 5px 0;"><strong>Medium (100-1000):</strong><br>
+                                • Ratio < 0.3: Score = (1-ratio) × -100<br>
+                                • Else: Score = (ratio-1) × 100</p>
+                                <p style="margin: 5px 0;"><strong>Low (<100):</strong> Filtered out</p>
+                            </div>
+                        </div>
+
+                        <div class="math-section" style="padding: 15px;">
+                            <h3 style="margin: 0 0 10px 0; font-size: 16px;">🚀 Key Features</h3>
+                            <ul style="margin: 5px 0; padding-left: 20px; font-size: 13px;">
+                                <li><strong>Real-time:</strong> Updates live</li>
+                                <li><strong>Smart filtering:</strong> Ignores noise</li>
+                                <li><strong>Business impact:</strong> Shows actual loss/gain</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Initialize UI helpers
+        document.addEventListener('DOMContentLoaded', function() {
+            // Update connection status - now delegates to ConnectionStatusManager
+            window.updateConnectionStatus = function(connected, message) {
+                if (window.ConnectionStatusManager) {
+                    window.ConnectionStatusManager.updateAPIStatus(connected, message);
+                } else {
+                    // Fallback for backward compatibility
+                    const statusDot = document.querySelector('.status-dot');
+                    const statusText = document.querySelector('.status-text');
+                    if (statusDot && statusText) {
+                        statusDot.style.backgroundColor = connected ? 'var(--gd-color-success)' : 'var(--gd-color-error)';
+                        statusText.textContent = message || (connected ? 'Connected' : 'Disconnected');
+                    }
+                }
+            };
+
+            // Listen for API status changes
+            if (window.unifiedAPI) {
+                window.addEventListener('api:statusChange', () => {
+                    const mode = window.unifiedAPI.getMode();
+                    updateConnectionStatus(true, mode === 'fastapi' ? 'FastAPI Connected' : 'Connected');
+                });
+            }
+
+            // Update quick stats display
+            window.updateQuickStats = async function() {
+                try {
+                    const config = await ConfigService.getConfig();
+
+                    // Update time range
+                    const timeRangeEl = document.getElementById('quickTimeRange');
+                    if (timeRangeEl) {
+                        timeRangeEl.textContent = config.currentTimeRange || 'now-12h';
+                    }
+
+                    // Update baseline
+                    const baselineEl = document.getElementById('quickBaseline');
+                    if (baselineEl && config.baselineStart && config.baselineEnd) {
+                        const start = new Date(config.baselineStart).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                        const end = new Date(config.baselineEnd).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                        baselineEl.textContent = `${start} - ${end}`;
+                    }
+
+                    // Update theme
+                    const themeEl = document.getElementById('quickTheme');
+                    if (themeEl) {
+                        themeEl.textContent = config.theme || 'light';
+                    }
+                } catch (error) {
+                    console.debug('Error updating quick stats:', error);
+                }
+            };
+
+            // Update quick stats on config changes
+            if (window.ConfigService) {
+                ConfigService.subscribe(() => {
+                    updateQuickStats();
+                });
+                // Initial update
+                setTimeout(updateQuickStats, 500);
+            }
+
+        });
+    </script>
+    </div>
+    <!-- End of Main App Content -->
+
+    <!-- Include all our custom JavaScript modules -->
+</body>
+</html>

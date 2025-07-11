@@ -11,6 +11,7 @@
 import { EnhancedFormulaParser } from '../core/enhanced-ast-parser.js';
 import { EnhancedFormulaValidator } from '../core/enhanced-validator.js';
 import { FUNCTION_CATEGORIES, FUNCTION_METADATA, FORMULA_PATTERNS } from '../core/formula-functions.js';
+import DOMPurify from './../../lib/dompurify.js';
 
 // Custom events
 export const FormulaBuilderEvents = {
@@ -58,7 +59,7 @@ export class EnhancedFormulaBuilder extends HTMLElement {
   }
 
   render() {
-    this.shadowRoot.innerHTML = `
+    this.shadowRoot.innerHTML = DOMPurify.sanitize(`
       <style>
         :host {
           --primary-color: #2563eb;
@@ -867,7 +868,7 @@ export class EnhancedFormulaBuilder extends HTMLElement {
       </div>
 
       <div class="sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
-    `;
+    `);
 
     this.announcer = this.shadowRoot.querySelector('[role="status"]');
   }
@@ -1152,7 +1153,7 @@ export class EnhancedFormulaBuilder extends HTMLElement {
     const metadata = FUNCTION_METADATA[functionName];
     const signature = this.getFunctionSignature(functionName);
 
-    node.innerHTML = `
+    node.innerHTML = DOMPurify.sanitize(`
       <div class="node-content">
         <span class="node-name">${functionName}</span>
         <span class="node-args">
@@ -1160,7 +1161,7 @@ export class EnhancedFormulaBuilder extends HTMLElement {
         </span>
       </div>
       <button class="node-remove" aria-label="Remove ${functionName}">×</button>
-    `;
+    `);
 
     // Setup event listeners
     node.querySelector('.node-remove').addEventListener('click', () => {
@@ -1296,7 +1297,7 @@ export class EnhancedFormulaBuilder extends HTMLElement {
   updateValidationDisplay() {
     const validationPanel = this.shadowRoot.querySelector('[data-panel="validation"]');
     const validationMessages = validationPanel.querySelector('.validation-messages');
-    validationMessages.innerHTML = this.renderValidationMessages();
+    validationMessages.innerHTML = DOMPurify.sanitize(this.renderValidationMessages());
 
     // Update stats
     const validationTime = this.shadowRoot.querySelector('.stat-value:nth-of-type(2)');
@@ -1327,11 +1328,11 @@ export class EnhancedFormulaBuilder extends HTMLElement {
 
   clearFormula() {
     const dropZone = this.shadowRoot.querySelector('.drop-zone');
-    dropZone.innerHTML = `
+    dropZone.innerHTML = DOMPurify.sanitize(`
       <div class="drop-zone-placeholder">
         Drag functions here to build your formula
       </div>
-    `;
+    `);
 
     this.formula = '';
     this.updatePreview();
@@ -1392,7 +1393,7 @@ export class EnhancedFormulaBuilder extends HTMLElement {
 
     // Re-render function list
     const functionList = this.shadowRoot.querySelector('.function-list');
-    functionList.innerHTML = this.renderFunctionList();
+    functionList.innerHTML = DOMPurify.sanitize(this.renderFunctionList());
 
     // Re-initialize drag-drop for new items
     this.initializeDragDrop();
@@ -1435,7 +1436,7 @@ export class EnhancedFormulaBuilder extends HTMLElement {
 
     // TODO: Parse and create visual nodes from formula text
     const dropZone = this.shadowRoot.querySelector('.drop-zone');
-    dropZone.innerHTML = `<div class="formula-text">${template.formula}</div>`;
+    dropZone.innerHTML = DOMPurify.sanitize(`<div class="formula-text">${template.formula}</div>`);
 
     // Update and validate
     this.updatePreview();
@@ -1491,7 +1492,7 @@ export class EnhancedFormulaBuilder extends HTMLElement {
     if (this.shadowRoot) {
       const functionList = this.shadowRoot.querySelector('.function-list');
       if (functionList) {
-        functionList.innerHTML = this.renderFunctionList();
+        functionList.innerHTML = DOMPurify.sanitize(this.renderFunctionList());
         this.initializeDragDrop();
       }
     }
@@ -1513,7 +1514,7 @@ export class EnhancedFormulaBuilder extends HTMLElement {
     if (this.selectedCategory === 'templates' && this.shadowRoot) {
       const functionList = this.shadowRoot.querySelector('.function-list');
       if (functionList) {
-        functionList.innerHTML = this.renderTemplates();
+        functionList.innerHTML = DOMPurify.sanitize(this.renderTemplates());
       }
     }
   }

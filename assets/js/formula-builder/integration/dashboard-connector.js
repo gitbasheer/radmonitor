@@ -3,6 +3,7 @@
  */
 
 import { createFormulaEditor } from '../ui/formula-editor.js';
+import DOMPurify from './../../lib/dompurify.js';
 
 export class DashboardFormulaIntegration {
   constructor(apiClient, dataService) {
@@ -38,7 +39,7 @@ export class DashboardFormulaIntegration {
   addIntegrationControls(container) {
     const controls = document.createElement('div');
     controls.className = 'formula-integration-controls';
-    controls.innerHTML = `
+    controls.innerHTML = DOMPurify.sanitize(`
       <div class="integration-toolbar">
         <button class="btn-execute-query">Execute Query</button>
         <button class="btn-add-to-dashboard">Add to Dashboard</button>
@@ -52,7 +53,7 @@ export class DashboardFormulaIntegration {
         <div class="results-summary"></div>
         <div class="results-preview"></div>
       </div>
-    `;
+    `);
 
     container.appendChild(controls);
 
@@ -109,7 +110,7 @@ export class DashboardFormulaIntegration {
     try {
       // Show loading state
       resultsSection.style.display = 'block';
-      resultsSummary.innerHTML = '<p>Executing query...</p>';
+      resultsSummary.innerHTML = DOMPurify.sanitize('<p>Executing query...</p>');
       resultsPreview.innerHTML = '';
 
       // Execute query through the API client
@@ -119,24 +120,24 @@ export class DashboardFormulaIntegration {
       const results = this.processQueryResults(response);
 
       // Display results
-      resultsSummary.innerHTML = `
+      resultsSummary.innerHTML = DOMPurify.sanitize(`
         <div class="results-stats">
           <span>Total Hits: ${results.totalHits}</span>
           <span>Took: ${results.took}ms</span>
         </div>
-      `;
+      `);
 
-      resultsPreview.innerHTML = `
+      resultsPreview.innerHTML = DOMPurify.sanitize(`
         <div class="results-data">
           <pre>${JSON.stringify(results.aggregations, null, 2)}</pre>
         </div>
-      `;
+      `);
 
       // Store results for dashboard integration
       this.lastQueryResults = results;
 
     } catch (error) {
-      resultsSummary.innerHTML = `<p class="error">Error: ${error.message}</p>`;
+      resultsSummary.innerHTML = DOMPurify.sanitize(`<p class="error">Error: ${error.message}</p>`);
       resultsPreview.innerHTML = '';
     }
   }
@@ -234,7 +235,7 @@ export class DashboardFormulaIntegration {
     const widget = document.createElement('div');
     widget.className = 'dashboard-widget formula-widget';
     widget.dataset.formula = config.formula;
-    widget.innerHTML = `
+    widget.innerHTML = DOMPurify.sanitize(`
       <div class="widget-header">
         <h4>${config.title}</h4>
         <div class="widget-controls">
@@ -251,7 +252,7 @@ export class DashboardFormulaIntegration {
           <code>${config.formula}</code>
         </div>
       </div>
-    `;
+    `);
 
     // Attach event handlers
     widget.querySelector('.btn-refresh').addEventListener('click', () => {
@@ -381,7 +382,7 @@ export class DashboardFormulaIntegration {
     if (!dropdown) return;
 
     // Clear existing options except the first one
-    dropdown.innerHTML = '<option value="">Load Saved Formula...</option>';
+    dropdown.innerHTML = DOMPurify.sanitize('<option value="">Load Saved Formula...</option>');
 
     // Add saved formulas
     Object.entries(savedFormulas).forEach(([name, data]) => {

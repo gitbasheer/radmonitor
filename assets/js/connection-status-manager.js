@@ -3,7 +3,8 @@
  * Centralizes all connection and status reporting in the application
  */
 
-import { renderAuthPrompt } from './components/auth-prompt.js';
+import { appStore } from './stores/app-store.js';
+import DOMPurify from './lib/dompurify.js';
 
 export class ConnectionStatusManager {
     constructor() {
@@ -144,6 +145,14 @@ export class ConnectionStatusManager {
         this.statuses.auth.message = message || (authenticated ? 'Authenticated' : 'Not authenticated');
 
         this.updateLoadingItem('auth', authenticated, this.statuses.auth.message);
+        
+        // Sync with app store to ensure single source of truth
+        const currentState = appStore.getState();
+        if (currentState.auth.isAuthenticated !== authenticated) {
+            console.log('🔄 Syncing auth status with app store:', authenticated);
+            // Don't trigger auth prompt here - let the app store handle it during init
+        }
+        
         this.checkAllSystemsReady();
     }
 
@@ -322,59 +331,15 @@ export class ConnectionStatusManager {
             }
         });
 
-        // Only hide loading if authenticated, otherwise show auth prompt
+        // Only hide loading if authenticated
         if (allReady && !this.isFullyLoaded) {
             setTimeout(() => this.hideLoadingState(), 500);
-        } else if (!this.statuses.auth.authenticated && this.statuses.api.connected) {
-            // API is ready but not authenticated - show auth prompt on overlay
-            this.showAuthPromptOnOverlay();
         }
+        // Let the app store handle auth prompts - don't show our own
 
         return allReady;
     }
 
-    /**
-     * Show auth prompt on loading overlay
-     */
-    showAuthPromptOnOverlay() {
-        try {
-            // Ensure main content stays hidden
-            const mainContent = document.getElementById('mainAppContent');
-            if (mainContent) {
-                mainContent.classList.remove('authenticated');
-                mainContent.style.display = 'none';
-            }
-
-            if (this.elements.loadingOverlay) {
-                // Make sure overlay is visible
-                this.elements.loadingOverlay.classList.remove('hidden');
-
-                // Update the loading content to show auth prompt
-                const loadingContent = this.elements.loadingOverlay.querySelector('.loading-content');
-                if (loadingContent) {
-                    renderAuthPrompt(loadingContent);
-                } else {
-                    console.error('Loading content element not found');
-                }
-            } else {
-                console.error('Loading overlay element not found');
-            }
-        } catch (error) {
-            console.error('Error showing auth prompt on overlay:', error);
-            // Try to at least show a basic message
-            if (this.elements.loadingOverlay) {
-                const loadingContent = this.elements.loadingOverlay.querySelector('.loading-content');
-                if (loadingContent) {
-                    loadingContent.innerHTML = `
-                        <div style="text-align: center; padding: 40px;">
-                            <h2 style="color: #ff6900;">Authentication Required</h2>
-                            <p>Please check the console for setup instructions.</p>
-                        </div>
-                    `;
-                }
-            }
-        }
-    }
 
     /**
      * Update loading message

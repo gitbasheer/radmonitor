@@ -136,7 +136,7 @@ class DashboardConfig:
 def get_elastic_cookie() -> Optional[str]:
     """Get Elastic cookie from environment or local script"""
     # Priority 1: Environment variable (for CI/CD)
-    cookie = os.environ.get('ELASTIC_COOKIE') or os.environ.get('ES_COOKIE')
+    cookie = os.environ.get('ELASTIC_COOKIE')
     if cookie:
         return cookie
 

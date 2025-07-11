@@ -3,9 +3,11 @@
  * This bypasses proxy issues when CORS extension is active
  */
 
+import { getElasticsearchUrl } from './config-service.js';
+
 export class DirectElasticsearchClient {
     constructor() {
-        this.elasticsearchUrl = window.ELASTICSEARCH_URL || 'https://usieventho-prod-usw2.kb.us-west-2.aws.found.io:9243';
+        this.elasticsearchUrl = getElasticsearchUrl();
         this.indexPath = '/elasticsearch/usi*/_search';
     }
 

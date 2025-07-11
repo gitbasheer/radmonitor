@@ -8,6 +8,7 @@
 import { FormulaAIAssistant } from './formula-builder/ai/formula-ai-assistant.js';
 import { EnhancedFormulaValidator } from './formula-builder/core/enhanced-validator.js';
 import { EnhancedFormulaParser } from './formula-builder/core/enhanced-ast-parser.js';
+import DOMPurify from './lib/dompurify.js';
 
 // Configuration
 const CONFIG = {
@@ -198,8 +199,10 @@ class AIFormulaIntegration {
     }
 
     const container = this.createElement('div', {
-      className: 'ai-formula-container',
-      innerHTML: `
+      className: 'ai-formula-container'
+    });
+    
+    container.innerHTML = DOMPurify.sanitize(`
         <div class="ai-formula-wrapper">
           <div class="ai-input-group">
             <input type="text" id="aiFormulaInput" class="ai-formula-input"
@@ -210,8 +213,7 @@ class AIFormulaIntegration {
           </div>
           <div id="aiFormulaResults" class="ai-formula-results" style="display: none;"></div>
         </div>
-      `
-    });
+      `);
 
     // Insert after title
     const title = header.querySelector('h1');
@@ -302,7 +304,7 @@ class AIFormulaIntegration {
     const { results } = this.elements;
 
     if (!result?.formula && !result?.alternatives?.length) {
-      results.innerHTML = this.createNoResultsHTML();
+      results.innerHTML = DOMPurify.sanitize(this.createNoResultsHTML());
       results.style.display = 'block';
       return;
     }
@@ -321,9 +323,9 @@ class AIFormulaIntegration {
     }
 
     // Render results
-    results.innerHTML = allResults.map((item, index) =>
+    results.innerHTML = DOMPurify.sanitize(allResults.map((item, index) =>
       this.createResultHTML(item, index)
-    ).join('');
+    ).join(''));
 
     results.style.display = 'block';
     this.attachResultListeners();
@@ -545,7 +547,7 @@ class AIFormulaIntegration {
     button.disabled = loading;
 
     if (loading) {
-      results.innerHTML = '<div class="ai-no-results">Generating formula...</div>';
+      results.innerHTML = DOMPurify.sanitize('<div class="ai-no-results">Generating formula...</div>');
       results.style.display = 'block';
     }
   }
@@ -556,7 +558,7 @@ class AIFormulaIntegration {
 
   showError(message) {
     const { results } = this.elements;
-    results.innerHTML = `<div class="ai-error">${this.escape(message)}</div>`;
+    results.innerHTML = DOMPurify.sanitize(`<div class="ai-error">${this.escape(message)}</div>`);
     results.style.display = 'block';
 
     setTimeout(() => this.hideResults(), CONFIG.errorDuration);

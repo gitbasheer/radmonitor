@@ -177,9 +177,12 @@ export class AuthService {
      * @returns {Promise<string|null>} Cookie value or null
      */
     async promptForCookie() {
-        // Use CookieModal if available
-        if (window.CookieModal) {
-            return await window.CookieModal.show();
+        // Use app store to show auth prompt
+        if (window.appStore) {
+            const { showAuthPrompt } = window.appStore.getState().actions;
+            showAuthPrompt();
+            // Return null since auth overlay handles cookie submission
+            return null;
         }
 
         // Fallback to prompt (should not reach here)

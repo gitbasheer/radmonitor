@@ -3,6 +3,8 @@
  * Handles CORS instructions, production mode warnings, and environment-specific features
  */
 
+import DOMPurify from './lib/dompurify.js';
+
 window.ProductionHelper = (() => {
     'use strict';
 
@@ -46,7 +48,7 @@ window.ProductionHelper = (() => {
 
         // Add to page
         const modalContainer = document.createElement('div');
-        modalContainer.innerHTML = modalHtml;
+        modalContainer.innerHTML = DOMPurify.sanitize(modalHtml);
         document.body.appendChild(modalContainer);
 
         // Auto-close on outside click
@@ -132,7 +134,7 @@ window.ProductionHelper = (() => {
         `;
 
         const bannerContainer = document.createElement('div');
-        bannerContainer.innerHTML = bannerHtml;
+        bannerContainer.innerHTML = DOMPurify.sanitize(bannerHtml);
         document.body.insertBefore(bannerContainer, document.body.firstChild);
 
         // Adjust body padding to account for banner
@@ -210,10 +212,15 @@ window.ProductionHelper = (() => {
                     setTimeout(() => {
                         const banner = document.getElementById('productionBanner');
                         if (banner) {
-                            banner.innerHTML = banner.innerHTML.replace(
+                            // Get the current HTML content
+                            const currentContent = banner.innerHTML;
+                            // Replace the text
+                            const updatedContent = currentContent.replace(
                                 'GitHub Pages Mode',
                                 'GitHub Pages Mode | 🔐 Auto-Authenticated'
                             );
+                            // Sanitize and set the updated content
+                            banner.innerHTML = DOMPurify.sanitize(updatedContent);
                         }
                     }, 1000);
                 } else if (config.dashboard?.skipCookiePrompt === false) {
