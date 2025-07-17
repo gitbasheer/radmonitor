@@ -1,10 +1,10 @@
 /**
  * Query Panel - Quick actions for selected EIDs
+ * Provides UI for executing predefined queries on selected EIDs
  */
 import { QueryResultsViewer } from './query-results-viewer.js';
 import { getTemplate } from '../esql/query-templates.js';
-import DOMPurify from './../../../lib/dompurify.js';
-
+import { QueryErrorFactory } from '../query-engine/errors.js';
 export class QueryPanel {
     constructor(options) {
         this.selectedEIDs = [];
@@ -26,32 +26,32 @@ export class QueryPanel {
      * Render the query panel
      */
     render() {
-        this.options.container.innerHTML = DOMPurify.sanitize(`
+        this.options.container.innerHTML = `
       <div class="emil-query-panel">
         <div class="emil-query-header">
           <h3>Quick Actions</h3>
           <span class="emil-query-status"></span>
         </div>
-
+        
         <div class="emil-query-actions">
           <button class="emil-query-btn" data-action="health-check" disabled>
             <span class="emil-query-icon">🏥</span>
             <span class="emil-query-label">Health Check</span>
             <span class="emil-query-desc">Check current status</span>
           </button>
-
+          
           <button class="emil-query-btn" data-action="baseline-compare" disabled>
             <span class="emil-query-icon">📊</span>
             <span class="emil-query-label">Compare Baseline</span>
             <span class="emil-query-desc">vs. last week</span>
           </button>
-
+          
           <button class="emil-query-btn" data-action="trend-analysis" disabled>
             <span class="emil-query-icon">📈</span>
             <span class="emil-query-label">Trend Analysis</span>
             <span class="emil-query-desc">24h trends</span>
           </button>
-
+          
           <button class="emil-query-btn" data-action="performance" disabled>
             <span class="emil-query-icon">⚡</span>
             <span class="emil-query-label">Performance</span>
@@ -73,7 +73,7 @@ export class QueryPanel {
                   <option value="7d">Last 7 days</option>
                 </select>
               </label>
-
+              
               <label>
                 Baseline Period:
                 <select id="emil-baseline-period">
@@ -93,7 +93,7 @@ export class QueryPanel {
           </button>
         </div>
       </div>
-    `);
+    `;
         this.applyStyles();
         this.attachEventListeners();
     }
@@ -323,7 +323,8 @@ export class QueryPanel {
         }
         catch (error) {
             console.error('Query execution failed:', error);
-            alert(`Query failed: ${error}`);
+            const userMessage = QueryErrorFactory.getUserMessage(error);
+            alert(`Query failed: ${userMessage}`);
         }
         finally {
             this.isLoading = false;

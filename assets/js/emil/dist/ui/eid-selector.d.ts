@@ -1,6 +1,6 @@
 /**
  * EID Selector Component - Main UI for EID search and selection
- * Integrates Trie search, virtual scrolling, and autocomplete
+ * Fixed version with proper cleanup and memory management
  */
 import { EIDRegistry } from '../eid-registry/eid-registry.js';
 export interface EIDSelectorOptions {
@@ -21,15 +21,20 @@ export declare class EIDSelector {
     private currentSuggestions;
     private selectedSuggestionIndex;
     private debounceTimer;
+    private eventHandlers;
+    private documentClickHandler;
+    private styleElement;
     constructor(options: EIDSelectorOptions);
     private render;
     private applyStyles;
     private attachEventListeners;
+    private addEventListener;
     private handleSearchInput;
     private handleSearchKeydown;
     private performSearch;
     private renderSuggestions;
     private highlightMatch;
+    private escapeHtml;
     private navigateSuggestions;
     private selectCurrentSuggestion;
     private showSuggestions;
@@ -53,7 +58,7 @@ export declare class EIDSelector {
      */
     setSelectedEIDs(eids: string[]): void;
     /**
-     * Destroy the component
+     * Destroy the component and clean up all resources
      */
     destroy(): void;
 }

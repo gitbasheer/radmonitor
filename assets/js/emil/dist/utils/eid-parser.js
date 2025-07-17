@@ -88,6 +88,43 @@ export class EIDParser {
         }
     }
     /**
+     * Extract RAD identifier for filtering purposes
+     * For Venture Feed RADs: pandc.vnext.recommendations.feed.feed*
+     * Returns a string that can be used to group EIDs by RAD
+     */
+    static extractRADIdentifier(eid) {
+        try {
+            const parsed = this.parse(eid);
+            // For venture feed RADs, group by the pattern
+            if (parsed.namespace === 'pandc' &&
+                parsed.radset === 'vnext' &&
+                parsed.radId === 'recommendations' &&
+                parsed.subaction?.startsWith('feed.feed')) {
+                return 'venture-feed';
+            }
+            // For other RADs, use namespace.radset.radId as the identifier
+            return `${parsed.namespace}.${parsed.radset}.${parsed.radId}`;
+        }
+        catch {
+            return 'unknown';
+        }
+    }
+    /**
+     * Get human-readable RAD name from identifier
+     */
+    static getRADDisplayName(radIdentifier) {
+        const radNames = {
+            'venture-feed': 'Venture Feed',
+            'pandc.vnext.recommendations': 'Recommendations',
+            'pandc.vnext.metricsevolved': 'Metrics Evolved',
+            'pandc.vnext.cart': 'Cart Recommendations',
+            'pandc.vnext.product': 'Product Recommendations',
+            'pandc.vnext.discovery': 'Discovery',
+            'pandc.vnext.search': 'Search'
+        };
+        return radNames[radIdentifier] || this.humanize(radIdentifier.split('.').pop() || radIdentifier);
+    }
+    /**
      * Get display name for an EID
      */
     static getDisplayName(eid) {
@@ -175,6 +212,43 @@ export class EIDParser {
         }
     }
     /**
+     * Extract RAD identifier for filtering purposes
+     * For Venture Feed RADs: pandc.vnext.recommendations.feed.feed*
+     * Returns a string that can be used to group EIDs by RAD
+     */
+    static extractRADIdentifier(eid) {
+        try {
+            const parsed = this.parse(eid);
+            // For venture feed RADs, group by the pattern
+            if (parsed.namespace === 'pandc' &&
+                parsed.radset === 'vnext' &&
+                parsed.radId === 'recommendations' &&
+                parsed.subaction?.startsWith('feed.feed')) {
+                return 'venture-feed';
+            }
+            // For other RADs, use namespace.radset.radId as the identifier
+            return `${parsed.namespace}.${parsed.radset}.${parsed.radId}`;
+        }
+        catch {
+            return 'unknown';
+        }
+    }
+    /**
+     * Get human-readable RAD name from identifier
+     */
+    static getRADDisplayName(radIdentifier) {
+        const radNames = {
+            'venture-feed': 'Venture Feed',
+            'pandc.vnext.recommendations': 'Recommendations',
+            'pandc.vnext.metricsevolved': 'Metrics Evolved',
+            'pandc.vnext.cart': 'Cart Recommendations',
+            'pandc.vnext.product': 'Product Recommendations',
+            'pandc.vnext.discovery': 'Discovery',
+            'pandc.vnext.search': 'Search'
+        };
+        return radNames[radIdentifier] || this.humanize(radIdentifier.split('.').pop() || radIdentifier);
+    }
+    /**
      * Create metadata from EID with defaults
      */
     static createMetadata(eid, additionalData) {
@@ -194,4 +268,3 @@ export class EIDParser {
 }
 EIDParser.DEFAULT_NAMESPACE = 'pandc';
 EIDParser.DEFAULT_RADSET = 'vnext';
-//# sourceMappingURL=eid-parser.js.map

@@ -39,12 +39,15 @@ from dotenv import load_dotenv
 # Load environment variables
 load_dotenv()
 
+# Add the parent directory to the path to ensure local imports work
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+# Import execute_elasticsearch_query from the local elasticsearch module
+from elasticsearch import execute_elasticsearch_query
+
 # ====================
 # Configuration Loading
 # ====================
-
-# Add the parent directory to the path
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 try:
     from config import get_config, AppConfig
@@ -211,200 +214,26 @@ def get_cache_key(query: Dict[str, Any]) -> str:
     """Generate cache key from query"""
     return json.dumps(query, sort_keys=True)
 
-async def execute_elasticsearch_query(query: Dict[str, Any], cookie: Optional[str] = None) -> Dict[str, Any]:
-    """Execute Elasticsearch query via Kibana proxy"""
-    start_time = time.time()
+def determine_rad_type_from_eid(eid: str) -> str:
+    """Determine RAD type from EID using registry mappings"""
+    # Check registry first
+    for mapping_eid, mapping in eid_registry.items():
+        if mapping_eid.upper() in eid.upper():
+            return mapping.rad_type
+    
+    # Fallback to pattern matching
+    eid_upper = eid.upper()
+    if 'LOGIN' in eid_upper or 'AUTH' in eid_upper:
+        return 'login'
+    elif 'API' in eid_upper or 'ENDPOINT' in eid_upper:
+        return 'api_call'
+    elif 'PAGE' in eid_upper or 'VIEW' in eid_upper:
+        return 'page_view'
+    elif 'DOWNLOAD' in eid_upper or 'FILE' in eid_upper:
+        return 'file_download'
+    
+    return 'custom'
 
-    # In development mode, return mock data
-    if ENVIRONMENT == 'development':
-        logger.info("Development mode: Returning mock dashboard data")
-        return {
-            "success": True,
-            "data": {
-                "aggregations": {
-                    "rad_types": {
-                        "buckets": [
-                            {"key": "login", "doc_count": 1523},
-                            {"key": "api_call", "doc_count": 3421},
-                            {"key": "page_view", "doc_count": 892},
-                            {"key": "file_download", "doc_count": 234}
-                        ]
-                    },
-                    "status_counts": {
-                        "buckets": [
-                            {"key": "normal", "doc_count": 4523},
-                            {"key": "warning", "doc_count": 892},
-                            {"key": "critical", "doc_count": 234},
-                            {"key": "increased", "doc_count": 421}
-                        ]
-                    }
-                },
-                "hits": {
-                    "total": {"value": 6070},
-                    "hits": [
-                        {
-                            "_source": {
-                                "name": "traffic.login.success",
-                                "rad_type": "login",
-                                "status": "normal",
-                                "score": 15.2,
-                                "current": 523,
-                                "baseline": 450,
-                                "impact": "Low",
-                                "timestamp": datetime.utcnow().isoformat()
-                            }
-                        },
-                        {
-                            "_source": {
-                                "name": "traffic.api.errors",
-                                "rad_type": "api_call",
-                                "status": "critical",
-                                "score": -45.8,
-                                "current": 892,
-                                "baseline": 234,
-                                "impact": "High",
-                                "timestamp": datetime.utcnow().isoformat()
-                            }
-                        },
-                        {
-                            "_source": {
-                                "name": "traffic.page.home",
-                                "rad_type": "page_view",
-                                "status": "increased",
-                                "score": 28.9,
-                                "current": 1245,
-                                "baseline": 967,
-                                "impact": "Medium",
-                                "timestamp": datetime.utcnow().isoformat()
-                            }
-                        },
-                        {
-                            "_source": {
-                                "name": "traffic.file.downloads",
-                                "rad_type": "file_download",
-                                "status": "warning",
-                                "score": -12.5,
-                                "current": 156,
-                                "baseline": 178,
-                                "impact": "Low",
-                                "timestamp": datetime.utcnow().isoformat()
-                            }
-                        },
-                        {
-                            "_source": {
-                                "name": "traffic.api.auth",
-                                "rad_type": "api_call",
-                                "status": "normal",
-                                "score": 5.2,
-                                "current": 2341,
-                                "baseline": 2225,
-                                "impact": "Low",
-                                "timestamp": datetime.utcnow().isoformat()
-                            }
-                        },
-                        {
-                            "_source": {
-                                "name": "traffic.login.failed",
-                                "rad_type": "login",
-                                "status": "critical",
-                                "score": -89.2,
-                                "current": 523,
-                                "baseline": 56,
-                                "impact": "High",
-                                "timestamp": datetime.utcnow().isoformat()
-                            }
-                        },
-                        {
-                            "_source": {
-                                "name": "traffic.page.checkout",
-                                "rad_type": "page_view",
-                                "status": "increased",
-                                "score": 45.6,
-                                "current": 892,
-                                "baseline": 613,
-                                "impact": "High",
-                                "timestamp": datetime.utcnow().isoformat()
-                            }
-                        },
-                        {
-                            "_source": {
-                                "name": "traffic.api.payments",
-                                "rad_type": "api_call",
-                                "status": "normal",
-                                "score": 2.1,
-                                "current": 1567,
-                                "baseline": 1534,
-                                "impact": "Low",
-                                "timestamp": datetime.utcnow().isoformat()
-                            }
-                        },
-                        {
-                            "_source": {
-                                "name": "traffic.file.uploads",
-                                "rad_type": "file_download",
-                                "status": "warning",
-                                "score": -23.4,
-                                "current": 89,
-                                "baseline": 116,
-                                "impact": "Medium",
-                                "timestamp": datetime.utcnow().isoformat()
-                            }
-                        },
-                        {
-                            "_source": {
-                                "name": "traffic.page.search",
-                                "rad_type": "page_view",
-                                "status": "normal",
-                                "score": 8.9,
-                                "current": 3421,
-                                "baseline": 3145,
-                                "impact": "Low",
-                                "timestamp": datetime.utcnow().isoformat()
-                            }
-                        }
-                    ]
-                }
-            },
-            "query_time_ms": int((time.time() - start_time) * 1000)
-        }
-
-    headers = {
-        'Content-Type': 'application/json',
-        'kbn-xsrf': 'true'
-    }
-
-    if cookie:
-        headers['Cookie'] = cookie
-
-    async with httpx.AsyncClient(timeout=30.0) as client:
-        try:
-            response = await client.post(
-                f"{ELASTICSEARCH_URL}{KIBANA_SEARCH_PATH}",
-                headers=headers,
-                json=query
-            )
-
-            if response.status_code == 200:
-                result = response.json()
-                query_time_ms = (time.time() - start_time) * 1000
-                return {
-                    "success": True,
-                    "data": result,
-                    "query_time_ms": query_time_ms
-                }
-            else:
-                return {
-                    "success": False,
-                    "error": f"Elasticsearch returned status {response.status_code}",
-                    "details": response.text
-                }
-
-        except Exception as e:
-            return {
-                "success": False,
-                "error": str(e),
-                "type": type(e).__name__
-            }
 
 # ====================
 # Circuit Breaker for External Services
@@ -945,13 +774,53 @@ async def query_dashboard_data(
             })
     # Extract events from aggregations if present (production mode)
     elif "aggregations" in data and "events" in data["aggregations"]:
+        # Define RAD type colors and display names
+        rad_type_config = {
+            "login": {"color": "#6B7280", "display": "Login"},
+            "api_call": {"color": "#3B82F6", "display": "API Call"},
+            "page_view": {"color": "#10B981", "display": "Page View"},
+            "file_download": {"color": "#F59E0B", "display": "File Download"},
+            "custom": {"color": "#8B5CF6", "display": "Custom"}
+        }
+        
         buckets = data["aggregations"]["events"].get("buckets", [])
         for bucket in buckets:
+            event_id = bucket["key"]
+            current = bucket.get("current", {}).get("doc_count", 0)
+            baseline = bucket.get("baseline", {}).get("doc_count", 0)
+            
+            # Determine RAD type from EID
+            rad_type = determine_rad_type_from_eid(event_id)
+            rad_config = rad_type_config.get(rad_type, {"color": "#6B7280", "display": "Custom"})
+            
+            # Calculate score and status
+            score = 0
+            if baseline > 0:
+                score = int(((current - baseline) / baseline) * 100)
+            
+            status = "NORMAL"
+            if score < -30:
+                status = "CRITICAL"
+            elif score < -20:
+                status = "WARNING"
+            elif score > 50:
+                status = "INCREASED"
+            
             processed_data.append({
-                "event_id": bucket["key"],
+                "id": event_id,
+                "name": event_id,
+                "event_id": event_id,
+                "radType": rad_type,
+                "radColor": rad_config["color"],
+                "radDisplayName": rad_config["display"],
+                "status": status,
+                "score": score,
                 "count": bucket["doc_count"],
-                "current": bucket.get("current", {}).get("doc_count", 0),
-                "baseline": bucket.get("baseline", {}).get("doc_count", 0)
+                "current": current,
+                "baseline": baseline,
+                "impact": "High" if abs(score) > 50 else "Medium" if abs(score) > 30 else "Low",
+                "timestamp": datetime.now().isoformat(),
+                "kibanaUrl": f"/app/discover#/?_g=(filters:!(),time:(from:now-24h,to:now))&_a=(query:(match_phrase:(event_id:'{event_id}')))"
             })
 
     # Cache successful results
@@ -1080,6 +949,81 @@ async def reset_metrics():
         "avg_response_time_ms": 0
     }
     return {"message": "Metrics reset", "timestamp": datetime.now().isoformat()}
+
+# ====================
+# EID Registry Endpoints
+# ====================
+
+class EIDMapping(BaseModel):
+    """Model for EID to RAD mapping"""
+    eid: str
+    rad_type: str
+    description: Optional[str] = None
+    added_at: datetime = Field(default_factory=datetime.now)
+
+class EIDRegistryResponse(BaseModel):
+    """Response model for EID registry operations"""
+    success: bool
+    message: str
+    mappings: Optional[List[EIDMapping]] = None
+
+# In-memory storage for EID mappings (in production, use a database)
+eid_registry: Dict[str, EIDMapping] = {}
+
+@app.get("/api/v1/eid-registry", response_model=EIDRegistryResponse)
+async def get_eid_registry():
+    """Get all EID mappings"""
+    return EIDRegistryResponse(
+        success=True,
+        message="Registry retrieved successfully",
+        mappings=list(eid_registry.values())
+    )
+
+@app.post("/api/v1/eid-registry", response_model=EIDRegistryResponse)
+async def add_eid_mapping(mapping: EIDMapping):
+    """Add a new EID mapping"""
+    if mapping.eid in eid_registry:
+        raise HTTPException(
+            status_code=400,
+            detail="EID already exists in registry"
+        )
+    
+    eid_registry[mapping.eid] = mapping
+    return EIDRegistryResponse(
+        success=True,
+        message=f"EID '{mapping.eid}' added successfully",
+        mappings=[mapping]
+    )
+
+@app.delete("/api/v1/eid-registry/{eid}", response_model=EIDRegistryResponse)
+async def delete_eid_mapping(eid: str):
+    """Delete an EID mapping"""
+    if eid not in eid_registry:
+        raise HTTPException(
+            status_code=404,
+            detail="EID not found in registry"
+        )
+    
+    del eid_registry[eid]
+    return EIDRegistryResponse(
+        success=True,
+        message=f"EID '{eid}' deleted successfully"
+    )
+
+@app.post("/api/v1/eid-registry/bulk", response_model=EIDRegistryResponse)
+async def bulk_import_eid_mappings(mappings: List[EIDMapping]):
+    """Bulk import EID mappings"""
+    added = 0
+    for mapping in mappings:
+        if mapping.eid not in eid_registry:
+            eid_registry[mapping.eid] = mapping
+            added += 1
+    
+    return EIDRegistryResponse(
+        success=True,
+        message=f"Added {added} new mappings (skipped {len(mappings) - added} duplicates)",
+        mappings=list(eid_registry.values())
+    )
 
 # ====================
 # Utility Endpoints

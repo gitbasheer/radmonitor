@@ -68,6 +68,13 @@ export function updateDataTable(results) {
         const row = document.createElement('tr');
         // Store rad_type as data attribute for easier filtering
         row.dataset.radType = radType;
+
+        // Add RAD identifier for EMIL-based filtering
+        if (window.EIDParser) {
+            const radIdentifier = window.EIDParser.extractRADIdentifier(eventId);
+            row.dataset.radIdentifier = radIdentifier;
+        }
+
         row.innerHTML = DOMPurify.sanitize(`
             <td><a href="${kibanaUrl}" target="_blank" class="event-link">
                 <span class="event-name">${eventId}</span>

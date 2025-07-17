@@ -1,17 +1,32 @@
 /**
  * ES|QL Query Builder - Translates intents to executable queries
+ *
+ * @module QueryBuilder
+ * @description Provides functionality to build ES|QL queries from intents and templates
  */
 import { getTemplate } from '../esql/query-templates.js';
+import { QueryConfig, IntentTemplateMap } from './query-config.js';
+import { validateParameterType, validateEids, formatQueryValue } from './validation.js';
+import { QueryErrorFactory } from './errors.js';
+/**
+ * ES|QL Query Builder class
+ * Handles the transformation of query intents and templates into executable ES|QL queries
+ */
 export class ESQLQueryBuilder {
     /**
      * Build an ES|QL query from intent
+     * @param intent - The query intent containing action, EIDs, and parameters
+     * @returns The generated ES|QL query string
+     * @throws {TemplateNotFoundError} If the template for the intent action is not found
+     * @throws {MissingParameterError} If required parameters are missing
+     * @throws {QueryBuildError} If query building fails
      */
     static buildFromIntent(intent) {
         // Map intent action to template
         const templateId = this.mapIntentToTemplate(intent.action);
         const template = getTemplate(templateId);
         if (!template) {
-            throw new Error(`No template found for action: ${intent.action}`);
+            throw QueryErrorFactory.templateNotFound(templateId);
         }
         // Prepare parameters with defaults and validation
         const parameters = this.prepareParameters(template, intent);
@@ -20,11 +35,16 @@ export class ESQLQueryBuilder {
     }
     /**
      * Build a query from template ID and explicit parameters
+     * @param templateId - The ID of the template to use
+     * @param params - Parameters to fill the template
+     * @returns The generated ES|QL query string
+     * @throws {TemplateNotFoundError} If the template is not found
+     * @throws {MissingParameterError} If required parameters are missing
      */
     static buildFromTemplate(templateId, params) {
         const template = getTemplate(templateId);
         if (!template) {
-            throw new Error(`Template not found: ${templateId}`);
+            throw QueryErrorFactory.templateNotFound(templateId);
         }
         // Validate and prepare parameters
         const parameters = this.validateParameters(template, params);
@@ -32,30 +52,31 @@ export class ESQLQueryBuilder {
     }
     /**
      * Map intent actions to template IDs
+     * @param action - The intent action
+     * @returns The corresponding template ID
      */
     static mapIntentToTemplate(action) {
-        const mapping = {
-            'health-check': 'healthCheck',
-            'baseline-compare': 'baselineComparison',
-            'trend-analysis': 'trendAnalysis',
-            'anomaly-detection': 'performanceMetrics',
-            'custom': 'healthCheck' // Default for custom
-        };
-        return mapping[action] || 'healthCheck';
+        return IntentTemplateMap[action] || IntentTemplateMap.custom || 'healthCheck';
     }
     /**
      * Prepare parameters from intent, applying defaults
+     * @param template - The query template
+     * @param intent - The query intent
+     * @returns Validated and prepared parameters
+     * @throws {MissingParameterError} If required parameters are missing
      */
     static prepareParameters(template, intent) {
+        // Validate EIDs first
+        const validatedEids = validateEids(intent.eids);
         const params = {
-            eids: intent.eids,
+            eids: validatedEids,
             ...intent.parameters
         };
         // Apply defaults for missing parameters
         for (const param of template.parameters) {
             if (params[param.name] === undefined) {
                 if (param.required && param.name !== 'eids') {
-                    throw new Error(`Required parameter missing: ${param.name}`);
+                    throw QueryErrorFactory.missingParameter(param.name, template.id);
                 }
                 if (param.default !== undefined) {
                     params[param.name] = param.default;
@@ -65,13 +86,21 @@ export class ESQLQueryBuilder {
         // Add context-based defaults
         if (intent.context) {
             if (intent.context.timeRange && !params.time_window) {
-                params.time_window = this.calculateTimeWindow(intent.context.timeRange.start, intent.context.timeRange.end);
+                const timeWindow = this.calculateTimeWindow(intent.context.timeRange.start, intent.context.timeRange.end);
+                if (timeWindow) {
+                    params.time_window = timeWindow;
+                }
             }
         }
         return this.validateParameters(template, params);
     }
     /**
      * Validate parameters against template requirements
+     * @param template - The query template
+     * @param params - Parameters to validate
+     * @returns Validated and formatted parameters
+     * @throws {MissingParameterError} If required parameters are missing
+     * @throws {ParameterValidationError} If parameter validation fails
      */
     static validateParameters(template, params) {
         const validated = {};
@@ -79,70 +108,34 @@ export class ESQLQueryBuilder {
             const value = params[param.name];
             // Check required
             if (param.required && (value === undefined || value === null)) {
-                throw new Error(`Required parameter missing: ${param.name}`);
+                throw QueryErrorFactory.missingParameter(param.name, template.id);
             }
             if (value !== undefined && value !== null) {
-                // Type validation
-                if (!this.validateType(value, param.type)) {
-                    throw new Error(`Invalid type for parameter ${param.name}: expected ${param.type}, got ${typeof value}`);
+                try {
+                    // Type validation
+                    validateParameterType(value, param.type, param.name);
+                    // Custom validation
+                    if (param.validation && !param.validation(value)) {
+                        throw QueryErrorFactory.parameterValidation(param.name, value, param.type, `Custom validation failed for parameter: ${param.name}`);
+                    }
+                    validated[param.name] = formatQueryValue(value, param.type);
                 }
-                // Custom validation
-                if (param.validation && !param.validation(value)) {
-                    throw new Error(`Validation failed for parameter: ${param.name}`);
+                catch (error) {
+                    if (error instanceof Error) {
+                        throw error;
+                    }
+                    throw QueryErrorFactory.parameterValidation(param.name, value, param.type);
                 }
-                validated[param.name] = this.formatValue(value, param.type);
             }
         }
         return validated;
     }
     /**
-     * Validate parameter type
-     */
-    static validateType(value, type) {
-        switch (type) {
-            case 'string':
-                return typeof value === 'string';
-            case 'number':
-                return typeof value === 'number' && !isNaN(value);
-            case 'boolean':
-                return typeof value === 'boolean';
-            case 'date':
-                return value instanceof Date || !isNaN(Date.parse(value));
-            case 'interval':
-                return typeof value === 'string' && /^\d+[smhd]$/.test(value);
-            case 'array':
-                return Array.isArray(value);
-            case 'percentage':
-                return typeof value === 'number' && value >= 0 && value <= 100;
-            default:
-                return true;
-        }
-    }
-    /**
-     * Format value for ES|QL query
-     */
-    static formatValue(value, type) {
-        switch (type) {
-            case 'string':
-                return value;
-            case 'array':
-                // Format array of strings for ES|QL IN clause
-                if (value.every((v) => typeof v === 'string')) {
-                    return value.map((v) => `"${v}"`).join(', ');
-                }
-                return value.join(', ');
-            case 'date':
-                // Ensure ISO format
-                return value instanceof Date ? value.toISOString() : value;
-            case 'percentage':
-                // Convert percentage to decimal if needed
-                return value > 1 ? value / 100 : value;
-            default:
-                return value;
-        }
-    }
-    /**
      * Render template with parameters
+     * @param template - The template string with placeholders
+     * @param params - Parameters to replace placeholders
+     * @returns The rendered query string
+     * @throws {QueryBuildError} If rendering fails
      */
     static renderTemplate(template, params) {
         let query = template;
@@ -157,10 +150,17 @@ export class ESQLQueryBuilder {
             .map(line => line.trim())
             .filter(line => line.length > 0)
             .join('\n');
+        // Validate query length
+        if (query.length > QueryConfig.limits.maxQueryLength) {
+            throw QueryErrorFactory.queryBuild(QueryConfig.errors.queryTooLong(QueryConfig.limits.maxQueryLength), template, params);
+        }
         return query;
     }
     /**
      * Calculate time window from date range
+     * @param start - Start date string
+     * @param end - End date string
+     * @returns Interval string (e.g., '1h', '2d')
      */
     static calculateTimeWindow(start, end) {
         const startDate = new Date(start);
@@ -181,6 +181,8 @@ export class ESQLQueryBuilder {
     }
     /**
      * Parse ES|QL query to extract used parameters
+     * @param query - The ES|QL query string
+     * @returns Array of parameter names found in the query
      */
     static parseQuery(query) {
         const paramPattern = /{{(\w+)}}/g;
@@ -196,6 +198,8 @@ export class ESQLQueryBuilder {
     }
     /**
      * Validate query syntax (basic check)
+     * @param query - The ES|QL query to validate
+     * @returns Validation result with error message if invalid
      */
     static validateQuery(query) {
         try {

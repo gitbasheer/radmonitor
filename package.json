@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "start": "python3 bin/server.py",
-    "dev": "concurrently \"npm run dev:server\" \"npm run dev:vite\"",
+    "dev": "concurrently \"pnpm run dev:server\" \"pnpm run dev:vite\"",
     "dev:server": "python3 bin/cleanup_server.py && python3 bin/server.py",
     "dev:vite": "vite",
     "dev:direct": "python3 bin/server.py",
@@ -26,6 +26,7 @@
   "engines": {
     "node": ">=16"
   },
+  "packageManager": "pnpm@10.12.4",
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.13.2",
     "@modelcontextprotocol/server-everything": "^2025.5.12",

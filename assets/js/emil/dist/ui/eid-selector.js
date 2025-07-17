@@ -1,18 +1,22 @@
 /**
  * EID Selector Component - Main UI for EID search and selection
- * Integrates Trie search, virtual scrolling, and autocomplete
+ * Fixed version with proper cleanup and memory management
  */
 import { VirtualScroll } from './virtual-scroll.js';
 import { EIDParser } from '../utils/eid-parser.js';
-import DOMPurify from './../../../lib/dompurify.js';
-
 export class EIDSelector {
     constructor(options) {
         this.selectedEIDs = new Set();
         this.virtualScroll = null;
+        this.searchInput = null;
+        this.suggestionsContainer = null;
         this.currentSuggestions = [];
         this.selectedSuggestionIndex = -1;
         this.debounceTimer = null;
+        // Store bound event handlers for cleanup
+        this.eventHandlers = new Map();
+        this.documentClickHandler = null;
+        this.styleElement = null;
         this.options = {
             multiSelect: true,
             showHotSection: true,
@@ -24,45 +28,50 @@ export class EIDSelector {
     }
     render() {
         // Create main container structure
-        this.options.container.innerHTML = DOMPurify.sanitize(`
+        this.options.container.innerHTML = `
       <div class="eid-selector">
         <div class="eid-selector-header">
           <div class="eid-search-container">
-            <input
-              type="text"
-              class="eid-search-input"
+            <input 
+              type="text" 
+              class="eid-search-input" 
               placeholder="Search EIDs (e.g., pandc.vnext.recommendations...)"
               autocomplete="off"
               spellcheck="false"
+              aria-label="Search EIDs"
+              role="combobox"
+              aria-expanded="false"
+              aria-autocomplete="list"
+              aria-controls="eid-suggestions"
             />
-            <div class="eid-search-icon">🔍</div>
+            <div class="eid-search-icon" aria-hidden="true">🔍</div>
           </div>
           <div class="eid-selector-actions">
-            <button class="eid-clear-btn" title="Clear selection">Clear</button>
-            <button class="eid-select-all-btn" title="Select all visible">Select All</button>
+            <button class="eid-clear-btn" title="Clear selection" aria-label="Clear all selections">Clear</button>
+            <button class="eid-select-all-btn" title="Select all visible" aria-label="Select all visible EIDs">Select All</button>
           </div>
         </div>
 
-        <div class="eid-suggestions-dropdown" style="display: none;"></div>
+        <div id="eid-suggestions" class="eid-suggestions-dropdown" role="listbox" style="display: none;"></div>
 
         <div class="eid-selector-body">
-          ${this.options.showHotSection ? '<div class="eid-hot-section"></div>' : ''}
-          ${this.options.showRecentSection ? '<div class="eid-recent-section"></div>' : ''}
-          <div class="eid-list-section">
+          ${this.options.showHotSection ? '<div class="eid-hot-section" role="region" aria-label="Hot EIDs"></div>' : ''}
+          ${this.options.showRecentSection ? '<div class="eid-recent-section" role="region" aria-label="Recent EIDs"></div>' : ''}
+          <div class="eid-list-section" role="region" aria-label="All EIDs">
             <div class="eid-list-header">
               <span class="eid-list-title">All EIDs</span>
-              <span class="eid-list-count">0</span>
+              <span class="eid-list-count" aria-live="polite">0</span>
             </div>
-            <div class="eid-virtual-list"></div>
+            <div class="eid-virtual-list" role="list"></div>
           </div>
         </div>
 
         <div class="eid-selector-footer">
-          <span class="eid-selection-count">0 selected</span>
-          <button class="eid-apply-btn">Apply Selection</button>
+          <span class="eid-selection-count" aria-live="polite" aria-atomic="true">0 selected</span>
+          <button class="eid-apply-btn" aria-label="Apply EID selection">Apply Selection</button>
         </div>
       </div>
-    `);
+    `;
         // Apply styles
         this.applyStyles();
         // Cache DOM references
@@ -79,8 +88,15 @@ export class EIDSelector {
         this.initializeVirtualScroll();
     }
     applyStyles() {
-        const style = document.createElement('style');
-        style.textContent = `
+        const styleId = 'emil-eid-selector-styles';
+        // Remove existing styles if any
+        const existingStyle = document.getElementById(styleId);
+        if (existingStyle) {
+            existingStyle.remove();
+        }
+        this.styleElement = document.createElement('style');
+        this.styleElement.id = styleId;
+        this.styleElement.textContent = `
       .eid-selector {
         display: flex;
         flex-direction: column;
@@ -144,7 +160,8 @@ export class EIDSelector {
       }
 
       .eid-suggestion:hover,
-      .eid-suggestion.selected {
+      .eid-suggestion.selected,
+      .eid-suggestion[aria-selected="true"] {
         background: #f5f5f5;
       }
 
@@ -180,6 +197,11 @@ export class EIDSelector {
 
       .eid-selector-actions button:hover {
         background: #f5f5f5;
+      }
+
+      .eid-selector-actions button:focus {
+        outline: 2px solid #0066cc;
+        outline-offset: 2px;
       }
 
       .eid-selector-body {
@@ -226,7 +248,13 @@ export class EIDSelector {
         color: white;
       }
 
-      .eid-chip.selected {
+      .eid-chip:focus {
+        outline: 2px solid #0066cc;
+        outline-offset: 2px;
+      }
+
+      .eid-chip.selected,
+      .eid-chip[aria-pressed="true"] {
         background: #1976d2;
         color: white;
       }
@@ -328,39 +356,61 @@ export class EIDSelector {
         background: #0052a3;
       }
 
+      .eid-apply-btn:focus {
+        outline: 2px solid #0066cc;
+        outline-offset: 2px;
+      }
+
       .eid-apply-btn:disabled {
         background: #ccc;
         cursor: not-allowed;
       }
     `;
-        document.head.appendChild(style);
+        document.head.appendChild(this.styleElement);
     }
     attachEventListeners() {
-        // Search input
-        this.searchInput.addEventListener('input', this.handleSearchInput.bind(this));
-        this.searchInput.addEventListener('keydown', this.handleSearchKeydown.bind(this));
-        this.searchInput.addEventListener('focus', () => {
+        if (!this.searchInput)
+            return;
+        // Search input handlers
+        this.addEventListener(this.searchInput, 'input', this.handleSearchInput.bind(this));
+        this.addEventListener(this.searchInput, 'keydown', this.handleSearchKeydown.bind(this));
+        this.addEventListener(this.searchInput, 'focus', () => {
             if (this.currentSuggestions.length > 0) {
                 this.showSuggestions();
             }
         });
         // Click outside to close suggestions
-        document.addEventListener('click', (e) => {
+        this.documentClickHandler = (e) => {
             if (!this.options.container.contains(e.target)) {
                 this.hideSuggestions();
             }
-        });
+        };
+        document.addEventListener('click', this.documentClickHandler);
         // Action buttons
         const clearBtn = this.options.container.querySelector('.eid-clear-btn');
-        clearBtn?.addEventListener('click', () => this.clearSelection());
+        if (clearBtn) {
+            this.addEventListener(clearBtn, 'click', () => this.clearSelection());
+        }
         const selectAllBtn = this.options.container.querySelector('.eid-select-all-btn');
-        selectAllBtn?.addEventListener('click', () => this.selectAll());
+        if (selectAllBtn) {
+            this.addEventListener(selectAllBtn, 'click', () => this.selectAll());
+        }
         const applyBtn = this.options.container.querySelector('.eid-apply-btn');
-        applyBtn?.addEventListener('click', () => this.applySelection());
+        if (applyBtn) {
+            this.addEventListener(applyBtn, 'click', () => this.applySelection());
+        }
+    }
+    // Helper method to track event listeners for cleanup
+    addEventListener(element, event, handler) {
+        element.addEventListener(event, handler);
+        if (!this.eventHandlers.has(element)) {
+            this.eventHandlers.set(element, new Map());
+        }
+        this.eventHandlers.get(element).set(event, handler);
     }
     handleSearchInput(e) {
         const query = e.target.value.trim();
-        // Debounce search
+        // Clear existing debounce timer
         if (this.debounceTimer) {
             clearTimeout(this.debounceTimer);
         }
@@ -407,35 +457,67 @@ export class EIDSelector {
         }
     }
     renderSuggestions() {
+        if (!this.suggestionsContainer)
+            return;
+        // Clear existing event listeners on suggestions
+        const existingSuggestions = this.suggestionsContainer.querySelectorAll('.eid-suggestion');
+        existingSuggestions.forEach(el => {
+            const handlers = this.eventHandlers.get(el);
+            if (handlers) {
+                handlers.forEach((handler, event) => {
+                    el.removeEventListener(event, handler);
+                });
+                this.eventHandlers.delete(el);
+            }
+        });
         const html = this.currentSuggestions
             .map((suggestion, index) => {
             const displayName = EIDParser.getDisplayName(suggestion.eid);
             const highlighted = this.highlightMatch(suggestion.eid, suggestion.matchedPart);
+            const isSelected = index === this.selectedSuggestionIndex;
             return `
-          <div class="eid-suggestion ${index === this.selectedSuggestionIndex ? 'selected' : ''}"
-               data-index="${index}">
+          <div class="eid-suggestion ${isSelected ? 'selected' : ''}" 
+               data-index="${index}"
+               role="option"
+               aria-selected="${isSelected}"
+               id="eid-suggestion-${index}">
             <div class="eid-suggestion-primary">${highlighted}</div>
             <div class="eid-suggestion-secondary">${displayName}</div>
           </div>
         `;
         })
             .join('');
-        this.suggestionsContainer.innerHTML = DOMPurify.sanitize(html);
-        // Add click handlers
+        this.suggestionsContainer.innerHTML = html;
+        // Add click handlers with proper cleanup tracking
         this.suggestionsContainer.querySelectorAll('.eid-suggestion').forEach((el, index) => {
-            el.addEventListener('click', () => {
+            this.addEventListener(el, 'click', () => {
                 this.selectedSuggestionIndex = index;
                 this.selectCurrentSuggestion();
             });
         });
+        // Update ARIA attributes
+        if (this.searchInput) {
+            this.searchInput.setAttribute('aria-expanded', 'true');
+            if (this.selectedSuggestionIndex >= 0) {
+                this.searchInput.setAttribute('aria-activedescendant', `eid-suggestion-${this.selectedSuggestionIndex}`);
+            }
+        }
     }
     highlightMatch(text, match) {
+        if (!match)
+            return this.escapeHtml(text);
+        const escapedText = this.escapeHtml(text);
         const index = text.toLowerCase().indexOf(match.toLowerCase());
         if (index === -1)
-            return text;
-        return (text.substring(0, index) +
-            `<span class="eid-suggestion-match">${text.substring(index, index + match.length)}</span>` +
-            text.substring(index + match.length));
+            return escapedText;
+        return (escapedText.substring(0, index) +
+            `<span class="eid-suggestion-match">${escapedText.substring(index, index + match.length)}</span>` +
+            escapedText.substring(index + match.length));
+    }
+    escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
     }
     navigateSuggestions(direction) {
         if (this.currentSuggestions.length === 0)
@@ -459,7 +541,9 @@ export class EIDSelector {
                 this.options.registry.recordUsage(suggestion.eid);
             }
             // Clear search
-            this.searchInput.value = '';
+            if (this.searchInput) {
+                this.searchInput.value = '';
+            }
             this.hideSuggestions();
             // Update UI
             this.updateSelectionCount();
@@ -467,42 +551,72 @@ export class EIDSelector {
         }
     }
     showSuggestions() {
-        this.suggestionsContainer.style.display = 'block';
+        if (this.suggestionsContainer) {
+            this.suggestionsContainer.style.display = 'block';
+            if (this.searchInput) {
+                this.searchInput.setAttribute('aria-expanded', 'true');
+            }
+        }
     }
     hideSuggestions() {
-        this.suggestionsContainer.style.display = 'none';
+        if (this.suggestionsContainer) {
+            this.suggestionsContainer.style.display = 'none';
+        }
+        if (this.searchInput) {
+            this.searchInput.setAttribute('aria-expanded', 'false');
+            this.searchInput.removeAttribute('aria-activedescendant');
+        }
         this.selectedSuggestionIndex = -1;
     }
     renderHotSection() {
         const container = this.options.container.querySelector('.eid-hot-section');
         if (!container)
             return;
+        // Clean up existing event listeners
+        const existingChips = container.querySelectorAll('.eid-chip');
+        existingChips.forEach(chip => {
+            const handlers = this.eventHandlers.get(chip);
+            if (handlers) {
+                handlers.forEach((handler, event) => {
+                    chip.removeEventListener(event, handler);
+                });
+                this.eventHandlers.delete(chip);
+            }
+        });
         const hotEIDs = this.options.registry.getHotEIDs(8);
         const html = `
       <div class="eid-section-title">
         🔥 Hot EIDs
       </div>
-      <div class="eid-chips">
-        ${hotEIDs.map(entry => `
-          <div class="eid-chip ${this.selectedEIDs.has(entry.eid) ? 'selected' : ''}"
-               data-eid="${entry.eid}"
-               title="${entry.eid}">
-            ${EIDParser.extractRADType(entry.eid)}
-            <span class="eid-trend ${entry.trend}">${entry.trend === 'rising' ? '↑' :
-            entry.trend === 'falling' ? '↓' :
-                '→'}</span>
-          </div>
-        `).join('')}
+      <div class="eid-chips" role="group" aria-label="Hot EIDs">
+        ${hotEIDs.map(entry => {
+            const isSelected = this.selectedEIDs.has(entry.eid);
+            return `
+          <button class="eid-chip ${isSelected ? 'selected' : ''}" 
+               data-eid="${this.escapeHtml(entry.eid)}"
+               title="${this.escapeHtml(entry.eid)}"
+               aria-pressed="${isSelected}"
+               role="button">
+            ${this.escapeHtml(EIDParser.extractRADType(entry.eid))}
+            <span class="eid-trend ${entry.trend}" aria-label="${entry.trend} trend">${entry.trend === 'rising' ? '↑' :
+                entry.trend === 'falling' ? '↓' :
+                    '→'}</span>
+          </button>
+        `;
+        }).join('')}
       </div>
     `;
-        container.innerHTML = DOMPurify.sanitize(html);
-        // Add click handlers
+        container.innerHTML = html;
+        // Add click handlers with tracking
         container.querySelectorAll('.eid-chip').forEach(chip => {
-            chip.addEventListener('click', () => {
+            this.addEventListener(chip, 'click', () => {
                 const eid = chip.getAttribute('data-eid');
-                this.toggleEIDSelection(eid);
-                chip.classList.toggle('selected');
-                this.updateSelectionCount();
+                if (eid) {
+                    this.toggleEIDSelection(eid);
+                    chip.classList.toggle('selected');
+                    chip.setAttribute('aria-pressed', String(this.selectedEIDs.has(eid)));
+                    this.updateSelectionCount();
+                }
             });
         });
     }
@@ -510,29 +624,48 @@ export class EIDSelector {
         const container = this.options.container.querySelector('.eid-recent-section');
         if (!container)
             return;
+        // Clean up existing event listeners
+        const existingChips = container.querySelectorAll('.eid-chip');
+        existingChips.forEach(chip => {
+            const handlers = this.eventHandlers.get(chip);
+            if (handlers) {
+                handlers.forEach((handler, event) => {
+                    chip.removeEventListener(event, handler);
+                });
+                this.eventHandlers.delete(chip);
+            }
+        });
         const recentEIDs = this.options.registry.getRecentEIDs(5);
         const html = `
       <div class="eid-section-title">
         🕐 Recent EIDs
       </div>
-      <div class="eid-chips">
-        ${recentEIDs.map(metadata => `
-          <div class="eid-chip ${this.selectedEIDs.has(metadata.eid) ? 'selected' : ''}"
-               data-eid="${metadata.eid}"
-               title="${metadata.eid}">
-            ${EIDParser.extractRADType(metadata.eid)}
-          </div>
-        `).join('')}
+      <div class="eid-chips" role="group" aria-label="Recent EIDs">
+        ${recentEIDs.map(metadata => {
+            const isSelected = this.selectedEIDs.has(metadata.eid);
+            return `
+          <button class="eid-chip ${isSelected ? 'selected' : ''}" 
+               data-eid="${this.escapeHtml(metadata.eid)}"
+               title="${this.escapeHtml(metadata.eid)}"
+               aria-pressed="${isSelected}"
+               role="button">
+            ${this.escapeHtml(EIDParser.extractRADType(metadata.eid))}
+          </button>
+        `;
+        }).join('')}
       </div>
     `;
-        container.innerHTML = DOMPurify.sanitize(html);
-        // Add click handlers
+        container.innerHTML = html;
+        // Add click handlers with tracking
         container.querySelectorAll('.eid-chip').forEach(chip => {
-            chip.addEventListener('click', () => {
+            this.addEventListener(chip, 'click', () => {
                 const eid = chip.getAttribute('data-eid');
-                this.toggleEIDSelection(eid);
-                chip.classList.toggle('selected');
-                this.updateSelectionCount();
+                if (eid) {
+                    this.toggleEIDSelection(eid);
+                    chip.classList.toggle('selected');
+                    chip.setAttribute('aria-pressed', String(this.selectedEIDs.has(eid)));
+                    this.updateSelectionCount();
+                }
             });
         });
     }
@@ -568,22 +701,28 @@ export class EIDSelector {
         const div = document.createElement('div');
         div.className = 'eid-item';
         div.dataset.eid = metadata.eid;
+        div.setAttribute('role', 'listitem');
+        const isSelected = this.selectedEIDs.has(metadata.eid);
+        const checkboxId = `eid-checkbox-${metadata.eid.replace(/\./g, '-')}`;
         const checkbox = this.options.multiSelect ? `
-      <input type="checkbox" class="eid-item-checkbox"
-             ${this.selectedEIDs.has(metadata.eid) ? 'checked' : ''} />
+      <input type="checkbox" 
+             class="eid-item-checkbox"
+             id="${checkboxId}"
+             ${isSelected ? 'checked' : ''}
+             aria-label="Select ${this.escapeHtml(metadata.eid)}" />
     ` : '';
-        div.innerHTML = DOMPurify.sanitize(`
+        div.innerHTML = `
       ${checkbox}
       <div class="eid-item-content">
-        <div class="eid-item-primary">${metadata.eid}</div>
+        <div class="eid-item-primary">${this.escapeHtml(metadata.eid)}</div>
         <div class="eid-item-secondary">
-          ${EIDParser.getDisplayName(metadata.eid)}
+          ${this.escapeHtml(EIDParser.getDisplayName(metadata.eid))} 
           · ${metadata.frequency} events
         </div>
       </div>
-    `);
+    `;
         // Add click handler
-        div.addEventListener('click', (e) => {
+        this.addEventListener(div, 'click', (e) => {
             if (e.target.classList.contains('eid-item-checkbox')) {
                 return; // Let checkbox handle it
             }
@@ -632,7 +771,9 @@ export class EIDSelector {
     updateSelectionCount() {
         const countEl = this.options.container.querySelector('.eid-selection-count');
         if (countEl) {
-            countEl.textContent = `${this.selectedEIDs.size} selected`;
+            const count = this.selectedEIDs.size;
+            countEl.textContent = `${count} selected`;
+            countEl.setAttribute('aria-label', `${count} EIDs selected`);
         }
         const applyBtn = this.options.container.querySelector('.eid-apply-btn');
         if (applyBtn) {
@@ -663,13 +804,44 @@ export class EIDSelector {
         this.virtualScroll?.refresh();
     }
     /**
-     * Destroy the component
+     * Destroy the component and clean up all resources
      */
     destroy() {
-        this.virtualScroll?.destroy();
+        // Clear timers
         if (this.debounceTimer) {
             clearTimeout(this.debounceTimer);
+            this.debounceTimer = null;
         }
+        // Remove all tracked event listeners
+        this.eventHandlers.forEach((handlers, element) => {
+            handlers.forEach((handler, event) => {
+                element.removeEventListener(event, handler);
+            });
+        });
+        this.eventHandlers.clear();
+        // Remove document click handler
+        if (this.documentClickHandler) {
+            document.removeEventListener('click', this.documentClickHandler);
+            this.documentClickHandler = null;
+        }
+        // Destroy virtual scroll
+        if (this.virtualScroll) {
+            this.virtualScroll.destroy();
+            this.virtualScroll = null;
+        }
+        // Remove styles
+        if (this.styleElement && this.styleElement.parentNode) {
+            this.styleElement.remove();
+            this.styleElement = null;
+        }
+        // Clear DOM references
+        this.searchInput = null;
+        this.suggestionsContainer = null;
+        // Clear data
+        this.selectedEIDs.clear();
+        this.currentSuggestions = [];
+        // Clear container
+        this.options.container.innerHTML = '';
     }
 }
 //# sourceMappingURL=eid-selector.js.map

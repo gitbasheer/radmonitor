@@ -30,6 +30,16 @@ export declare class EIDParser {
      */
     static extractRADType(eid: string): string;
     /**
+     * Extract RAD identifier for filtering purposes
+     * For Venture Feed RADs: pandc.vnext.recommendations.feed.feed*
+     * Returns a string that can be used to group EIDs by RAD
+     */
+    static extractRADIdentifier(eid: string): string;
+    /**
+     * Get human-readable RAD name from identifier
+     */
+    static getRADDisplayName(radIdentifier: string): string;
+    /**
      * Get display name for an EID
      */
     static getDisplayName(eid: string): string;
@@ -50,8 +60,17 @@ export declare class EIDParser {
      */
     static isSameRADSet(eid1: string, eid2: string): boolean;
     /**
+     * Extract RAD identifier for filtering purposes
+     * For Venture Feed RADs: pandc.vnext.recommendations.feed.feed*
+     * Returns a string that can be used to group EIDs by RAD
+     */
+    static extractRADIdentifier(eid: string): string;
+    /**
+     * Get human-readable RAD name from identifier
+     */
+    static getRADDisplayName(radIdentifier: string): string;
+    /**
      * Create metadata from EID with defaults
      */
     static createMetadata(eid: string, additionalData?: Partial<EIDMetadata>): EIDMetadata;
 }
-//# sourceMappingURL=eid-parser.d.ts.map

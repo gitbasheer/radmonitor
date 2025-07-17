@@ -53,4 +53,3 @@ export interface EIDSuggestion {
     score: number;
     matchedPart: string;
 }
-//# sourceMappingURL=index.d.ts.map

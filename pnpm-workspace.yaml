@@ -1,0 +1,4 @@
+packages:
+  # We're keeping everything in the root for now
+  # but this allows for future expansion
+  - '.'

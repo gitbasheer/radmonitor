@@ -530,12 +530,17 @@ export class QueryResultsViewer {
       return;
     }
 
-    const columns = Object.keys(result.data[0]);
+    const firstRow = result.data[0];
+    if (!firstRow || typeof firstRow !== 'object') {
+      alert('Invalid data format');
+      return;
+    }
+    const columns = Object.keys(firstRow);
     const csv = [
       columns.join(','),
       ...result.data.map(row => 
         columns.map(col => {
-          const value = row[col];
+          const value = (row as any)[col];
           // Escape quotes and wrap in quotes if contains comma
           const escaped = String(value).replace(/"/g, '""');
           return escaped.includes(',') ? `"${escaped}"` : escaped;

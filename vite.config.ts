@@ -2,21 +2,24 @@ import { defineConfig } from 'vite';
 import { resolve } from 'path';
 
 export default defineConfig({
-  root: '.',
+  root: resolve(__dirname, 'src'),
   base: '/',
+  publicDir: resolve(__dirname, 'public'),
   build: {
-    outDir: 'dist',
-    rollupOptions: {
-      input: {
-        main: resolve(__dirname, 'index.html'),
-        monitor: resolve(__dirname, 'src/index.html')
-      }
-    }
+    outDir: resolve(__dirname, 'dist'),
+    emptyOutDir: true,
+    sourcemap: false
   },
   server: {
     port: 3000,
+    host: true,
     proxy: {
-      '/api': {
+      // Proxy API endpoints
+      '/api/v1': {
+        target: 'http://localhost:8000',
+        changeOrigin: true
+      },
+      '/api/console': {
         target: 'http://localhost:8000',
         changeOrigin: true
       },
@@ -28,15 +31,13 @@ export default defineConfig({
         target: 'ws://localhost:8000',
         ws: true
       }
+    },
+    fs: {
+      // Prevent serving TypeScript source files
+      deny: ['.ts', '.tsx']
     }
   },
   resolve: {
-    alias: {
-      '@': resolve(__dirname, './src'),
-      '@components': resolve(__dirname, './src/components'),
-      '@styles': resolve(__dirname, './src/styles'),
-      '@utils': resolve(__dirname, './src/utils'),
-      '@types': resolve(__dirname, './src/types')
-    }
+    extensions: ['.mjs', '.js', '.ts', '.jsx', '.tsx', '.json']
   }
 });

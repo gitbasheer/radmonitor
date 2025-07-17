@@ -24,6 +24,11 @@ config/shared-cookie.json
 # Node modules
 node_modules/
 
+# pnpm
+pnpm-lock.yaml
+.pnpm-store/
+.pnpm-debug.log*
+
 # Test coverage and artifacts
 coverage/
 htmlcov/
@@ -128,6 +133,12 @@ test-dataprocessing-results.json
 ui-test-results.json
 api-test-results.json
 *.pre-antares
+*.backup
+*-backup.*
+package-lock.json.backup
+package.json.backup
+radar_knowledge_backup.json
+create_master_backup.sh
 
 # Chrome extension (unless specifically required)
 chrome-extension/
@@ -174,3 +185,31 @@ spike_eval.md
 sprint_work.md
 test-memory-fixes.js
 agent_collab.md
+
+# Old/deprecated HTML files
+index-old.html
+set-cookie.html
+debug-state.html
+emil-demo.html
+emil-esql-demo.html
+
+# Migration and cleanup scripts
+migrate_to_refactored.sh
+cleanup-old-templates.sh
+cleanup-legacy.sh
+cleanup-unused-files.sh
+sync-cookie.sh
+deploy-production.sh
+start-correct-server.sh
+
+# Old architecture files
+src/
+
+# Elasticsearch directory (if using MCP instead)
+elasticsearch/
+
+# Package lock files (using pnpm now)
+package-lock.json
+
+# PNPM migration docs (if migration complete)
+PNPM_MIGRATION.md

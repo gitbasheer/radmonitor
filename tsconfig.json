@@ -16,17 +16,9 @@
     "declarationMap": true,
     "sourceMap": true,
     "outDir": "./dist",
-    "rootDir": "./src",
     "baseUrl": ".",
-    "paths": {
-      "@/*": ["src/*"],
-      "@components/*": ["src/components/*"],
-      "@styles/*": ["src/styles/*"],
-      "@utils/*": ["src/utils/*"],
-      "@types/*": ["src/types/*"]
-    },
     "types": ["vite/client", "node"]
   },
-  "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist", "assets/js/emil/**/*"]
+  "include": ["src/**/*", "assets/js/emil/utils/eid-parser.ts", "assets/js/components/rad-filter.ts"],
+  "exclude": ["node_modules", "dist"]
 }

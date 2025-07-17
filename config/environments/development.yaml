@@ -59,6 +59,8 @@ security:
   - 127.0.0.1
   enable_docs: true
   require_auth: false
+  disable_auth: false
+  api_tokens: null
 redis:
   enabled: false
   url: redis://localhost:6379

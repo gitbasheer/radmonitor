@@ -1,8 +1,6 @@
 /**
  * Query Results Viewer - Display ES|QL query results
  */
-import DOMPurify from './../../../lib/dompurify.js';
-
 export class QueryResultsViewer {
     constructor(options) {
         this.modalElement = null;
@@ -15,7 +13,7 @@ export class QueryResultsViewer {
         // Create modal container
         this.modalElement = document.createElement('div');
         this.modalElement.className = 'emil-results-modal';
-        this.modalElement.innerHTML = DOMPurify.sanitize(`
+        this.modalElement.innerHTML = `
       <div class="emil-results-overlay"></div>
       <div class="emil-results-container">
         <div class="emil-results-header">
@@ -35,7 +33,7 @@ export class QueryResultsViewer {
           </div>
         </div>
       </div>
-    `);
+    `;
         // Apply styles
         this.applyStyles();
         // Add to container
@@ -479,7 +477,12 @@ export class QueryResultsViewer {
             alert('No data to export');
             return;
         }
-        const columns = Object.keys(result.data[0]);
+        const firstRow = result.data[0];
+        if (!firstRow || typeof firstRow !== 'object') {
+            alert('Invalid data format');
+            return;
+        }
+        const columns = Object.keys(firstRow);
         const csv = [
             columns.join(','),
             ...result.data.map(row => columns.map(col => {

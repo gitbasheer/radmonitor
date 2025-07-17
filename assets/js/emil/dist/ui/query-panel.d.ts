@@ -1,5 +1,6 @@
 /**
  * Query Panel - Quick actions for selected EIDs
+ * Provides UI for executing predefined queries on selected EIDs
  */
 import { ESQLExecutor } from '../services/esql-executor.js';
 export interface QueryPanelOptions {

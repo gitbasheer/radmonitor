@@ -1,11 +1,15 @@
 /**
  * Query Panel - Quick actions for selected EIDs
+ * Provides UI for executing predefined queries on selected EIDs
  */
 
 import { QueryIntent } from '../esql/template-types.js';
 import { ESQLExecutor } from '../services/esql-executor.js';
 import { QueryResultsViewer } from './query-results-viewer.js';
-import { getTemplateIds, getTemplate } from '../esql/query-templates.js';
+import { getTemplate } from '../esql/query-templates.js';
+import { IntentTemplateMap } from '../query-engine/query-config.js';
+import { validateEids } from '../query-engine/validation.js';
+import { QueryErrorFactory } from '../query-engine/errors.js';
 
 export interface QueryPanelOptions {
   container: HTMLElement;
@@ -351,7 +355,8 @@ export class QueryPanel {
 
     } catch (error) {
       console.error('Query execution failed:', error);
-      alert(`Query failed: ${error}`);
+      const userMessage = QueryErrorFactory.getUserMessage(error);
+      alert(`Query failed: ${userMessage}`);
     } finally {
       this.isLoading = false;
       button?.classList.remove('loading');

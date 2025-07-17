@@ -1,0 +1,1 @@
+{"version":3,"file":"index.js","sourceRoot":"","sources":["../../eid-registry/index.ts"],"names":[],"mappings":"AAAA;;;GAGG;AAEH,QAAQ;AACR,cAAc,YAAY,CAAC;AAE3B,WAAW;AACX,OAAO,EAAE,kBAAkB,EAAE,MAAM,2BAA2B,CAAC;AAC/D,OAAO,EAAE,eAAe,EAAE,MAAM,oBAAoB,CAAC;AAErD,gBAAgB;AAChB,OAAO,EAAE,aAAa,EAA6B,MAAM,sBAAsB,CAAC;AAEhF,oBAAoB;AACpB,OAAO,EACL,kBAAkB,IAAI,QAAQ,EAC/B,MAAM,2BAA2B,CAAC"}
