@@ -1,0 +1,7 @@
+# Python test requirements for RAD Monitor
+pytest==8.3.2
+pytest-cov==5.0.0
+pytest-mock==3.14.0
+pytest-asyncio==0.23.8
+requests==2.32.3
+responses==0.25.3 

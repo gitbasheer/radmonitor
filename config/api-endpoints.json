@@ -1,0 +1,26 @@
+{
+  "kibana": {
+    "url": "https://usieventho-prod-usw2.kb.us-west-2.aws.found.io:9243",
+    "description": "Production Kibana/Elasticsearch endpoint"
+  },
+  "corsProxy": {
+    "url": "http://localhost:8000",
+    "path": "/api/fetch-kibana-data",
+    "description": "FastAPI proxy endpoint for development"
+  },
+  "fastapi": {
+    "url": "http://localhost:8000",
+    "description": "FastAPI development server"
+  },
+  "searchDefaults": {
+    "minEventDate": "2025-05-19T04:00:00.000Z",
+    "defaultTimeRange": "now-12h",
+    "defaultSize": 0,
+    "maxBuckets": 500
+  },
+  "proxy": {
+    "enabled": true,
+    "url": "https://regal-youtiao-09c777.netlify.app/.netlify/functions/proxy",
+    "type": "netlify"
+  }
+}
