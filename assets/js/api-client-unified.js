@@ -7,6 +7,7 @@
 import TimeRangeUtils from './time-range-utils.js';
 import { ConfigService, getApiUrl, getElasticsearchUrl } from './config-service.js';
 import { cryptoUtils } from './crypto-utils.js';
+import { authManager } from './auth-manager.js';
 
 /**
  * Unified API Client
@@ -64,129 +65,46 @@ export class UnifiedAPIClient {
     // ====================
 
     /**
-     * Get authentication cookie from various sources
+     * Get authentication cookie (delegate to AuthManager)
      */
     async getElasticCookie() {
-        // Use CentralizedAuth if available
-        if (window.CentralizedAuth) {
-            const cookie = window.CentralizedAuth.getCookie();
-            if (cookie) {
-                return cookie;
-            }
-        }
-        
-        // Fallback to legacy method (for compatibility)
-        const saved = localStorage.getItem('elasticCookie');
-        if (saved) {
-            try {
-                let parsed;
-                // Try to decrypt if it looks encrypted
-                if (/^[A-Za-z0-9+/]+=*$/.test(saved) && saved.length > 100) {
-                    try {
-                        parsed = await cryptoUtils.decrypt(saved);
-                    } catch (decryptError) {
-                        // Fall back to plain text
-                        parsed = JSON.parse(saved);
-                    }
-                } else {
-                    // Legacy unencrypted format
-                    parsed = JSON.parse(saved);
-                }
-                if (parsed.expires && new Date(parsed.expires) > new Date()) {
-                    return parsed.cookie;
-                }
-            } catch (e) {
-                // Invalid JSON, continue checking
-            }
-        }
-
-        // Check window.ELASTIC_COOKIE
-        if (window.ELASTIC_COOKIE) {
-            return window.ELASTIC_COOKIE;
-        }
-
-        // No cookie found
-        return null;
+        return authManager.getCookie();
     }
 
     /**
-     * Save authentication cookie
+     * Save authentication cookie (delegate to AuthManager)
      */
     async saveElasticCookie(cookie) {
         if (!cookie || !cookie.trim()) return false;
-
-        // Use CentralizedAuth if available
-        if (window.CentralizedAuth) {
-            try {
-                await window.CentralizedAuth.setCookie(cookie, { source: 'api-client' });
-                return true;
-            } catch (error) {
-                console.error('Failed to save cookie via CentralizedAuth:', error);
-                return false;
-            }
-        }
-
-        // Fallback to legacy method
-        const cookieData = {
-            cookie: cookie.trim(),
-            expires: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-            saved: new Date().toISOString()
-        };
-
         try {
-            const encrypted = await cryptoUtils.encrypt(cookieData);
-            localStorage.setItem('elasticCookie', encrypted);
+            authManager.setCookie(cookie);
+            return true;
         } catch (error) {
-            console.error('Failed to encrypt cookie:', error);
-            // Fallback to unencrypted
-            localStorage.setItem('elasticCookie', JSON.stringify(cookieData));
+            console.error('Failed to save cookie:', error);
+            return false;
         }
-        return true;
     }
 
     /**
      * Get authentication details
      */
     async getAuthenticationDetails() {
-        const cookie = await this.getElasticCookie();
-
-        if (cookie) {
-            return {
-                valid: true,
-                method: this.isLocalDev ? 'unified-server' : 'direct',
-                cookie: cookie
-            };
-        }
-
+        const authenticated = authManager.isAuthenticated();
+        const status = authManager.getStatus();
+        
         return {
-            valid: false,
-            method: null,
-            cookie: null,
-            message: 'No authentication cookie found'
+            valid: authenticated,
+            authenticated: authenticated,
+            method: this.isLocalDev ? 'unified-server' : 'direct',
+            ...status
         };
     }
 
     /**
-     * Prompt user for cookie
+     * Prompt user for cookie (delegate to AuthManager)
      */
     async promptForCookie(purpose = 'API access') {
-        const cookie = prompt(
-            `Enter your Elastic authentication cookie for ${purpose}:\n\n` +
-            `1. Open Kibana in another tab\n` +
-            `2. Open Developer Tools (F12)\n` +
-            `3. Go to Network tab\n` +
-            `4. Refresh the page\n` +
-            `5. Find any request to Kibana\n` +
-            `6. Copy the 'Cookie' header value\n` +
-            `7. Paste it below\n\n` +
-            `Look for: sid=xxxxx`
-        );
-
-        if (cookie && await this.saveElasticCookie(cookie)) {
-            return cookie.trim();
-        }
-
-        return null;
+        return await authManager.promptForCookie(purpose);
     }
 
     // ====================
@@ -196,14 +114,18 @@ export class UnifiedAPIClient {
     /**
      * Make HTTP request with consistent error handling
      */
-    async request(url, options = {}) {
+    async request(url, options = {}, retryCount = 0) {
         const startTime = Date.now();
         const requestId = `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
         try {
+            // Add auth headers from AuthManager
+            const authHeaders = authManager.getAuthHeaders();
+            
             // Add default headers
             options.headers = {
                 'Content-Type': 'application/json',
+                ...authHeaders,
                 ...options.headers
             };
 
@@ -222,6 +144,20 @@ export class UnifiedAPIClient {
                 const duration = Date.now() - startTime;
                 this.metrics.requests++;
                 this.metrics.totalTime += duration;
+
+                // Handle 401 - Authentication required
+                if (response.status === 401 && retryCount === 0) {
+                    console.log('🔐 Authentication required - prompting for cookie...');
+                    const newCookie = await authManager.promptForCookie();
+                    
+                    if (newCookie) {
+                        // Retry with new cookie
+                        console.log('🔄 Retrying with new authentication...');
+                        return this.request(url, options, retryCount + 1);
+                    } else {
+                        throw new Error('Authentication required but no cookie provided');
+                    }
+                }
 
                 if (!response.ok) {
                     const error = await response.json().catch(() => ({}));

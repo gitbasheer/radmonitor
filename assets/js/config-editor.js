@@ -6,6 +6,7 @@
 import { ConfigService } from './config-service.js';
 import TimeRangeUtils from './time-range-utils.js';
 import DOMPurify from './lib/dompurify.js';
+import { authManager } from './auth-manager.js';
 
 const ConfigEditor = {
     // Store current config for comparison
@@ -322,13 +323,8 @@ const ConfigEditor = {
                 saved: new Date().toISOString()
             };
 
-            // Use centralized auth if available
-            if (window.CentralizedAuth) {
-                await window.CentralizedAuth.setCookie(cookieValue);
-            } else {
-                // Fallback to legacy storage
-                localStorage.setItem('elasticCookie', JSON.stringify(cookieData));
-            }
+            // Use AuthManager to set cookie
+            authManager.setCookie(cookieValue);
 
                 // Test the connection using the unified API
                 try {

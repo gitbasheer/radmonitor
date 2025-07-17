@@ -3,7 +3,7 @@
  * Environment-agnostic, single responsibility
  */
 
-import { authService } from './auth-service.js';
+import { authManager } from './auth-manager.js';
 import { getApiUrl } from './config-service.js';
 
 export class SimplifiedAPIClient {
@@ -31,13 +31,18 @@ export class SimplifiedAPIClient {
      */
     async request(endpoint, options = {}) {
         // Check authentication status
-        const authStatus = await authService.checkAuth();
+        const isAuthenticated = authManager.isAuthenticated();
 
         // For non-anonymous requests, check if we have auth
-        if (!options.allowAnonymous && !authStatus.authenticated) {
-            // Return error response instead of throwing
-            console.log('⚠️ Request blocked - no authentication');
-            throw new Error('Authentication required');
+        if (!options.allowAnonymous && !isAuthenticated) {
+            // Try to prompt for cookie
+            console.log('🔐 Authentication required - prompting for cookie...');
+            const cookie = await authManager.promptForCookie();
+            
+            if (!cookie) {
+                console.log('⚠️ Request blocked - no authentication');
+                throw new Error('Authentication required');
+            }
         }
 
         const url = `${this.baseUrl}${endpoint}`;
@@ -47,49 +52,21 @@ export class SimplifiedAPIClient {
         // Retry loop with exponential backoff
         for (let attempt = 0; attempt < maxRetries; attempt++) {
             try {
+                // Get auth headers from AuthManager
+                const authHeaders = authManager.getAuthHeaders();
+                
                 const requestOptions = {
                     credentials: 'include',
                     headers: {
                         'Content-Type': 'application/json',
                         'Accept': 'application/json',
+                        ...authHeaders,
                         ...options.headers
                     },
                     ...options
                 };
 
-                // Add cookie header for all environments
-                let cookieValue = null;
-
-                // Try multiple sources for the cookie
-                if (window.CentralizedAuth && window.CentralizedAuth.getCookie) {
-                    cookieValue = window.CentralizedAuth.getCookie();
-                } else if (authStatus.cookie) {
-                    cookieValue = authStatus.cookie;
-                } else {
-                    // Try to get from localStorage as fallback
-                    // Check both possible keys for backward compatibility
-                    cookieValue = localStorage.getItem('elastic_cookie');
-                    if (!cookieValue) {
-                        try {
-                            const saved = localStorage.getItem('elasticCookie');
-                            if (saved) {
-                                const parsed = JSON.parse(saved);
-                                if (parsed.cookie) {
-                                    cookieValue = parsed.cookie;
-                                }
-                            }
-                        } catch (e) {
-                            // Ignore
-                        }
-                    }
-                }
-
-                if (cookieValue) {
-                    // Ensure cookie is in the right format
-                    if (!cookieValue.startsWith('sid=')) {
-                        cookieValue = `sid=${cookieValue}`;
-                    }
-                    requestOptions.headers['X-Elastic-Cookie'] = cookieValue;
+                if (authHeaders.Authorization) {
                     console.log('🍪 Using authentication cookie for request');
                 }
 
@@ -329,8 +306,8 @@ export class SimplifiedAPIClient {
         console.log('🔌 Testing API connection...');
 
         try {
-            const authStatus = await authService.checkAuth();
-            if (!authStatus.authenticated) {
+            const isAuthenticated = authManager.isAuthenticated();
+            if (!isAuthenticated) {
                 console.log('⚠️ Not authenticated');
                 return false;
             }

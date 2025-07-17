@@ -3,6 +3,8 @@
  * Single source of truth for all configuration, synced with backend
  */
 
+import { authManager } from './auth-manager.js';
+
 // Configuration state
 let config = null;
 let listeners = [];
@@ -91,13 +93,9 @@ async function apiRequest(endpoint, options = {}) {
         ...options.headers
     };
 
-    // Add authentication cookie if available
-    if (window.CentralizedAuth && window.CentralizedAuth.getCookie) {
-        const cookie = window.CentralizedAuth.getCookie();
-        if (cookie) {
-            headers['X-Elastic-Cookie'] = cookie;
-        }
-    }
+    // Add authentication headers from AuthManager
+    const authHeaders = authManager.getAuthHeaders();
+    Object.assign(headers, authHeaders);
 
     try {
         const response = await fetch(url, {
@@ -270,22 +268,12 @@ async function handlePreConfiguredCookie(cookieValue) {
     try {
         console.log('🔐 Setting up pre-configured authentication...');
 
-        // Use centralized auth if available
-        if (window.CentralizedAuth) {
-            await window.CentralizedAuth.setCookie(cookieValue.trim(), {
-                source: 'github-secrets',
-                skipValidation: true
-            });
-        } else {
-            // Fallback to localStorage (should not happen in production)
-            const cookieData = {
-                cookie: cookieValue.trim(),
-                expires: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-                saved: new Date().toISOString(),
-                source: 'github-secrets'
-            };
-
-            localStorage.setItem('elasticCookie', JSON.stringify(cookieData));
+        // Use AuthManager to set cookie
+        try {
+            authManager.setCookie(cookieValue.trim());
+            console.log('✅ Cookie from GitHub Secrets saved via AuthManager');
+        } catch (error) {
+            console.error('Failed to save cookie:', error);
         }
 
         // Update config to reflect the auto-authentication

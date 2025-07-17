@@ -11,8 +11,7 @@ import './components/loading-overlay.js';
 import './components/auth-overlay.js';
 
 // Import existing services that we'll integrate with the store
-import { CentralizedAuth } from './centralized-auth.js';
-import { authService } from './auth-service.js';
+import { authManager } from './auth-manager.js';
 import { ConfigService } from './config-service.js';
 import { apiClient } from './api-client-simplified.js';
 import { dataService } from './data-service.js';
@@ -20,14 +19,9 @@ import { SimplifiedDashboard } from './dashboard-simplified.js';
 import DOMPurify from './lib/dompurify.js';
 
 // Initialize centralized authentication
-window.CentralizedAuth = CentralizedAuth;
-const centralizedAuthPromise = CentralizedAuth.init().then(auth => {
-  console.log('✅ CentralizedAuth initialized', auth);
-  return auth;
-}).catch(err => {
-  console.error('❌ CentralizedAuth initialization failed:', err);
-  return null;
-});
+// AuthManager is already initialized as a singleton
+window.AuthManager = authManager;
+console.log('✅ AuthManager initialized');
 
 // Import config components
 import ConfigEditor from './config-editor.js';
@@ -292,9 +286,7 @@ async function initialize() {
   console.log('💡 Type RADMonitor.help() for available commands');
 
   try {
-    // Wait for CentralizedAuth to be ready first
-    console.log('⏳ Waiting for CentralizedAuth to initialize...');
-    await centralizedAuthPromise;
+    // AuthManager is already initialized and ready
     
     // Start the app initialization
     const { initialize: initApp } = useActions();
@@ -319,6 +311,40 @@ async function initialize() {
       window.RADMonitor.refresh = () => dashboardInstance.refresh();
       
       console.log('✅ Dashboard initialization complete');
+      
+      // Initialize Debug Panel in development mode
+      if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+        try {
+          // Load debug panel CSS
+          const link = document.createElement('link');
+          link.rel = 'stylesheet';
+          link.href = '/src/styles/debug-panel.css';
+          document.head.appendChild(link);
+          
+          // Dynamically load debug panel JS
+          const script = document.createElement('script');
+          script.src = '/assets/js/components/debug-panel.js';
+          script.onload = () => {
+            console.log('🐛 Loading debug panel...');
+            const debugPanel = new window.DebugPanel();
+            const container = document.createElement('div');
+            container.style.position = 'fixed';
+            container.style.bottom = '20px';
+            container.style.right = '20px';
+            container.style.zIndex = '9999';
+            container.appendChild(debugPanel.render());
+            document.body.appendChild(container);
+            window.debugPanel = debugPanel;
+            console.log('✅ Debug panel loaded. Click 🐛 Debug button to open.');
+          };
+          script.onerror = (error) => {
+            console.warn('Debug panel not available:', error);
+          };
+          document.body.appendChild(script);
+        } catch (error) {
+          console.warn('Failed to load debug panel:', error);
+        }
+      }
     } else {
       console.log('⚠️ Initialization incomplete - authentication required');
     }

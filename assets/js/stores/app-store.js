@@ -4,6 +4,7 @@
  */
 
 import { createStore } from '/node_modules/zustand/esm/vanilla.mjs';
+import { authManager } from '../auth-manager.js';
 
 // Create the main app store
 export const appStore = createStore((set, get) => ({
@@ -67,45 +68,16 @@ export const appStore = createStore((set, get) => ({
       const startTime = Date.now();
 
       try {
-        // Check centralized auth first
-        let authStatus = null;
-        let storedCookie = null;
+        // Check authentication using AuthManager
+        const authStatus = authManager.getStatus();
+        const storedCookie = authManager.getCookie();
         
-        if (window.CentralizedAuth) {
-            authStatus = window.CentralizedAuth.getStatus();
-            console.log('🔍 CentralizedAuth status:', authStatus);
-            
-            if (authStatus.hasAuth && !authStatus.expired) {
-                storedCookie = window.CentralizedAuth.getCookie();
-                console.log('🔑 Got cookie from CentralizedAuth');
-            }
-        }
+        console.log('🔍 AuthManager status:', authStatus);
         
-        // If no cookie from CentralizedAuth, check other sources
         if (!storedCookie) {
-            console.log('⚠️ No cookie from CentralizedAuth, checking other sources...');
-            
-            // Try multiple storage keys
-            const possibleKeys = ['elastic_cookie', 'elasticCookie', 'rad_monitor_auth'];
-            for (const key of possibleKeys) {
-                const value = localStorage.getItem(key);
-                if (value) {
-                    try {
-                        // Try to parse if it's JSON
-                        const parsed = JSON.parse(value);
-                        if (parsed.cookie) {
-                            storedCookie = parsed.cookie;
-                            break;
-                        }
-                    } catch {
-                        // Not JSON, use as-is if it looks like a cookie
-                        if (value.startsWith('sid=') || value.startsWith('Fe26.2')) {
-                            storedCookie = value;
-                            break;
-                        }
-                    }
-                }
-            }
+            console.log('⚠️ No authentication cookie found');
+        } else {
+            console.log('🔑 Got cookie from AuthManager');
         }
 
         if (storedCookie) {
@@ -137,12 +109,8 @@ export const appStore = createStore((set, get) => ({
         if (sid) {
           const cookie = `sid=${sid}`;
 
-          // Use centralized auth if available
-          if (window.CentralizedAuth) {
-            await window.CentralizedAuth.setCookie(cookie, { source: 'url' });
-          } else {
-            localStorage.setItem('elastic_cookie', cookie);
-          }
+          // Use AuthManager to set cookie
+          authManager.setCookie(cookie);
 
           // Clean URL
           window.history.replaceState({}, document.title, window.location.pathname);
@@ -204,12 +172,8 @@ export const appStore = createStore((set, get) => ({
     setCookie: async (cookie) => {
       const formattedCookie = cookie.startsWith('sid=') ? cookie : `sid=${cookie}`;
 
-      // Use centralized auth if available
-      if (window.CentralizedAuth) {
-        await window.CentralizedAuth.setCookie(formattedCookie, { source: 'manual' });
-      } else {
-        localStorage.setItem('elastic_cookie', formattedCookie);
-      }
+      // Use AuthManager to set cookie
+      authManager.setCookie(formattedCookie);
 
       set((state) => ({
         auth: {
@@ -224,12 +188,8 @@ export const appStore = createStore((set, get) => ({
     },
 
     clearAuth: () => {
-      // Use centralized auth if available
-      if (window.CentralizedAuth) {
-        window.CentralizedAuth.clearAuth();
-      } else {
-        localStorage.removeItem('elastic_cookie');
-      }
+      // Use AuthManager to clear cookie
+      authManager.clearCookie();
       set((state) => ({
         auth: {
           isAuthenticated: false,

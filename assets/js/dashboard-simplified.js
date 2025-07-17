@@ -4,7 +4,7 @@
  * @module dashboard-simplified
  */
 
-import { authService } from './auth-service.js';
+import { authManager } from './auth-manager.js';
 import { dataService } from './data-service.js';
 import { apiClient } from './api-client-simplified.js';
 import { EventEmitter } from './event-emitter.js';
@@ -85,7 +85,7 @@ export class SimplifiedDashboard {
             // Step 1: Check authentication (but don't force prompt)
             let authStatus;
             try {
-                authStatus = await authService.checkAuth();
+                authStatus = authManager.getStatus();
                 if (authStatus.authenticated) {
                     console.log('(✓)Authentication:', authStatus.method);
                     connectionManager.updateAuthStatus(true, `Authenticated via ${authStatus.method}`);
@@ -384,7 +384,7 @@ export class SimplifiedDashboard {
             console.log('🔍 Testing API connection...');
 
             // Check auth status first
-            const authStatus = await authService.checkAuth();
+            const authStatus = authManager.getStatus();
             console.log('Auth status:', authStatus);
 
             if (!authStatus.authenticated) {
@@ -400,10 +400,14 @@ export class SimplifiedDashboard {
                 this.authRetries++;
 
                 try {
-                    await authService.requireAuth();
-                    // Reset auth state on success
-                    this.isAuthenticating = false;
-                    this.authRetries = 0;
+                    const cookie = await authManager.promptForCookie();
+                    if (cookie) {
+                        // Reset auth state on success
+                        this.isAuthenticating = false;
+                        this.authRetries = 0;
+                    } else {
+                        throw new Error('No cookie provided');
+                    }
                 } catch (error) {
                     console.log('(✗) Authentication failed:', error.message);
                     this.isAuthenticating = false;
@@ -452,10 +456,14 @@ export class SimplifiedDashboard {
                 this.authRetries++;
 
                 try {
-                    await authService.requireAuth();
-                    this.isAuthenticating = false;
-                    this.authRetries = 0;
-                    return await this.testApiConnection(); // Retry after auth
+                    const cookie = await authManager.promptForCookie();
+                    if (cookie) {
+                        this.isAuthenticating = false;
+                        this.authRetries = 0;
+                        return await this.testApiConnection(); // Retry after auth
+                    } else {
+                        throw new Error('No cookie provided');
+                    }
                 } catch (authError) {
                     console.log('(✗) Authentication failed:', authError.message);
                     this.isAuthenticating = false;
@@ -476,9 +484,8 @@ export class SimplifiedDashboard {
         this.isAuthenticating = false;
 
         try {
-            const cookie = await authService.promptForCookie();
+            const cookie = await authManager.promptForCookie();
             if (cookie) {
-                await authService.setLegacyCookie(cookie);
                 console.log('(✓)Cookie saved successfully');
 
                 // Test connection after setting cookie

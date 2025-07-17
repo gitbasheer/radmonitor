@@ -433,22 +433,44 @@ async def favicon():
 # ====================
 
 @app.post("/api/v1/auth/validate")
-async def validate_auth(cookie: Optional[str] = Header(None)):
-    """Validate authentication cookie"""
-    if not cookie:
-        raise HTTPException(status_code=401, detail="No authentication cookie provided")
-
+async def validate_auth(
+    authorization: Optional[str] = Header(None),
+    cookie: Optional[str] = Header(None)  # Keep for backward compatibility
+):
+    """Validate authentication cookie from Authorization header or Cookie header"""
+    
+    # Try Authorization header first (new way)
+    sid_cookie = None
+    
+    if authorization and authorization.startswith("Bearer "):
+        # Extract sid from "Bearer sid=..." format
+        sid_cookie = authorization.replace("Bearer ", "").strip()
+    elif cookie:
+        # Fall back to Cookie header for backward compatibility
+        sid_cookie = cookie
+    
+    if not sid_cookie:
+        raise HTTPException(
+            status_code=401, 
+            detail="No authentication provided. Use Authorization: Bearer sid=..."
+        )
+    
+    # Ensure cookie has sid= prefix
+    if not sid_cookie.startswith("sid="):
+        sid_cookie = f"sid={sid_cookie}"
+    
     # Test the cookie by making a simple Elasticsearch query
     try:
         test_query = {
             "query": {"match_all": {}},
             "size": 0
         }
-        result = await execute_elasticsearch_query(test_query, cookie)
+        result = await execute_elasticsearch_query(test_query, sid_cookie)
 
         if result.get("success"):
             return {
                 "authenticated": True,
+                "valid": True,
                 "message": "Cookie is valid",
                 "timestamp": datetime.now().isoformat()
             }
@@ -708,22 +730,31 @@ async def query_dashboard_data(
     app_state.metrics["cache_misses"] += 1
 
     # Execute query - check all possible auth headers
-    # Try headers in consistent order, log each step for diagnostics
+    # Try Authorization header first (new standard), then fallback to others
     auth_cookie = None
-    if cookie:
+    
+    if authorization and authorization.startswith("Bearer "):
+        logger.info("Using Authorization header (Bearer token)")
+        auth_cookie = authorization.replace("Bearer ", "").strip()
+    elif cookie:
         logger.info("Using Cookie header")
         auth_cookie = cookie
     elif x_elastic_cookie:
         logger.info("Using X-Elastic-Cookie header")
         auth_cookie = x_elastic_cookie
     elif authorization:
-        logger.info("Using Authorization header")
+        # Non-Bearer authorization header (backward compatibility)
+        logger.info("Using Authorization header (legacy)")
         auth_cookie = authorization
     else:
         logger.warning("No authentication cookie found")
     
     if not auth_cookie:
         raise HTTPException(status_code=401, detail="Authentication credentials not found")
+    
+    # Ensure cookie has sid= prefix
+    if not auth_cookie.startswith("sid="):
+        auth_cookie = f"sid={auth_cookie}"
 
     # Continue with query execution
     result = await execute_elasticsearch_query(query_request.query, auth_cookie)
@@ -855,21 +886,33 @@ async def query_dashboard_data(
 
 @app.get("/api/v1/auth/status")
 async def auth_status(
+    authorization: Optional[str] = Header(None),
     cookie: Optional[str] = Header(None),
     x_elastic_cookie: Optional[str] = Header(None, alias="X-Elastic-Cookie")
 ):
     """Check authentication status"""
-    # Check both Cookie and X-Elastic-Cookie headers
-    auth_cookie = cookie or x_elastic_cookie
+    # Check Authorization header first (new standard), then others
+    auth_cookie = None
+    method = None
+    
+    if authorization and authorization.startswith("Bearer "):
+        auth_cookie = authorization.replace("Bearer ", "").strip()
+        method = "bearer"
+    elif cookie:
+        auth_cookie = cookie
+        method = "cookie"
+    elif x_elastic_cookie:
+        auth_cookie = x_elastic_cookie
+        method = "x-elastic-cookie"
 
     if auth_cookie:
-        logger.info("Auth status check - Cookie present")
+        logger.info(f"Auth status check - {method} present")
     else:
-        logger.info("Auth status check - No cookie found")
+        logger.info("Auth status check - No authentication found")
 
     return {
         "authenticated": bool(auth_cookie),
-        "method": "cookie" if auth_cookie else None,
+        "method": method,
         "timestamp": datetime.now().isoformat()
     }
 
@@ -891,18 +934,30 @@ async def logout():
 async def kibana_proxy(
     request: Request,
     body: Dict[str, Any],
+    authorization: Optional[str] = Header(None),
     cookie: Optional[str] = Header(None),
     x_elastic_cookie: Optional[str] = Header(None, alias="X-Elastic-Cookie")
 ):
     """Proxy requests to Kibana (CORS bypass)"""
-    # Check both Cookie and X-Elastic-Cookie headers
-    auth_cookie = cookie or x_elastic_cookie
+    # Check Authorization header first (new standard), then others
+    auth_cookie = None
+    
+    if authorization and authorization.startswith("Bearer "):
+        auth_cookie = authorization.replace("Bearer ", "").strip()
+    elif cookie:
+        auth_cookie = cookie
+    elif x_elastic_cookie:
+        auth_cookie = x_elastic_cookie
 
     if not auth_cookie:
         raise HTTPException(
             status_code=401,
-            detail="Authentication required. Please provide a cookie."
+            detail="Authentication required. Use Authorization: Bearer sid=..."
         )
+    
+    # Ensure cookie has sid= prefix
+    if not auth_cookie.startswith("sid="):
+        auth_cookie = f"sid={auth_cookie}"
 
     # Execute the query
     result = await execute_elasticsearch_query(body, auth_cookie)
@@ -1024,6 +1079,127 @@ async def bulk_import_eid_mappings(mappings: List[EIDMapping]):
         message=f"Added {added} new mappings (skipped {len(mappings) - added} duplicates)",
         mappings=list(eid_registry.values())
     )
+
+# ====================
+# Diagnostic Endpoints
+# ====================
+
+class DiagnosticInfo(BaseModel):
+    """Model for diagnostic information"""
+    total_events: int
+    registry_mappings: int
+    registry_matches: int
+    pattern_matches: int
+    unknown_eids: List[str]
+    processing_details: List[Dict[str, Any]]
+
+@app.get("/api/v1/diagnostics/eid-processing")
+async def get_eid_processing_diagnostics():
+    """Get detailed diagnostics about EID processing"""
+    # Get current cached data
+    cache_entries = []
+    for key, entry in app_state.cache.items():
+        if "data" in entry:
+            cache_entries.extend(entry["data"])
+    
+    # Analyze EID processing
+    registry_matches = 0
+    pattern_matches = 0
+    unknown_eids = []
+    processing_details = []
+    
+    for event in cache_entries:
+        eid = event.get("event_id") or event.get("id") or event.get("name", "")
+        if not eid:
+            continue
+            
+        # Check registry match
+        registry_match = None
+        for mapping_eid, mapping in eid_registry.items():
+            if mapping_eid.upper() in eid.upper():
+                registry_match = mapping
+                registry_matches += 1
+                break
+        
+        if registry_match:
+            processing_details.append({
+                "eid": eid,
+                "detected_rad": registry_match.rad_type,
+                "source": "registry",
+                "confidence": 100,
+                "mapping": registry_match.eid
+            })
+        else:
+            # Try pattern matching
+            detected_rad = determine_rad_type_from_eid(eid)
+            if detected_rad and detected_rad != 'custom':
+                pattern_matches += 1
+                processing_details.append({
+                    "eid": eid,
+                    "detected_rad": detected_rad,
+                    "source": "pattern",
+                    "confidence": calculate_pattern_confidence(eid, detected_rad)
+                })
+            else:
+                unknown_eids.append(eid)
+                processing_details.append({
+                    "eid": eid,
+                    "detected_rad": detected_rad or "unknown",
+                    "source": "unknown",
+                    "confidence": 0
+                })
+    
+    return DiagnosticInfo(
+        total_events=len(cache_entries),
+        registry_mappings=len(eid_registry),
+        registry_matches=registry_matches,
+        pattern_matches=pattern_matches,
+        unknown_eids=unknown_eids[:20],  # Limit to first 20
+        processing_details=processing_details[:50]  # Limit to first 50
+    )
+
+def calculate_pattern_confidence(eid: str, rad_type: str) -> int:
+    """Calculate confidence score for pattern-based RAD type detection"""
+    eid_upper = eid.upper()
+    patterns = {
+        'login': ['LOGIN', 'AUTH', 'SIGNIN', 'LOGON'],
+        'api_call': ['API', 'ENDPOINT', 'SERVICE', 'REQUEST'],
+        'page_view': ['PAGE', 'VIEW', 'VISIT', 'SCREEN'],
+        'file_download': ['DOWNLOAD', 'FILE', 'EXPORT', 'ATTACHMENT']
+    }
+    
+    relevant_patterns = patterns.get(rad_type, [])
+    if not relevant_patterns:
+        return 0
+    
+    match_count = sum(1 for pattern in relevant_patterns if pattern in eid_upper)
+    return min(100, int((match_count / len(relevant_patterns)) * 100))
+
+@app.get("/api/v1/diagnostics/cache-analysis")
+async def get_cache_analysis():
+    """Analyze cache usage and performance"""
+    cache_sizes = []
+    cache_ages = []
+    now = datetime.now()
+    
+    for key, entry in app_state.cache.items():
+        cache_sizes.append(len(str(entry)))
+        age = (now - entry["timestamp"]).total_seconds()
+        cache_ages.append(age)
+    
+    return {
+        "cache_entries": len(app_state.cache),
+        "total_size_bytes": sum(cache_sizes),
+        "average_size_bytes": sum(cache_sizes) / len(cache_sizes) if cache_sizes else 0,
+        "oldest_entry_age_seconds": max(cache_ages) if cache_ages else 0,
+        "newest_entry_age_seconds": min(cache_ages) if cache_ages else 0,
+        "cache_hit_rate": (
+            app_state.metrics["cache_hits"] /
+            (app_state.metrics["cache_hits"] + app_state.metrics["cache_misses"])
+            if (app_state.metrics["cache_hits"] + app_state.metrics["cache_misses"]) > 0
+            else 0
+        )
+    }
 
 # ====================
 # Utility Endpoints

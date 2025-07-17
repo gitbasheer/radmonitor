@@ -4,6 +4,7 @@
  */
 
 import { appStore } from './app-store.js';
+import { authManager } from '../auth-manager.js';
 
 // Expose store to window for debugging
 window.RADStore = {
@@ -56,11 +57,9 @@ window.RADStore = {
     console.log('Checking:', auth.isChecking);
     console.log('Error:', auth.error || 'None');
     
-    // Also check CentralizedAuth
-    if (window.CentralizedAuth) {
-      const centralAuth = window.CentralizedAuth.getStatus();
-      console.log('CentralizedAuth:', centralAuth);
-    }
+    // Also check AuthManager
+    const authManagerStatus = authManager.getStatus();
+    console.log('AuthManager:', authManagerStatus);
     
     console.groupEnd();
     return auth;
@@ -88,7 +87,7 @@ window.RADStore = {
     
     // Check all possible cookie locations
     const sources = {
-      'CentralizedAuth': window.CentralizedAuth?.getCookie() || null,
+      'AuthManager': authManager.getCookie() || null,
       'localStorage[rad_monitor_auth]': localStorage.getItem('rad_monitor_auth'),
       'localStorage[elastic_cookie]': localStorage.getItem('elastic_cookie'),
       'localStorage[elasticCookie]': localStorage.getItem('elasticCookie'),

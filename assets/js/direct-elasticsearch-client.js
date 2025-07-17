@@ -4,6 +4,7 @@
  */
 
 import { getElasticsearchUrl } from './config-service.js';
+import { authManager } from './auth-manager.js';
 
 export class DirectElasticsearchClient {
     constructor() {
@@ -15,24 +16,7 @@ export class DirectElasticsearchClient {
      * Get authentication cookie from centralized auth or localStorage
      */
     getAuthCookie() {
-        // Use centralized auth if available
-        if (window.CentralizedAuth) {
-            return window.CentralizedAuth.getCookie();
-        }
-
-        // Fallback to localStorage
-        try {
-            const saved = localStorage.getItem('elasticCookie');
-            if (saved) {
-                const parsed = JSON.parse(saved);
-                if (parsed.expires && new Date(parsed.expires) > new Date()) {
-                    return parsed.cookie;
-                }
-            }
-        } catch (e) {
-            console.warn('Failed to parse saved cookie:', e);
-        }
-        return null;
+        return authManager.getCookie();
     }
 
     /**

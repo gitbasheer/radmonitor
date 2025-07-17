@@ -213,3 +213,7 @@ package-lock.json
 
 # PNPM migration docs (if migration complete)
 PNPM_MIGRATION.md
+
+# Old auth files (replaced by auth-manager.js)
+assets/js/auth-service.js
+assets/js/centralized-auth.js
