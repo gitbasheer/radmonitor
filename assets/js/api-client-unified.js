@@ -337,6 +337,179 @@ export class UnifiedAPIClient {
     // ====================
 
     /**
+     * Compare two time windows for baseline health checks
+     * @param {string} healthyStart - ISO timestamp for healthy window start
+     * @param {string} healthyEnd - ISO timestamp for healthy window end
+     * @param {string} recentStart - ISO timestamp for recent window start
+     * @param {string} recentEnd - ISO timestamp for recent window end
+     * @param {string} eidPrefix - EID pattern to filter (default: 'pandc.vnext.recommendations.feed.feed*')
+     * @returns {Promise<Object>} Comparison result with status and details
+     */
+    async compareWindows(healthyStart, healthyEnd, recentStart, recentEnd, eidPrefix = 'pandc.vnext.recommendations.feed.feed*') {
+        // Build base query structure
+        const baseQuery = {
+            size: 0,
+            query: {
+                bool: {
+                    filter: [
+                        {
+                            wildcard: {
+                                'detail.event.data.traffic.eid.keyword': eidPrefix
+                            }
+                        },
+                        {
+                            match_phrase: {
+                                'detail.global.page.host': 'dashboard.godaddy.com'
+                            }
+                        }
+                    ]
+                }
+            },
+            aggs: {
+                unique_eids: {
+                    terms: {
+                        field: 'detail.event.data.traffic.eid.keyword',
+                        size: 10000
+                    }
+                },
+                event_count: {
+                    value_count: {
+                        field: '@timestamp'
+                    }
+                }
+            }
+        };
+
+        // Create queries for both time windows
+        const healthyQuery = {
+            ...baseQuery,
+            query: {
+                ...baseQuery.query,
+                bool: {
+                    ...baseQuery.query.bool,
+                    filter: [
+                        ...baseQuery.query.bool.filter,
+                        {
+                            range: {
+                                '@timestamp': {
+                                    gte: healthyStart,
+                                    lte: healthyEnd
+                                }
+                            }
+                        }
+                    ]
+                }
+            }
+        };
+
+        const recentQuery = {
+            ...baseQuery,
+            query: {
+                ...baseQuery.query,
+                bool: {
+                    ...baseQuery.query.bool,
+                    filter: [
+                        ...baseQuery.query.bool.filter,
+                        {
+                            range: {
+                                '@timestamp': {
+                                    gte: recentStart,
+                                    lte: recentEnd
+                                }
+                            }
+                        }
+                    ]
+                }
+            }
+        };
+
+        // Execute both queries in parallel
+        const [healthyRes, recentRes] = await Promise.all([
+            this.executeQuery(healthyQuery),
+            this.executeQuery(recentQuery)
+        ]);
+
+        // Check if both queries succeeded
+        if (!healthyRes.success || !recentRes.success) {
+            return {
+                success: false,
+                error: 'Failed to execute comparison queries',
+                details: {
+                    healthyError: healthyRes.error,
+                    recentError: recentRes.error
+                }
+            };
+        }
+
+        // Extract metrics from responses
+        const healthyData = healthyRes.data;
+        const recentData = recentRes.data;
+
+        const healthyCount = healthyData.aggregations?.event_count?.value || 0;
+        const recentCount = recentData.aggregations?.event_count?.value || 0;
+
+        const healthyEids = healthyData.aggregations?.unique_eids?.buckets || [];
+        const recentEids = recentData.aggregations?.unique_eids?.buckets || [];
+
+        // Calculate percentage difference
+        const diff = healthyCount > 0 
+            ? ((recentCount - healthyCount) / healthyCount) * 100
+            : (recentCount > 0 ? 100 : 0);
+
+        // Determine status based on thresholds
+        let status = 'NORMAL';
+        if (diff < -80) {
+            status = 'CRITICAL';
+        } else if (diff < -50) {
+            status = 'WARNING';
+        } else if (diff > 50) {
+            status = 'INCREASED';
+        }
+
+        // Calculate EID differences
+        const healthyEidSet = new Set(healthyEids.map(b => b.key));
+        const recentEidSet = new Set(recentEids.map(b => b.key));
+        
+        const missingEids = [...healthyEidSet].filter(eid => !recentEidSet.has(eid));
+        const newEids = [...recentEidSet].filter(eid => !healthyEidSet.has(eid));
+
+        return {
+            success: true,
+            status,
+            percentageDiff: Math.round(diff * 100) / 100,
+            details: {
+                healthy: {
+                    eventCount: healthyCount,
+                    uniqueEids: healthyEids.length,
+                    topEids: healthyEids.slice(0, 5).map(b => ({
+                        eid: b.key,
+                        count: b.doc_count
+                    }))
+                },
+                recent: {
+                    eventCount: recentCount,
+                    uniqueEids: recentEids.length,
+                    topEids: recentEids.slice(0, 5).map(b => ({
+                        eid: b.key,
+                        count: b.doc_count
+                    }))
+                },
+                eidAnalysis: {
+                    missingEids: missingEids.slice(0, 10),
+                    newEids: newEids.slice(0, 10),
+                    totalMissing: missingEids.length,
+                    totalNew: newEids.length
+                },
+                timeWindows: {
+                    healthy: { start: healthyStart, end: healthyEnd },
+                    recent: { start: recentStart, end: recentEnd }
+                },
+                eidPattern: eidPrefix
+            }
+        };
+    }
+
+    /**
      * Execute Elasticsearch query
      */
     async executeQuery(query, forceRefresh = false) {
