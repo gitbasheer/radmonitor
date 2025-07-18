@@ -379,8 +379,16 @@ app.mount("/node_modules", StaticFiles(directory=PROJECT_ROOT / "node_modules"),
 @app.get("/", response_class=HTMLResponse)
 async def read_index():
     """Serve the main dashboard"""
-    index_path = PROJECT_ROOT / "index.html"
-    return FileResponse(index_path)
+    # Check dist folder first, then root
+    dist_index = PROJECT_ROOT / "dist" / "index.html"
+    root_index = PROJECT_ROOT / "index.html"
+    
+    if dist_index.exists():
+        return FileResponse(dist_index)
+    elif root_index.exists():
+        return FileResponse(root_index)
+    else:
+        raise HTTPException(status_code=404, detail="index.html not found")
 
 # ====================
 # Health & Status Endpoints
@@ -432,32 +440,27 @@ async def favicon():
 # Authentication Endpoint
 # ====================
 
+class AuthValidateRequest(BaseModel):
+    """Request model for auth validation"""
+    sid_cookie: str = Field(..., description="Enter your sid cookie value (e.g., Fe26.2**...)")
+
 @app.post("/api/v1/auth/validate")
-async def validate_auth(
-    authorization: Optional[str] = Header(None),
-    cookie: Optional[str] = Header(None)  # Keep for backward compatibility
-):
-    """Validate authentication cookie from Authorization header or Cookie header"""
+async def validate_auth(request: AuthValidateRequest):
+    """Validate authentication cookie against Kibana
     
-    # Try Authorization header first (new way)
-    sid_cookie = None
+    Enter your sid cookie value (the long Fe26.2** string from Kibana).
+    The endpoint will test it against Elasticsearch to verify it's valid.
+    """
     
-    if authorization and authorization.startswith("Bearer "):
-        # Extract sid from "Bearer sid=..." format
-        sid_cookie = authorization.replace("Bearer ", "").strip()
-    elif cookie:
-        # Fall back to Cookie header for backward compatibility
-        sid_cookie = cookie
+    # Extract the sid value
+    sid_value = request.sid_cookie.strip()
     
-    if not sid_cookie:
-        raise HTTPException(
-            status_code=401, 
-            detail="No authentication provided. Use Authorization: Bearer sid=..."
-        )
+    # Remove sid= prefix if they included it
+    if sid_value.startswith("sid="):
+        sid_value = sid_value.replace("sid=", "")
     
-    # Ensure cookie has sid= prefix
-    if not sid_cookie.startswith("sid="):
-        sid_cookie = f"sid={sid_cookie}"
+    # Format properly for Elasticsearch
+    sid_cookie = f"sid={sid_value}"
     
     # Test the cookie by making a simple Elasticsearch query
     try:
@@ -1255,13 +1258,15 @@ async def validate_connections():
 
     # Check configuration
     try:
-        settings = get_settings()
-        results["configuration"] = bool(settings._settings)
+        # Check if config was loaded successfully
+        results["configuration"] = bool(config) and hasattr(config, 'environment')
     except:
         results["configuration"] = False
 
     # Check static files
-    results["static_files"] = (PROJECT_ROOT / "index.html").exists()
+    dist_index = PROJECT_ROOT / "dist" / "index.html"
+    root_index = PROJECT_ROOT / "index.html"
+    results["static_files"] = dist_index.exists() or root_index.exists()
 
     return results
 
@@ -1376,7 +1381,13 @@ if __name__ == "__main__":
         try:
             # Get all running tasks
             loop = asyncio.new_event_loop()
-            pending = asyncio.all_tasks(loop) if hasattr(asyncio, 'all_tasks') else asyncio.Task.all_tasks(loop)
+            # Use the correct method for Python 3.9+
+            if hasattr(asyncio, 'all_tasks'):
+                pending = asyncio.all_tasks(loop)
+            else:
+                # For Python 3.7-3.8
+                pending = asyncio.Task.all_tasks(loop) if hasattr(asyncio.Task, 'all_tasks') else set()
+            
             for task in pending:
                 task.cancel()
         except:
