@@ -1,0 +1,13 @@
+{
+  "corsProxy": {
+    "url": "http://localhost:8001",
+    "enabled": true
+  },
+  "elasticsearch": {
+    "url": "https://usieventho-prod-usw2.kb.us-west-2.aws.found.io:9243",
+    "path": "/api/console/proxy?path=traffic-*/_search&method=POST",
+    "indexPattern": "traffic-*"
+  },
+  "environment": "development",
+  "useProxy": true
+}
