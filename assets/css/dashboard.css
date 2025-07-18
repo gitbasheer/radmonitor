@@ -773,3 +773,26 @@ body.dark-theme .card .value {
 body.dark-theme .card .subtitle {
     color: rgba(255, 255, 255, 0.7);
 }
+
+/* WAM General ET Card Animations - Memory-efficient hover effects */
+.wam-eid-card {
+    transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s ease-out;
+    cursor: pointer;
+    will-change: transform; /* GPU acceleration hint for 60fps animations */
+}
+
+/* Prevent layout thrashing with transform-only animations */
+.wam-eid-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Dark theme support for WAM cards */
+body.dark-theme .wam-eid-card {
+    background: #333;
+    border-color: #555;
+}
+
+body.dark-theme .wam-eid-card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+}

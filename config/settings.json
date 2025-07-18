@@ -23,6 +23,16 @@
     "warning_threshold": -50,
     "min_daily_volume": 100
   },
+  "monitoring": {
+    "eidPrefixes": {
+      "wamGeneral": "pandc.vnext.recommendations.metricsevolved*"
+    },
+    "defaultBaseline": {
+      "from": "now-6d",
+      "to": "now"
+    },
+    "recentWindow": "now-1h"
+  },
   "rad_types": {
     "venture_feed": {
       "pattern": "pandc.vnext.recommendations.feed.feed*",
@@ -44,6 +54,13 @@
       "enabled": false,
       "color": "#FF9800",
       "description": "Product page recommendations"
+    },
+    "wam_general": {
+      "pattern": "pandc.vnext.recommendations.metricsevolved*",
+      "display_name": "WAM General ET",
+      "enabled": true,
+      "color": "#FF6F00",
+      "description": "WAM General evolved metrics monitoring"
     }
   },
   "dashboard": {
