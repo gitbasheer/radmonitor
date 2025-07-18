@@ -59,6 +59,13 @@ export class WamChart {
                             Refresh
                         </button>
                         
+                        <button id="wam-kibana-btn" style="padding: 8px 16px; background: #1BA9F5; color: white; border: none; border-radius: 4px; cursor: pointer; display: none; font-weight: 500;">
+                            <svg style="width: 16px; height: 16px; vertical-align: middle; margin-right: 4px;" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+                            </svg>
+                            View in Kibana
+                        </button>
+                        
                         <label style="display: flex; align-items: center; gap: 5px; cursor: pointer;">
                             <input type="checkbox" id="wam-baseline-toggle" ${this.config.showBaseline ? 'checked' : ''}>
                             <span>Show Baseline</span>
@@ -302,6 +309,7 @@ export class WamChart {
         const timeRange = document.getElementById('wam-time-range');
         const refreshBtn = document.getElementById('wam-refresh-btn');
         const baselineToggle = document.getElementById('wam-baseline-toggle');
+        const kibanaBtn = document.getElementById('wam-kibana-btn');
         
         eidSelect.addEventListener('change', () => this.loadEidData());
         timeRange.addEventListener('change', () => this.loadEidData(true)); // Pass true for time range changes
@@ -311,6 +319,9 @@ export class WamChart {
         });
         baselineToggle.addEventListener('change', (e) => {
             this.toggleBaseline(e.target.checked);
+        });
+        kibanaBtn.addEventListener('click', () => {
+            this.openInKibana();
         });
     }
 
@@ -381,6 +392,9 @@ export class WamChart {
             this.clearChart();
             return;
         }
+        
+        // Store current data for Kibana URL generation
+        this.currentData = currentData;
 
         const labels = currentData.map(d => d.timestamp);
         const events = currentData.map(d => d.events);
@@ -412,6 +426,12 @@ export class WamChart {
         
         // Use smooth animation for all updates
         this.chart.update();
+        
+        // Show Kibana button when data is loaded
+        const kibanaBtn = document.getElementById('wam-kibana-btn');
+        if (kibanaBtn && this.currentEid) {
+            kibanaBtn.style.display = 'block';
+        }
     }
     
     toggleBaseline(show) {
@@ -594,5 +614,62 @@ export class WamChart {
                 this.showStatus(message, type);
             }
         }
+    }
+    
+    openInKibana() {
+        if (!this.currentEid || !this.currentData || this.currentData.length === 0) {
+            return;
+        }
+        
+        // Get time range from the data
+        const startTime = this.currentData[0].timestamp;
+        const endTime = this.currentData[this.currentData.length - 1].timestamp;
+        
+        // Get the base Kibana URL from the cookie domain
+        const kibanaBase = 'https://usieventho-prod-usw2.kb.us-west-2.aws.found.io:9243';
+        
+        // Build the query
+        const query = {
+            query: {
+                match_phrase: {
+                    [this.config.eidField.replace('.keyword', '')]: this.currentEid
+                }
+            }
+        };
+        
+        // Create the Kibana Discover URL
+        const appState = {
+            columns: ['_source'],
+            filters: [],
+            index: 'traffic-*',
+            interval: 'auto',
+            query: {
+                language: 'kuery',
+                query: `${this.config.eidField.replace('.keyword', '')} : "${this.currentEid}"`
+            },
+            sort: [['@timestamp', 'desc']]
+        };
+        
+        const globalState = {
+            filters: [],
+            refreshInterval: {
+                pause: true,
+                value: 0
+            },
+            time: {
+                from: startTime.toISOString(),
+                to: endTime.toISOString()
+            }
+        };
+        
+        // Encode the states
+        const encodedAppState = encodeURIComponent(JSON.stringify(appState));
+        const encodedGlobalState = encodeURIComponent(JSON.stringify(globalState));
+        
+        // Construct the full URL
+        const kibanaUrl = `${kibanaBase}/app/discover#/?_g=${encodedGlobalState}&_a=${encodedAppState}`;
+        
+        // Open in new tab
+        window.open(kibanaUrl, '_blank');
     }
 }
