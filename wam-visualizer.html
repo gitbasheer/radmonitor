@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WAM EID Timeline Visualizer</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='80' font-size='80'>📊</text></svg>">
+    <style>
+        :root {
+            --bg-primary: #f5f5f5;
+            --bg-secondary: white;
+            --text-primary: #333;
+            --text-secondary: #666;
+            --border-color: #ddd;
+            --shadow: rgba(0,0,0,0.1);
+            --accent: #FF6F00;
+            --accent-hover: #FF8F00;
+            --auth-bg: #FFF8E1;
+            --success-bg: #d4edda;
+            --success-text: #155724;
+            --error-bg: #f8d7da;
+            --error-text: #721c24;
+        }
+
+        body.dark {
+            --bg-primary: #121212;
+            --bg-secondary: #1e1e1e;
+            --text-primary: #e0e0e0;
+            --text-secondary: #999;
+            --border-color: #333;
+            --shadow: rgba(0,0,0,0.3);
+            --auth-bg: #2d2611;
+            --success-bg: #1e3a1e;
+            --success-text: #4caf50;
+            --error-bg: #3a1e1e;
+            --error-text: #f44336;
+        }
+
+        * {
+            transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .header {
+            background: var(--bg-secondary);
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px var(--shadow);
+            margin-bottom: 20px;
+            position: relative;
+        }
+        .auth-section {
+            background: var(--auth-bg);
+            padding: 15px;
+            border-radius: 4px;
+            border-left: 4px solid var(--accent);
+            margin-bottom: 20px;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            margin: 10px 0;
+            box-sizing: border-box;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+        }
+        .btn {
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        .btn:hover {
+            background: var(--accent-hover);
+        }
+        .status {
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+            display: none;
+        }
+        .status.success {
+            background: var(--success-bg);
+            color: var(--success-text);
+            display: block;
+        }
+        .status.error {
+            background: var(--error-bg);
+            color: var(--error-text);
+            display: block;
+        }
+        #visualizer-container {
+            margin-top: 20px;
+        }
+        
+        /* Dark mode toggle button */
+        .theme-toggle {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: transparent;
+            border: 2px solid var(--border-color);
+            border-radius: 50px;
+            padding: 8px 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-primary);
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        
+        .theme-toggle:hover {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px var(--shadow);
+        }
+        
+        .theme-toggle svg {
+            width: 20px;
+            height: 20px;
+            transition: transform 0.3s ease;
+        }
+        
+        .theme-toggle:hover svg {
+            transform: rotate(180deg);
+        }
+        
+        /* Dark mode specific chart container styling */
+        body.dark #wam-chart .wam-chart-container {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+        }
+        
+        body.dark #wam-chart select,
+        body.dark #wam-chart input {
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            border-color: var(--border-color);
+        }
+        
+        body.dark #wam-chart #wam-chart-stats {
+            background: var(--bg-primary);
+        }
+        
+        /* Configuration panel styles */
+        .config-button {
+            background: transparent;
+            border: 2px solid var(--border-color);
+            border-radius: 4px;
+            padding: 8px 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-primary);
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        
+        .config-button:hover {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: white;
+        }
+        
+        .config-panel {
+            display: none;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+            box-shadow: 0 2px 8px var(--shadow);
+        }
+        
+        .config-panel.active {
+            display: block;
+        }
+        
+        .config-section {
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .config-section:last-child {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+        
+        .config-section h4 {
+            margin: 0 0 15px 0;
+            color: var(--text-primary);
+            font-size: 16px;
+        }
+        
+        .config-group {
+            display: grid;
+            gap: 15px;
+        }
+        
+        .config-item {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        
+        .config-item label {
+            font-size: 13px;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+        
+        .config-item input[type="text"],
+        .config-item input[type="number"],
+        .config-item select {
+            padding: 8px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 14px;
+        }
+        
+        .config-item input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+        
+        .config-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .config-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            justify-content: flex-end;
+        }
+        
+        .config-btn {
+            padding: 8px 16px;
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+        
+        .config-btn.save {
+            background: var(--accent);
+            color: white;
+        }
+        
+        .config-btn.save:hover {
+            background: var(--accent-hover);
+        }
+        
+        .config-btn.cancel {
+            background: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+        }
+        
+        .config-btn.cancel:hover {
+            background: var(--bg-primary);
+        }
+        
+        .two-column {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        
+        @media (max-width: 768px) {
+            .two-column {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔬 WAM EID Timeline Visualizer</h1>
+            <p>Visualize event and visitor patterns for specific EIDs over time using HyperLogLog++ cardinality estimation.</p>
+            <button class="theme-toggle" onclick="toggleTheme()">
+                <svg id="theme-icon" viewBox="0 0 24 24" fill="currentColor">
+                    <!-- Sun icon (for light mode) -->
+                    <path d="M12 2.25a.75.75 0 01.75.75v2.25a.75.75 0 01-1.5 0V3a.75.75 0 01.75-.75zM7.5 12a4.5 4.5 0 119 0 4.5 4.5 0 01-9 0zM18.894 6.166a.75.75 0 00-1.06-1.06l-1.591 1.591a.75.75 0 101.06 1.06l1.591-1.591zM21.75 12a.75.75 0 01-.75.75h-2.25a.75.75 0 010-1.5H21a.75.75 0 01.75.75zM17.834 18.894a.75.75 0 001.06-1.06l-1.591-1.591a.75.75 0 10-1.06 1.06l1.591 1.591zM12 18a.75.75 0 01.75.75V21a.75.75 0 01-1.5 0v-2.25A.75.75 0 0112 18zM7.758 17.303a.75.75 0 00-1.061-1.06l-1.591 1.591a.75.75 0 001.06 1.06l1.591-1.591zM6 12a.75.75 0 01-.75.75H3a.75.75 0 010-1.5h2.25A.75.75 0 016 12zM6.697 7.757a.75.75 0 001.06-1.06l-1.591-1.591a.75.75 0 00-1.06 1.06l1.591 1.591z"/>
+                </svg>
+                <span id="theme-text">Dark</span>
+            </button>
+        </div>
+
+        <div class="auth-section">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <h3>🔑 Authentication</h3>
+                    <p>Enter your Kibana cookie to access Elasticsearch data:</p>
+                </div>
+                <button class="config-button" onclick="toggleConfig()">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.07,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/>
+                    </svg>
+                    Configure
+                </button>
+            </div>
+            <input type="text" id="cookie-input" placeholder="sid=Fe26.2**..." value="">
+            <button class="btn" onclick="authenticate()">Set Cookie & Load Data</button>
+            <div id="auth-status" class="status"></div>
+        </div>
+        
+        <div id="config-panel" class="config-panel">
+            <h3>⚙️ Configuration Settings</h3>
+            
+            <div class="config-section">
+                <h4>🔗 API Settings</h4>
+                <div class="config-group two-column">
+                    <div class="config-item">
+                        <label for="config-proxy-url">Proxy URL</label>
+                        <input type="text" id="config-proxy-url" value="http://localhost:8001">
+                    </div>
+                    <div class="config-item">
+                        <label for="config-es-index">Elasticsearch Index Pattern</label>
+                        <input type="text" id="config-es-index" value="*" placeholder="logstash-*">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="config-section">
+                <h4>🔍 Query Settings</h4>
+                <div class="config-group two-column">
+                    <div class="config-item">
+                        <label for="config-eid-pattern">EID Pattern</label>
+                        <input type="text" id="config-eid-pattern" value="pandc.vnext.recommendations.metricsevolved*">
+                    </div>
+                    <div class="config-item">
+                        <label for="config-top-eids-limit">Top EIDs Limit</label>
+                        <input type="number" id="config-top-eids-limit" value="20" min="1" max="100">
+                    </div>
+                    <div class="config-item">
+                        <label for="config-cardinality-precision">HLL++ Precision Threshold</label>
+                        <input type="number" id="config-cardinality-precision" value="1000" min="100" max="40000">
+                    </div>
+                    <div class="config-item">
+                        <label for="config-baseline-weeks">Baseline History (weeks)</label>
+                        <input type="number" id="config-baseline-weeks" value="3" min="1" max="8">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="config-section">
+                <h4>📊 Visualization Settings</h4>
+                <div class="config-group two-column">
+                    <div class="config-item">
+                        <label for="config-chart-tension">Line Smoothness (0-1)</label>
+                        <input type="number" id="config-chart-tension" value="0.1" min="0" max="1" step="0.1">
+                    </div>
+                    <div class="config-item">
+                        <label for="config-point-radius">Data Point Size</label>
+                        <input type="number" id="config-point-radius" value="3" min="0" max="10">
+                    </div>
+                    <div class="config-item">
+                        <label for="config-default-range">Default Time Range</label>
+                        <select id="config-default-range">
+                            <option value="1h">Last 1 Hour</option>
+                            <option value="6h">Last 6 Hours</option>
+                            <option value="24h" selected>Last 24 Hours</option>
+                            <option value="7d">Last 7 Days</option>
+                            <option value="30d">Last 30 Days</option>
+                        </select>
+                    </div>
+                    <div class="config-item">
+                        <div class="config-checkbox">
+                            <input type="checkbox" id="config-show-baseline" checked>
+                            <label for="config-show-baseline">Show Baseline by Default</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="config-section">
+                <h4>🏷️ Field Mappings</h4>
+                <div class="config-group">
+                    <div class="config-item">
+                        <label for="config-timestamp-field">Timestamp Field</label>
+                        <input type="text" id="config-timestamp-field" value="@timestamp">
+                    </div>
+                    <div class="config-item">
+                        <label for="config-eid-field">EID Field</label>
+                        <input type="text" id="config-eid-field" value="detail.event.data.traffic.eid.keyword">
+                    </div>
+                    <div class="config-item">
+                        <label for="config-userid-field">User ID Field</label>
+                        <input type="text" id="config-userid-field" value="detail.event.data.traffic.userId.keyword">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="config-actions">
+                <button class="config-btn cancel" onclick="cancelConfig()">Cancel</button>
+                <button class="config-btn save" onclick="saveConfig()">Save Configuration</button>
+            </div>
+        </div>
+
+        <div id="visualizer-container"></div>
+    </div>
+
+    <script>
+        // Theme toggle functionality
+        function toggleTheme() {
+            const body = document.body;
+            const isDark = body.classList.toggle('dark');
+            const icon = document.getElementById('theme-icon');
+            const text = document.getElementById('theme-text');
+            
+            if (isDark) {
+                // Switch to moon icon for dark mode
+                icon.innerHTML = '<path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"/>';
+                text.textContent = 'Light';
+                localStorage.setItem('theme', 'dark');
+            } else {
+                // Switch to sun icon for light mode
+                icon.innerHTML = '<path d="M12 2.25a.75.75 0 01.75.75v2.25a.75.75 0 01-1.5 0V3a.75.75 0 01.75-.75zM7.5 12a4.5 4.5 0 119 0 4.5 4.5 0 01-9 0zM18.894 6.166a.75.75 0 00-1.06-1.06l-1.591 1.591a.75.75 0 101.06 1.06l1.591-1.591zM21.75 12a.75.75 0 01-.75.75h-2.25a.75.75 0 010-1.5H21a.75.75 0 01.75.75zM17.834 18.894a.75.75 0 001.06-1.06l-1.591-1.591a.75.75 0 10-1.06 1.06l1.591 1.591zM12 18a.75.75 0 01.75.75V21a.75.75 0 01-1.5 0v-2.25A.75.75 0 0112 18zM7.758 17.303a.75.75 0 00-1.061-1.06l-1.591 1.591a.75.75 0 001.06 1.06l1.591-1.591zM6 12a.75.75 0 01-.75.75H3a.75.75 0 010-1.5h2.25A.75.75 0 016 12zM6.697 7.757a.75.75 0 001.06-1.06l-1.591-1.591a.75.75 0 00-1.06 1.06l1.591 1.591z"/>';
+                text.textContent = 'Dark';
+                localStorage.setItem('theme', 'light');
+            }
+            
+            // Update chart theme if it exists
+            if (window.chart && window.chart.updateTheme) {
+                window.chart.updateTheme(isDark);
+            }
+        }
+        
+        // Load saved theme
+        document.addEventListener('DOMContentLoaded', () => {
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme === 'dark') {
+                toggleTheme();
+            }
+        });
+        
+        // Configuration management
+        const defaultConfig = {
+            proxyUrl: 'http://localhost:8001',
+            esIndex: '*',
+            eidPattern: 'pandc.vnext.recommendations.metricsevolved*',
+            topEidsLimit: 20,
+            cardinalityPrecision: 1000,
+            baselineWeeks: 3,
+            chartTension: 0.1,
+            pointRadius: 3,
+            defaultRange: '24h',
+            showBaseline: true,
+            timestampField: '@timestamp',
+            eidField: 'detail.event.data.traffic.eid.keyword',
+            userIdField: 'detail.event.data.traffic.userId.keyword'
+        };
+        
+        let currentConfig = { ...defaultConfig };
+        
+        function loadConfig() {
+            const saved = localStorage.getItem('wam_config');
+            if (saved) {
+                try {
+                    currentConfig = { ...defaultConfig, ...JSON.parse(saved) };
+                } catch (e) {
+                    console.error('Failed to load config:', e);
+                }
+            }
+            return currentConfig;
+        }
+        
+        function toggleConfig() {
+            const panel = document.getElementById('config-panel');
+            const isActive = panel.classList.toggle('active');
+            
+            if (isActive) {
+                // Populate form with current config
+                loadConfig();
+                document.getElementById('config-proxy-url').value = currentConfig.proxyUrl;
+                document.getElementById('config-es-index').value = currentConfig.esIndex;
+                document.getElementById('config-eid-pattern').value = currentConfig.eidPattern;
+                document.getElementById('config-top-eids-limit').value = currentConfig.topEidsLimit;
+                document.getElementById('config-cardinality-precision').value = currentConfig.cardinalityPrecision;
+                document.getElementById('config-baseline-weeks').value = currentConfig.baselineWeeks;
+                document.getElementById('config-chart-tension').value = currentConfig.chartTension;
+                document.getElementById('config-point-radius').value = currentConfig.pointRadius;
+                document.getElementById('config-default-range').value = currentConfig.defaultRange;
+                document.getElementById('config-show-baseline').checked = currentConfig.showBaseline;
+                document.getElementById('config-timestamp-field').value = currentConfig.timestampField;
+                document.getElementById('config-eid-field').value = currentConfig.eidField;
+                document.getElementById('config-userid-field').value = currentConfig.userIdField;
+            }
+        }
+        
+        function cancelConfig() {
+            document.getElementById('config-panel').classList.remove('active');
+        }
+        
+        function saveConfig() {
+            // Gather values from form
+            currentConfig = {
+                proxyUrl: document.getElementById('config-proxy-url').value,
+                esIndex: document.getElementById('config-es-index').value,
+                eidPattern: document.getElementById('config-eid-pattern').value,
+                topEidsLimit: parseInt(document.getElementById('config-top-eids-limit').value),
+                cardinalityPrecision: parseInt(document.getElementById('config-cardinality-precision').value),
+                baselineWeeks: parseInt(document.getElementById('config-baseline-weeks').value),
+                chartTension: parseFloat(document.getElementById('config-chart-tension').value),
+                pointRadius: parseInt(document.getElementById('config-point-radius').value),
+                defaultRange: document.getElementById('config-default-range').value,
+                showBaseline: document.getElementById('config-show-baseline').checked,
+                timestampField: document.getElementById('config-timestamp-field').value,
+                eidField: document.getElementById('config-eid-field').value,
+                userIdField: document.getElementById('config-userid-field').value
+            };
+            
+            // Save to localStorage
+            localStorage.setItem('wam_config', JSON.stringify(currentConfig));
+            
+            // Apply configuration to chart if it exists
+            if (window.chart) {
+                window.chart.applyConfig(currentConfig);
+            }
+            
+            // Close panel
+            document.getElementById('config-panel').classList.remove('active');
+            
+            // Show success message
+            const statusDiv = document.getElementById('auth-status');
+            statusDiv.className = 'status success';
+            statusDiv.textContent = '✅ Configuration saved successfully!';
+            setTimeout(() => {
+                statusDiv.textContent = '';
+                statusDiv.className = 'status';
+            }, 3000);
+        }
+    </script>
+    
+    <script type="module">
+        import { WamChart } from './wam-visualizer/wam-chart.js';
+        
+        let chart = null;
+        
+        window.authenticate = async function() {
+            const cookie = document.getElementById('cookie-input').value.trim();
+            const statusDiv = document.getElementById('auth-status');
+            
+            if (!cookie) {
+                statusDiv.className = 'status error';
+                statusDiv.textContent = '❌ Please enter a cookie';
+                return;
+            }
+            
+            try {
+                // Save cookie
+                localStorage.setItem('elastic_cookie', cookie);
+                
+                // Load configuration
+                const config = loadConfig();
+                
+                // Initialize chart if not already done
+                if (!chart) {
+                    const container = document.getElementById('visualizer-container');
+                    container.innerHTML = '<div id="wam-chart"></div>';
+                    chart = new WamChart('wam-chart', config);
+                    window.chart = chart; // Make available globally for theme toggle and config
+                }
+                
+                // Set cookie in chart service
+                chart.setCookie(cookie);
+                
+                statusDiv.className = 'status success';
+                statusDiv.textContent = '✅ Cookie set! Loading EIDs...';
+                
+                // Refresh data
+                await chart.loadTopEids();
+                
+            } catch (error) {
+                statusDiv.className = 'status error';
+                statusDiv.textContent = `❌ Error: ${error.message}`;
+            }
+        };
+        
+        // Load saved cookie on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            const savedCookie = localStorage.getItem('elastic_cookie');
+            if (savedCookie) {
+                document.getElementById('cookie-input').value = savedCookie;
+                // Auto-authenticate if cookie exists
+                setTimeout(() => authenticate(), 500);
+            }
+        });
+    </script>
+</body>
+</html>
