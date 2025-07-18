@@ -178,6 +178,50 @@ Status levels:
 - 🟢 **NORMAL**: Traffic looks fine
 - 🔵 **INCREASED**: Traffic is up
 
+## WAM General ET Monitoring
+
+### Overview
+The WAM (Web Analytics Module) implementation provides real-time visitor tracking using HyperLogLog++ cardinality estimation. It's integrated into the dashboard for monitoring EID-level traffic patterns.
+
+### Quick Start
+```bash
+# Start the local WAM visualizer
+./start-wam.sh
+
+# Open in browser
+http://localhost:8000/wam-visualizer.html
+```
+
+### Features
+- **Real-time EID monitoring** with configurable time ranges (1h to 30d)
+- **Baseline comparison** showing historical patterns with percentile ranges
+- **Smooth transitions** between time periods
+- **Dark mode** with automatic theme detection
+- **Configurable settings** for all parameters via UI
+
+### Architecture
+```
+wam-visualizer.html          # Main interface
+├── wam-visualizer/
+│   ├── wam-service.js      # Data fetching & baseline calculation
+│   └── wam-chart.js        # Chart.js visualization component
+└── server/
+    └── elasticsearch-proxy.mjs  # Local proxy with auth validation
+```
+
+### Configuration
+All settings accessible via the Configure button:
+- API endpoints and proxy URL
+- EID patterns and field mappings
+- Visualization parameters (smoothness, point size, etc.)
+- Baseline calculation weeks
+
+### Key Improvements
+- Fixed calendar_interval vs fixed_interval for different time ranges
+- Baseline now properly aligns with current data intervals
+- Removed unique visitors line for cleaner visualization
+- Production-ready proxy with comprehensive error handling
+
 ## Project Structure
 
 ```
@@ -188,12 +232,21 @@ Status levels:
 │   └── config-service.js         # Loads configuration
 ├── config/
 │   ├── production.json           # Production settings
-│   └── settings.json             # Local settings
+│   ├── settings.json             # Local settings
+│   └── local-dev.json            # Local WAM development
 ├── proxy-service/
 │   └── netlify/functions/
 │       └── proxy.js              # CORS proxy function
-└── scripts/
-    └── verify-config.sh          # Config checker
+├── wam-visualizer.html           # WAM monitoring interface
+├── wam-visualizer/
+│   ├── wam-service.js            # Data service for WAM
+│   └── wam-chart.js              # Chart visualization
+├── server/
+│   └── elasticsearch-proxy.mjs   # Local proxy server
+├── scripts/
+│   └── verify-config.sh          # Config checker
+├── start-wam.sh                  # Start WAM visualizer
+└── stop-wam.sh                   # Stop WAM services
 ```
 
 ## Need Help?
