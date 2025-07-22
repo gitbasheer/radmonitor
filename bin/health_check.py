@@ -89,7 +89,7 @@ def main():
 
     # Detailed API checks
     if success:
-        print("\n📊 Detailed API Checks:")
+        print("\n Detailed API Checks:")
         api_results = check_api_health(proxy_url)
         all_results.extend(api_results)
         for _, message in api_results:

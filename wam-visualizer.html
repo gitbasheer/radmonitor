@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WAM EID Timeline Visualizer</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='80' font-size='80'>📊</text></svg>">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='80' font-size='80'></text></svg>">
     <style>
         :root {
             --bg-primary: #f5f5f5;
@@ -302,13 +302,56 @@
                 grid-template-columns: 1fr;
             }
         }
+        .auth-section.compact {
+            margin-top: 30px;
+            padding: 15px 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .auth-section.compact h4 {
+            margin: 0;
+            font-size: 14px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .auth-section.compact input[type="text"] {
+            flex: 1;
+            min-width: 200px;
+            padding: 8px 12px;
+            font-size: 13px;
+        }
+        
+        .auth-section.compact .btn {
+            padding: 8px 16px;
+            font-size: 13px;
+            white-space: nowrap;
+        }
+        
+        .auth-section.compact .status {
+            flex-basis: 100%;
+            margin-top: 5px;
+            padding: 8px 12px;
+            font-size: 13px;
+        }
+        
+        .auth-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex: 1;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>🔬 WAM EID Timeline Visualizer</h1>
-            <p>Visualize event and visitor patterns for specific EIDs over time using HyperLogLog++ cardinality estimation.</p>
+            <h1>WAM EID Timeline </h1>
             <button class="theme-toggle" onclick="toggleTheme()">
                 <svg id="theme-icon" viewBox="0 0 24 24" fill="currentColor">
                     <!-- Sun icon (for light mode) -->
@@ -318,26 +361,25 @@
             </button>
         </div>
 
-        <div class="auth-section">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-                <div>
-                    <h3>🔑 Authentication</h3>
-                    <p>Enter your Kibana cookie to access Elasticsearch data:</p>
-                </div>
-                <button class="config-button" onclick="toggleConfig()">
+        <div id="visualizer-container"></div>
+        
+        <!-- Compact Auth Section at Bottom -->
+        <div class="auth-section compact">
+            <h4>Auth</h4>
+            <div class="auth-controls">
+                <input type="text" id="cookie-input" placeholder="sid=Fe26.2**..." value="">
+                <button class="btn" onclick="authenticate()">Set Cookie & Load</button>
+                <button class="config-button" onclick="toggleConfig()" title="Configure Settings">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                         <path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.07,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/>
                     </svg>
-                    Configure
                 </button>
             </div>
-            <input type="text" id="cookie-input" placeholder="sid=Fe26.2**..." value="">
-            <button class="btn" onclick="authenticate()">Set Cookie & Load Data</button>
             <div id="auth-status" class="status"></div>
         </div>
         
         <div id="config-panel" class="config-panel">
-            <h3>⚙️ Configuration Settings</h3>
+            <h3>Config</h3>
             
             <div class="config-section">
                 <h4>🔗 API Settings</h4>
@@ -357,37 +399,92 @@
                 <h4>🔍 Query Settings</h4>
                 <div class="config-group two-column">
                     <div class="config-item">
-                        <label for="config-eid-pattern">EID Pattern</label>
-                        <input type="text" id="config-eid-pattern" value="pandc.vnext.recommendations.metricsevolved*">
+                        <label for="config-eid-pattern">EID Pattern
+                            <span style="font-size: 11px; color: var(--text-secondary); display: block;">Wildcard pattern to match EIDs</span>
+                        </label>
+                        <input type="text" id="config-eid-pattern" value="pandc.vnext.recommendations.metricsevolved*" placeholder="e.g., *.metricsevolved*">
                     </div>
                     <div class="config-item">
-                        <label for="config-top-eids-limit">Top EIDs Limit</label>
-                        <input type="number" id="config-top-eids-limit" value="20" min="1" max="100">
+                        <label for="config-top-eids-limit">Maximum EIDs to Display
+                            <span style="font-size: 11px; color: var(--text-secondary); display: block;">Number of top EIDs to show</span>
+                        </label>
+                        <input type="number" id="config-top-eids-limit" value="100" min="1" max="200">
                     </div>
                     <div class="config-item">
-                        <label for="config-cardinality-precision">HLL++ Precision Threshold</label>
+                        <label for="config-cardinality-precision">HyperLogLog++ Precision
+                            <span style="font-size: 11px; color: var(--text-secondary); display: block;">Higher = more accurate visitor counts</span>
+                        </label>
                         <input type="number" id="config-cardinality-precision" value="1000" min="100" max="40000">
-                    </div>
-                    <div class="config-item">
-                        <label for="config-baseline-weeks">Baseline History (weeks)</label>
-                        <input type="number" id="config-baseline-weeks" value="3" min="1" max="8">
                     </div>
                 </div>
             </div>
             
             <div class="config-section">
-                <h4>📊 Visualization Settings</h4>
+                <h4>📈 Baseline Configuration</h4>
+                <div class="config-group">
+                    <div class="config-item">
+                        <label for="config-baseline-mode">Baseline Mode
+                            <span style="font-size: 11px; color: var(--text-secondary); display: block;">How baseline is calculated</span>
+                        </label>
+                        <select id="config-baseline-mode" style="width: 100%;">
+                            <option value="weekly" selected>Weekly Pattern (same time previous weeks)</option>
+                            <option value="daily">Daily Pattern (same time previous days)</option>
+                            <option value="rolling">Rolling Average (continuous average)</option>
+                        </select>
+                    </div>
+                    <div class="two-column" style="margin-top: 15px;">
+                        <div class="config-item">
+                            <label for="config-baseline-weeks">History Period
+                                <span style="font-size: 11px; color: var(--text-secondary); display: block;">Number of weeks/days to include</span>
+                            </label>
+                            <input type="number" id="config-baseline-weeks" value="3" min="1" max="8">
+                        </div>
+                        <div class="config-item">
+                            <label for="config-baseline-percentiles">Percentile Bands
+                                <span style="font-size: 11px; color: var(--text-secondary); display: block;">Which percentiles to display</span>
+                            </label>
+                            <select id="config-baseline-percentiles" style="width: 100%;">
+                                <option value="all" selected>All (p10, p25, p50, p75, p90)</option>
+                                <option value="quartiles">Quartiles only (p25, p50, p75)</option>
+                                <option value="median">Median only (p50)</option>
+                                <option value="extremes">Extremes only (p10, p90)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="config-item" style="margin-top: 15px;">
+                        <label style="font-size: 13px; color: var(--text-secondary);">
+                            <strong>Baseline Time Range:</strong> When viewing "Last 24 Hours", the baseline will compare against the same 24-hour period from the previous 3 weeks.
+                            <br><br>
+                            <strong>Example:</strong> If today is Monday 3pm and you're viewing the last 24 hours, the baseline includes:
+                            <ul style="margin: 5px 0 0 20px; font-size: 12px;">
+                                <li>Sunday 3pm - Monday 3pm (1 week ago)</li>
+                                <li>Sunday 3pm - Monday 3pm (2 weeks ago)</li>
+                                <li>Sunday 3pm - Monday 3pm (3 weeks ago)</li>
+                            </ul>
+                        </label>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="config-section">
+                <h4>Visualization Settings</h4>
                 <div class="config-group two-column">
                     <div class="config-item">
-                        <label for="config-chart-tension">Line Smoothness (0-1)</label>
+                        <label for="config-chart-tension">Line Smoothness
+                            <span style="font-size: 11px; color: var(--text-secondary); display: block;">0 = straight lines, 1 = smooth curves</span>
+                        </label>
                         <input type="number" id="config-chart-tension" value="0.1" min="0" max="1" step="0.1">
                     </div>
                     <div class="config-item">
-                        <label for="config-point-radius">Data Point Size</label>
+                        <label for="config-point-radius">Data Point Size
+                            <span style="font-size: 11px; color: var(--text-secondary); display: block;">0 = no points, 10 = large points</span>
+                        </label>
                         <input type="number" id="config-point-radius" value="3" min="0" max="10">
                     </div>
                     <div class="config-item">
-                        <label for="config-default-range">Default Time Range</label>
+                        <label for="config-default-range">Default Time Range
+                            <span style="font-size: 11px; color: var(--text-secondary); display: block;">Initial time range on load</span>
+                        </label>
                         <select id="config-default-range">
                             <option value="1h">Last 1 Hour</option>
                             <option value="6h">Last 6 Hours</option>
@@ -397,10 +494,24 @@
                         </select>
                     </div>
                     <div class="config-item">
-                        <div class="config-checkbox">
-                            <input type="checkbox" id="config-show-baseline" checked>
-                            <label for="config-show-baseline">Show Baseline by Default</label>
-                        </div>
+                        <label for="config-chart-height">Chart Height (pixels)
+                            <span style="font-size: 11px; color: var(--text-secondary); display: block;">Height of the timeline chart</span>
+                        </label>
+                        <input type="number" id="config-chart-height" value="400" min="200" max="800" step="50">
+                    </div>
+                </div>
+                <div class="config-group" style="margin-top: 15px;">
+                    <div class="config-checkbox">
+                        <input type="checkbox" id="config-show-baseline" checked>
+                        <label for="config-show-baseline">Show Baseline by Default</label>
+                    </div>
+                    <div class="config-checkbox">
+                        <input type="checkbox" id="config-show-grid" checked>
+                        <label for="config-show-grid">Show Grid Lines</label>
+                    </div>
+                    <div class="config-checkbox">
+                        <input type="checkbox" id="config-show-legend" checked>
+                        <label for="config-show-legend">Show Chart Legend</label>
                     </div>
                 </div>
             </div>
@@ -471,13 +582,18 @@
             proxyUrl: 'http://localhost:8001',
             esIndex: '*',
             eidPattern: 'pandc.vnext.recommendations.metricsevolved*',
-            topEidsLimit: 20,
+            topEidsLimit: 100,  // Increased to show all EIDs
             cardinalityPrecision: 1000,
             baselineWeeks: 3,
+            baselineMode: 'weekly',
+            baselinePercentiles: 'all',
             chartTension: 0.1,
             pointRadius: 3,
+            chartHeight: 400,
             defaultRange: '24h',
             showBaseline: true,
+            showGrid: true,
+            showLegend: true,
             timestampField: '@timestamp',
             eidField: 'detail.event.data.traffic.eid.keyword',
             userIdField: 'detail.event.data.traffic.userId.keyword'
@@ -514,6 +630,11 @@
                 document.getElementById('config-point-radius').value = currentConfig.pointRadius;
                 document.getElementById('config-default-range').value = currentConfig.defaultRange;
                 document.getElementById('config-show-baseline').checked = currentConfig.showBaseline;
+                document.getElementById('config-baseline-mode').value = currentConfig.baselineMode || 'weekly';
+                document.getElementById('config-baseline-percentiles').value = currentConfig.baselinePercentiles || 'all';
+                document.getElementById('config-chart-height').value = currentConfig.chartHeight || 400;
+                document.getElementById('config-show-grid').checked = currentConfig.showGrid !== false;
+                document.getElementById('config-show-legend').checked = currentConfig.showLegend !== false;
                 document.getElementById('config-timestamp-field').value = currentConfig.timestampField;
                 document.getElementById('config-eid-field').value = currentConfig.eidField;
                 document.getElementById('config-userid-field').value = currentConfig.userIdField;
@@ -537,6 +658,11 @@
                 pointRadius: parseInt(document.getElementById('config-point-radius').value),
                 defaultRange: document.getElementById('config-default-range').value,
                 showBaseline: document.getElementById('config-show-baseline').checked,
+                baselineMode: document.getElementById('config-baseline-mode').value,
+                baselinePercentiles: document.getElementById('config-baseline-percentiles').value,
+                chartHeight: parseInt(document.getElementById('config-chart-height').value),
+                showGrid: document.getElementById('config-show-grid').checked,
+                showLegend: document.getElementById('config-show-legend').checked,
                 timestampField: document.getElementById('config-timestamp-field').value,
                 eidField: document.getElementById('config-eid-field').value,
                 userIdField: document.getElementById('config-userid-field').value

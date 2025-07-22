@@ -61,7 +61,7 @@ export const FlexibleTimeComparison = (() => {
                 host: "dashboard.godaddy.com"
             };
 
-            console.log('📊 Executing flexible time comparison:', {
+            console.log(' Executing flexible time comparison:', {
                 comparisonDuration: formatDuration(comparisonEnd - comparisonStart),
                 baselineDuration: formatDuration(baselineEnd - baselineStart),
                 strategy

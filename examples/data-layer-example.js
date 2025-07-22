@@ -130,7 +130,7 @@ export const DataLayerExample = (() => {
     // =======================
 
     function exampleStateInspection() {
-        console.log('📊 Inspecting query state...');
+        console.log(' Inspecting query state...');
 
         const state = DataLayer.getQueryState();
         console.log('Active queries:', state.activeQueries.size);

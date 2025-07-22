@@ -409,7 +409,7 @@ Implemented comprehensive unit and integration tests for the Zustand app store (
 - Mock clearing between tests
 - Proper teardown of timers and event listeners
 
-### 📊 Test Results
+###  Test Results
 
 - **Total Tests:** 46
 - **Test Categories:**

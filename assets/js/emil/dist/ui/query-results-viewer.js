@@ -105,7 +105,7 @@ export class QueryResultsViewer {
         const tableHtml = this.renderTable(data.slice(0, 10));
         return `
       <div class="emil-timeseries-note">
-        📊 Time series data detected. Showing first 10 rows.
+         Time series data detected. Showing first 10 rows.
         <br><small>Full visualization coming in Phase 3</small>
       </div>
       ${tableHtml}

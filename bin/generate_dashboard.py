@@ -303,7 +303,7 @@ def fetch_kibana_data(cookie: str, config: DashboardConfig, baseline_start: str,
                      baseline_end: str, current_time: str, logger: logging.Logger) -> Dict[str, Any]:
     """Fetch data from Kibana/Elasticsearch"""
 
-    logger.info("📊 Fetching traffic data from Elasticsearch...")
+    logger.info(" Fetching traffic data from Elasticsearch...")
 
     # Build the query
     query = build_elasticsearch_query(config, baseline_start, baseline_end, current_time)
@@ -674,7 +674,7 @@ def main():
 
         # Calculate summary statistics
         stats = calculate_summary_stats(events)
-        logger.info(f"📊 Summary: {stats['critical']} critical, {stats['warning']} warning, "
+        logger.info(f" Summary: {stats['critical']} critical, {stats['warning']} warning, "
                    f"{stats['normal']} normal, {stats['increased']} increased")
 
         # Generate HTML dashboard

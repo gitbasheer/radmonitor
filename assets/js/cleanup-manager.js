@@ -204,7 +204,7 @@ export class CleanupManager {
      */
     logStats() {
         const stats = this.getStats();
-        console.log('📊 CleanupManager Stats:', stats);
+        console.log(' CleanupManager Stats:', stats);
         return stats;
     }
 }

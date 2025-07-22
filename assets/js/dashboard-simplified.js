@@ -535,7 +535,7 @@ export class SimplifiedDashboard {
         const state = dataService.getState();
 
         const stats = `
-📊 Performance Statistics
+ Performance Statistics
 ========================
 API Metrics:
 - Total Requests: ${metrics.requests}

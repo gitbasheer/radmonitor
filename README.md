@@ -286,7 +286,7 @@ Running individual tests from: tests/uiUpdates.test.js
 
 **Baseline Statistics:**
 ```
-📊 Test Baseline Status
+ Test Baseline Status
 Total test files: 65
 Total individual tests: 287
 

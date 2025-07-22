@@ -616,7 +616,7 @@ class TestBaselineManager:
 
     def create_baseline(self) -> None:
         """Create a new test baseline"""
-        print(f"{Colors.blue('📊 Creating new test baseline...')}\n")
+        print(f"{Colors.blue(' Creating new test baseline...')}\n")
 
         # Run all tests
         results = self.runner.run_all_tests()
@@ -690,7 +690,7 @@ class TestBaselineManager:
         data = self.baseline.data
         timestamp = data.get("timestamp", "Unknown")
 
-        print(f"{Colors.blue('📊 Test Baseline Status')}")
+        print(f"{Colors.blue(' Test Baseline Status')}")
         print(f"{Colors.blue('='*70)}")
         print(f"Created: {timestamp}")
         print(f"Total test files: {data.get('total_test_files', 0)}")

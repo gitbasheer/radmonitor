@@ -22,7 +22,7 @@ async function testSimplifiedSystem() {
     };
 
     // Display results
-    console.log('\n📊 Test Results:');
+    console.log('\n Test Results:');
     console.table(tests);
 
     const passed = Object.values(tests).filter(t => t.includes('✅')).length;

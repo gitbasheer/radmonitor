@@ -188,7 +188,7 @@ Multiple similar server scripts:
 
 4. **Staged Cleanup**: Delete files in stages, testing after each stage
 
-## 📊 Estimated Impact
+##  Estimated Impact
 
 - **Archive directory**: ~15-20 files, safe to delete
 - **Old API clients**: ~3 files, significant cleanup after migration verification

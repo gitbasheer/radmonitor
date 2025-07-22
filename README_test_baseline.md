@@ -47,7 +47,7 @@ python bin/test_baseline_manager.py create
 
 **Sample Output:**
 ```
-📊 Creating new test baseline...
+ Creating new test baseline...
 
 🧪 Discovering and running all tests...
 
@@ -160,7 +160,7 @@ python bin/test_baseline_manager.py status
 
 **Sample Output:**
 ```
-📊 Test Baseline Status
+ Test Baseline Status
 ======================================================================
 Created: 2025-07-10T21:08:11.130727
 Total test files: 4
@@ -304,7 +304,7 @@ The baseline is stored in `.test-baseline.json` with this enhanced structure:
 Based on the latest baseline creation:
 
 ```
-📊 Test Baseline Status
+ Test Baseline Status
 ======================================================================
 Created: 2025-07-10T21:08:11.130727
 Total test files: 4

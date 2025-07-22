@@ -173,7 +173,7 @@ Based on various tickets:
 - [ ] Automated code generation
 - [ ] Schema validation tools
 
-## 📊 Context Relationship Diagram
+##  Context Relationship Diagram
 
 ```mermaid
 graph TB

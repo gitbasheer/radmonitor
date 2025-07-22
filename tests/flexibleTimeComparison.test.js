@@ -91,7 +91,7 @@ describe('FlexibleTimeComparison', () => {
 
             expect(result).toEqual(mockResponse.data);
             expect(console.log).toHaveBeenCalledWith(
-                '📊 Executing flexible time comparison:',
+                ' Executing flexible time comparison:',
                 expect.objectContaining({
                     comparisonDuration: '39m',
                     baselineDuration: '4d 0h',

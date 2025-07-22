@@ -41,7 +41,7 @@ export class QueryPanel {
           </button>
           
           <button class="emil-query-btn" data-action="baseline-compare" disabled>
-            <span class="emil-query-icon">📊</span>
+            <span class="emil-query-icon"></span>
             <span class="emil-query-label">Compare Baseline</span>
             <span class="emil-query-desc">vs. last week</span>
           </button>

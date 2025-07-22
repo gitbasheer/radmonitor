@@ -72,7 +72,7 @@ const ConfigEditor = {
 
         // Baseline Period
         html += '<div class="config-section" style="margin-top: 12px;">';
-        html += '<h5 style="margin: 0 0 8px 0; font-size: 13px; color: #555;">📊 Baseline Period</h5>';
+        html += '<h5 style="margin: 0 0 8px 0; font-size: 13px; color: #555;"> Baseline Period</h5>';
         html += this.createCompactField('Start Date', 'timeRange.baselineStart', config.baselineStart || '2025-06-01', 'date');
         html += this.createCompactField('End Date', 'timeRange.baselineEnd', config.baselineEnd || '2025-06-09', 'date');
         html += '</div>';

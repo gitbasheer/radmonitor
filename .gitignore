@@ -217,3 +217,7 @@ PNPM_MIGRATION.md
 # Old auth files (replaced by auth-manager.js)
 assets/js/auth-service.js
 assets/js/centralized-auth.js
+
+# PID files
+*.pid
+.*.pid

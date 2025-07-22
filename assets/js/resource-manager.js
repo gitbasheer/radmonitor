@@ -227,7 +227,7 @@ export class ResourceManager {
      */
     logStats() {
         const stats = this.getStats();
-        console.log('📊 ResourceManager Stats:', stats);
+        console.log(' ResourceManager Stats:', stats);
         return stats;
     }
 }

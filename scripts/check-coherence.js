@@ -163,7 +163,7 @@ if (fs.existsSync(endpointFile)) {
 }
 
 // Generate report
-console.log('\n📊 COHERENCE CHECK REPORT\n');
+console.log('\n COHERENCE CHECK REPORT\n');
 console.log('=' .repeat(60));
 
 if (issues.length === 0) {

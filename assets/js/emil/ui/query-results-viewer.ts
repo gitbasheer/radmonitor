@@ -129,7 +129,7 @@ export class QueryResultsViewer {
     
     return `
       <div class="emil-timeseries-note">
-        📊 Time series data detected. Showing first 10 rows.
+         Time series data detected. Showing first 10 rows.
         <br><small>Full visualization coming in Phase 3</small>
       </div>
       ${tableHtml}

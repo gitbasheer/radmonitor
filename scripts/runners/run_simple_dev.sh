@@ -27,7 +27,7 @@ python3 bin/cleanup_ports.py 8000 2>/dev/null || true
 
 # Generate dashboard if script exists
 if [ -f "bin/generate_dashboard.py" ]; then
-    echo "📊 Generating fresh dashboard..."
+    echo " Generating fresh dashboard..."
     if python3 bin/generate_dashboard.py --dry-run; then
         echo "(✓)Dashboard generation ready"
     else

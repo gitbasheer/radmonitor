@@ -18,7 +18,7 @@ flowchart LR
     end
 
     %% Data Sources
-    subgraph DATA["📊 Data Sources"]
+    subgraph DATA[" Data Sources"]
         KIBANA["Kibana<br/>(RAD Events)"]
         ES["Elasticsearch<br/>(Metrics)"]
     end

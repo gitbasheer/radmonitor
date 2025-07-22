@@ -259,7 +259,7 @@ log('section', 'Validating HTML Files');
 FILES_TO_CHECK.html.forEach(validateHTMLFile);
 
 // Summary
-console.log(`\n${colors.blue}📊 Validation Summary${colors.reset}`);
+console.log(`\n${colors.blue} Validation Summary${colors.reset}`);
 console.log(`${colors.green}Passed: ${totalPassed}${colors.reset}`);
 console.log(`${colors.yellow}Warnings: ${totalWarnings}${colors.reset}`);
 console.log(`${colors.red}Issues: ${totalIssues}${colors.reset}`);

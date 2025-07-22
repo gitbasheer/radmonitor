@@ -346,7 +346,7 @@ class Validator:
 
     def validate_data_flow(self):
         """Test data processing pipeline"""
-        print("\n📊 Checking Data Flow...")
+        print("\n Checking Data Flow...")
         print("=======================")
 
         # Check if API endpoints are configured

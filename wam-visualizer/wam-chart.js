@@ -5,23 +5,31 @@
 
 import { WamDataService } from './wam-service.js';
 
+import { wamCache } from './wam-cache.js';
+
 export class WamChart {
     constructor(containerId, config = {}) {
         this.container = document.getElementById(containerId);
         this.config = {
-            proxyUrl: 'http://localhost:8001',
+            proxyUrl: config.proxyUrl || this.getDefaultProxyUrl(),
             esIndex: '*',
             eidPattern: 'pandc.vnext.recommendations.metricsevolved*',
-            topEidsLimit: 20,
+            topEidsLimit: 100,  // Increased to show all EIDs
             cardinalityPrecision: 1000,
             baselineWeeks: 3,
+            baselineMode: 'weekly',
+            baselinePercentiles: 'all',
             chartTension: 0.1,
             pointRadius: 3,
+            chartHeight: 400,
             defaultRange: '24h',
             showBaseline: true,
+            showGrid: true,
+            showLegend: true,
             timestampField: '@timestamp',
             eidField: 'detail.event.data.traffic.eid.keyword',
             userIdField: 'detail.event.data.traffic.userId.keyword',
+            indexPattern: 'traffic-*',  // Add default index pattern for Kibana
             ...config
         };
         
@@ -34,6 +42,21 @@ export class WamChart {
         }
         
         this.render();
+    }
+    
+    getDefaultProxyUrl() {
+        const hostname = window.location.hostname;
+        const protocol = window.location.protocol;
+        const port = window.location.port;
+        
+        // Local development
+        if (hostname === 'localhost' || hostname === '127.0.0.1') {
+            return 'http://localhost:8001';
+        }
+        
+        // Production or any other environment - use relative URL
+        // This will work with any reverse proxy setup
+        return '/proxy';
     }
 
     render() {
@@ -75,7 +98,33 @@ export class WamChart {
                 
                 <div id="wam-chart-status" style="margin: 10px 0;"></div>
                 
-                <div style="position: relative; height: 400px;">
+                <!-- EID Statistics Table -->
+                <div id="wam-stats-container" style="margin: 20px 0; display: none;">
+                    <h3 style="margin: 10px 0; color: var(--text-primary);">EID Performance Comparison</h3>
+                    <div style="border: 1px solid var(--border-color); border-radius: 4px;">
+                        <table id="wam-stats-table" style="width: 100%; border-collapse: collapse; background: var(--bg-secondary); table-layout: fixed;">
+                            <colgroup>
+                                <col style="width: calc(100% - 400px);">
+                                <col style="width: 150px;">
+                                <col style="width: 120px;">
+                                <col style="width: 130px;">
+                            </colgroup>
+                            <thead>
+                                <tr style="background: var(--bg-primary);">
+                                    <th style="padding: 12px; text-align: left; border-bottom: 2px solid var(--border-color); font-weight: 600;">EID</th>
+                                    <th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border-color); font-weight: 600; white-space: nowrap;">Baseline Avg/Hour</th>
+                                    <th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border-color); font-weight: 600; white-space: nowrap;">Last Hour</th>
+                                    <th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border-color); font-weight: 600; white-space: nowrap;">Change</th>
+                                </tr>
+                            </thead>
+                            <tbody id="wam-stats-tbody">
+                                <!-- Rows will be inserted here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <div style="position: relative; height: ${this.config.chartHeight}px;">
                     <canvas id="wam-timeline-chart"></canvas>
                 </div>
                 
@@ -83,12 +132,25 @@ export class WamChart {
                     <h4 style="margin: 0 0 10px 0; color: var(--text-primary);">Statistics</h4>
                     <div id="wam-stats-content" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px;"></div>
                 </div>
+                
+                <!-- Cache Status -->
+                <div id="wam-cache-status" style="margin-top: 10px; padding: 8px 12px; background: var(--bg-primary); border-radius: 4px; font-size: 11px; color: var(--text-secondary); display: flex; justify-content: space-between; align-items: center;">
+                    <span id="wam-cache-stats">Cache: Initializing...</span>
+                    <button onclick="window.wamChart && window.wamChart.clearCache()" style="padding: 4px 8px; background: transparent; border: 1px solid var(--border-color); border-radius: 3px; color: var(--text-secondary); cursor: pointer; font-size: 11px;">Clear Cache</button>
+                </div>
             </div>
         `;
         
         this.initializeChart();
         this.attachEventListeners();
         this.loadTopEids();
+        
+        // Make this instance globally accessible
+        window.wamChart = this;
+        
+        // Start cache status updates
+        this.updateCacheStatus();
+        setInterval(() => this.updateCacheStatus(), 5000);
     }
 
     async initializeChart() {
@@ -313,9 +375,17 @@ export class WamChart {
         
         eidSelect.addEventListener('change', () => this.loadEidData());
         timeRange.addEventListener('change', () => this.loadEidData(true)); // Pass true for time range changes
-        refreshBtn.addEventListener('click', () => {
-            this.loadTopEids();
-            this.loadEidData();
+        refreshBtn.addEventListener('click', async () => {
+            // Force refresh bypasses cache
+            await this.loadTopEids(true);
+            this.loadEidData(false, true);
+            // Also refresh statistics if visible
+            const statsContainer = document.getElementById('wam-stats-container');
+            if (statsContainer && statsContainer.style.display !== 'none') {
+                const timeRange = document.getElementById('wam-time-range').value;
+                const eids = await this.service.fetchTopEids(timeRange, this.config.topEidsLimit, true);
+                this.loadEidStatistics(eids, true);
+            }
         });
         baselineToggle.addEventListener('change', (e) => {
             this.toggleBaseline(e.target.checked);
@@ -325,11 +395,11 @@ export class WamChart {
         });
     }
 
-    async loadTopEids() {
+    async loadTopEids(forceRefresh = false) {
         try {
             this.showStatus('Loading EIDs...', 'info');
             const timeRange = document.getElementById('wam-time-range').value;
-            const eids = await this.service.fetchTopEids(timeRange, this.config.topEidsLimit);
+            const eids = await this.service.fetchTopEids(timeRange, this.config.topEidsLimit, forceRefresh);
             
             const select = document.getElementById('wam-eid-select');
             const currentValue = select.value;
@@ -344,13 +414,16 @@ export class WamChart {
                 select.value = currentValue;
             }
             
+            // Load statistics for all EIDs
+            await this.loadEidStatistics(eids);
+            
             this.showStatus('', 'success');
         } catch (error) {
             this.showStatus(`Failed to load EIDs: ${error.message}`, 'error');
         }
     }
 
-    async loadEidData(isTimeRangeChange = false) {
+    async loadEidData(isTimeRangeChange = false, forceRefresh = false) {
         const eid = document.getElementById('wam-eid-select').value;
         if (!eid) {
             this.clearChart();
@@ -369,7 +442,7 @@ export class WamChart {
             this.currentEid = eid;
             
             const showBaseline = document.getElementById('wam-baseline-toggle').checked;
-            const data = await this.service.fetchEidTimeline(eid, timeRange, showBaseline);
+            const data = await this.service.fetchEidTimeline(eid, timeRange, showBaseline, forceRefresh);
             this.updateChart(data, isTimeRangeChange);
             this.updateStats(data.current || data);
             
@@ -525,13 +598,36 @@ export class WamChart {
         // Update service with new config
         this.service.updateConfig(this.config);
         
+        // Update chart height if changed
+        if (newConfig.chartHeight && this.chart) {
+            const chartContainer = this.chart.canvas.parentElement;
+            if (chartContainer) {
+                chartContainer.style.height = `${this.config.chartHeight}px`;
+            }
+        }
+        
         // Update chart properties if chart exists
         if (this.chart) {
-            // Update line tension and point sizes for events dataset
-            if (this.chart.data.datasets[5]) { // Events dataset
-                this.chart.data.datasets[5].tension = this.config.chartTension;
-                this.chart.data.datasets[5].pointRadius = this.config.pointRadius;
-                this.chart.data.datasets[5].pointHoverRadius = this.config.pointRadius + 3;
+            // Update line tension and point sizes for all line datasets
+            this.chart.data.datasets.forEach((dataset, index) => {
+                if (dataset.type === 'line' || !dataset.type) {
+                    dataset.tension = this.config.chartTension;
+                    if (index === 5) { // Events dataset
+                        dataset.pointRadius = this.config.pointRadius;
+                        dataset.pointHoverRadius = this.config.pointRadius + 3;
+                    }
+                }
+            });
+            
+            // Update legend visibility
+            this.chart.options.plugins.legend.display = this.config.showLegend;
+            
+            // Update grid visibility
+            if (this.chart.options.scales.x && this.chart.options.scales.x.grid) {
+                this.chart.options.scales.x.grid.display = this.config.showGrid;
+            }
+            if (this.chart.options.scales['y-events'] && this.chart.options.scales['y-events'].grid) {
+                this.chart.options.scales['y-events'].grid.display = this.config.showGrid;
             }
             
             this.chart.update();
@@ -617,35 +713,73 @@ export class WamChart {
     }
     
     openInKibana() {
-        if (!this.currentEid || !this.currentData || this.currentData.length === 0) {
+        if (!this.currentEid) {
             return;
         }
         
-        // Get time range from the data
-        const startTime = this.currentData[0].timestamp;
-        const endTime = this.currentData[this.currentData.length - 1].timestamp;
+        // Get the selected time range from the dropdown
+        const timeRange = document.getElementById('wam-time-range').value;
+        
+        // Calculate the time range based on selection
+        const now = new Date();
+        let startTime, endTime;
+        
+        switch(timeRange) {
+            case '1h':
+                startTime = new Date(now.getTime() - 60 * 60 * 1000);
+                endTime = now;
+                break;
+            case '6h':
+                startTime = new Date(now.getTime() - 6 * 60 * 60 * 1000);
+                endTime = now;
+                break;
+            case '24h':
+                startTime = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+                endTime = now;
+                break;
+            case '7d':
+                startTime = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+                endTime = now;
+                break;
+            case '30d':
+                startTime = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+                endTime = now;
+                break;
+            default:
+                // Default to last 24 hours
+                startTime = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+                endTime = now;
+        }
         
         // Get the base Kibana URL from the cookie domain
         const kibanaBase = 'https://usieventho-prod-usw2.kb.us-west-2.aws.found.io:9243';
         
-        // Build the query
-        const query = {
-            query: {
-                match_phrase: {
-                    [this.config.eidField.replace('.keyword', '')]: this.currentEid
-                }
-            }
-        };
-        
         // Create the Kibana Discover URL
         const appState = {
             columns: ['_source'],
-            filters: [],
-            index: 'traffic-*',
+            filters: [{
+                meta: {
+                    alias: null,
+                    disabled: false,
+                    index: this.config.indexPattern || 'traffic-*',
+                    key: this.config.eidField.replace('.keyword', ''),
+                    negate: false,
+                    params: {
+                        query: this.currentEid
+                    },
+                    type: 'phrase'
+                },
+                query: {
+                    match_phrase: {
+                        [this.config.eidField.replace('.keyword', '')]: this.currentEid
+                    }
+                }
+            }],
+            index: this.config.indexPattern || 'traffic-*',
             interval: 'auto',
             query: {
                 language: 'kuery',
-                query: `${this.config.eidField.replace('.keyword', '')} : "${this.currentEid}"`
+                query: ''  // Clear the query since we're using a filter
             },
             sort: [['@timestamp', 'desc']]
         };
@@ -662,14 +796,170 @@ export class WamChart {
             }
         };
         
-        // Encode the states
-        const encodedAppState = encodeURIComponent(JSON.stringify(appState));
-        const encodedGlobalState = encodeURIComponent(JSON.stringify(globalState));
+        // Convert to RISON format (Kibana's URL encoding)
+        // For simplicity, we'll use Kibana's expected format with time and query
+        const timeFrom = `now-${this.getTimeRangeString(timeRange)}`;
+        const timeTo = 'now';
         
-        // Construct the full URL
-        const kibanaUrl = `${kibanaBase}/app/discover#/?_g=${encodedGlobalState}&_a=${encodedAppState}`;
+        // Build a simpler Kibana URL that works
+        const kibanaUrl = `${kibanaBase}/app/discover#/?` +
+            `_g=(filters:!(),refreshInterval:(pause:!t,value:0),time:(from:'${timeFrom}',to:'${timeTo}'))&` +
+            `_a=(columns:!(_source),filters:!(),index:'${this.config.indexPattern || 'traffic-*'}',interval:auto,` +
+            `query:(language:kuery,query:'${this.config.eidField.replace('.keyword', '')}:"${this.currentEid}"'),` +
+            `sort:!(!('@timestamp',desc)))`;
         
         // Open in new tab
         window.open(kibanaUrl, '_blank');
+    }
+    
+    getTimeRangeString(timeRange) {
+        // Convert our time range to Kibana's relative time format
+        switch(timeRange) {
+            case '1h': return '1h';
+            case '6h': return '6h';
+            case '24h': return '24h';
+            case '7d': return '7d';
+            case '30d': return '30d';
+            default: return '24h';
+        }
+    }
+    
+    openEidInKibana(eid) {
+        // Get the selected time range from the dropdown
+        const timeRange = document.getElementById('wam-time-range').value;
+        
+        // Get the base Kibana URL from the cookie domain
+        const kibanaBase = 'https://usieventho-prod-usw2.kb.us-west-2.aws.found.io:9243';
+        
+        // Build a simpler Kibana URL that works
+        const timeFrom = `now-${this.getTimeRangeString(timeRange)}`;
+        const timeTo = 'now';
+        
+        const kibanaUrl = `${kibanaBase}/app/discover#/?` +
+            `_g=(filters:!(),refreshInterval:(pause:!t,value:0),time:(from:'${timeFrom}',to:'${timeTo}'))&` +
+            `_a=(columns:!(_source),filters:!(),index:'${this.config.indexPattern || 'traffic-*'}',interval:auto,` +
+            `query:(language:kuery,query:'${this.config.eidField.replace('.keyword', '')}:"${eid}"'),` +
+            `sort:!(!('@timestamp',desc)))`;
+        
+        // Open in new tab
+        window.open(kibanaUrl, '_blank');
+    }
+    
+    async loadEidStatistics(topEids, forceRefresh = false) {
+        try {
+            const container = document.getElementById('wam-stats-container');
+            const tbody = document.getElementById('wam-stats-tbody');
+            
+            if (!container || !tbody) return;
+            
+            // Show container
+            container.style.display = 'block';
+            tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 20px;">Loading statistics...</td></tr>';
+            
+            const timeRange = document.getElementById('wam-time-range').value;
+            const BATCH_SIZE = 10; // Process EIDs in batches to avoid flooding
+            
+            // Create placeholder rows for all EIDs immediately
+            const placeholderHTML = topEids.map(eidInfo => `
+                <tr id="stats-row-${CSS.escape(eidInfo.eid)}" style="border-bottom: 1px solid var(--border-color);">
+                    <td style="padding: 10px; font-family: monospace; font-size: 12px; word-break: break-word;">
+                        <a href="#" onclick="window.wamChart.openEidInKibana('${eidInfo.eid}'); return false;" style="color: #1BA9F5; text-decoration: none; cursor: pointer;" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'" title="${eidInfo.eid}">
+                            ${eidInfo.eid}
+                        </a>
+                    </td>
+                    <td style="padding: 10px; text-align: right; white-space: nowrap; min-width: 150px;">
+                        <span style="color: var(--text-secondary); font-size: 11px;">-</span>
+                    </td>
+                    <td style="padding: 10px; text-align: right; white-space: nowrap; min-width: 120px;">
+                        <span style="color: var(--text-secondary); font-size: 11px;">-</span>
+                    </td>
+                    <td style="padding: 10px; text-align: right; white-space: nowrap; min-width: 100px;">
+                        <span style="color: var(--text-secondary); font-size: 11px;">Loading...</span>
+                    </td>
+                </tr>
+            `).join('');
+            tbody.innerHTML = placeholderHTML;
+            
+            // Process EIDs in batches
+            for (let i = 0; i < topEids.length; i += BATCH_SIZE) {
+                const batch = topEids.slice(i, i + BATCH_SIZE);
+                
+                // Process batch in parallel
+                const batchPromises = batch.map(async (eidInfo) => {
+                    try {
+                        // Use the new cached stats method
+                        const stat = await this.service.fetchEidStats(eidInfo.eid, timeRange, forceRefresh);
+                        
+                        if (stat) {
+                            // Update the specific row
+                            this.updateStatRow(stat);
+                        }
+                        return stat;
+                    } catch (error) {
+                        console.error(`Failed to load stats for ${eidInfo.eid}:`, error);
+                        return null;
+                    }
+                });
+                
+                // Wait for this batch to complete before starting next
+                await Promise.all(batchPromises);
+                
+                // Small delay between batches to avoid overwhelming the proxy
+                if (i + BATCH_SIZE < topEids.length) {
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                }
+            }
+            
+            
+        } catch (error) {
+            console.error('Failed to load EID statistics:', error);
+            const tbody = document.getElementById('wam-stats-tbody');
+            if (tbody) {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 20px; color: #f44336;">Failed to load statistics</td></tr>';
+            }
+        }
+    }
+    
+    updateStatRow(stat) {
+        const row = document.getElementById(`stats-row-${CSS.escape(stat.eid)}`);
+        if (!row) return;
+        
+        const changeColor = stat.percentChange > 0 ? '#4caf50' : 
+                          stat.percentChange < -10 ? '#f44336' : '#ff9800';
+        const arrow = stat.percentChange > 0 ? '↑' : '↓';
+        
+        // Update the existing cells (we now have 4 cells from the start)
+        const cells = row.getElementsByTagName('td');
+        if (cells.length >= 4) {
+            // Update baseline avg/hour (2nd cell)
+            cells[1].innerHTML = stat.baselineAvgPerHour.toLocaleString();
+            cells[1].style.color = 'var(--text-primary)'; // Remove the muted color
+            
+            // Update last hour (3rd cell)
+            cells[2].innerHTML = stat.lastHourCount.toLocaleString();
+            cells[2].style.color = 'var(--text-primary)'; // Remove the muted color
+            
+            // Update change (4th cell)
+            cells[3].style.color = changeColor;
+            cells[3].style.fontWeight = '600';
+            cells[3].innerHTML = `${arrow} ${Math.abs(stat.percentChange).toFixed(1)}%`;
+        }
+    }
+    
+    updateCacheStatus() {
+        const stats = wamCache.getStats();
+        const statusEl = document.getElementById('wam-cache-stats');
+        if (statusEl) {
+            statusEl.textContent = `Cache: ${stats.size}/${stats.maxSize} entries | Hit rate: ${stats.hitRate} | ${stats.hits} hits, ${stats.misses} misses`;
+        }
+    }
+    
+    clearCache() {
+        if (confirm('Clear all cached data? This will require fresh queries for all data.')) {
+            wamCache.clear();
+            this.updateCacheStatus();
+            this.showStatus('Cache cleared', 'info');
+            setTimeout(() => this.showStatus('', 'success'), 2000);
+        }
     }
 }

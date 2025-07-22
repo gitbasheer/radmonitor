@@ -373,8 +373,18 @@ async def add_metrics(request: Request, call_next):
 PROJECT_ROOT = Path(__file__).parent.parent
 
 # Mount static directories
-app.mount("/assets", StaticFiles(directory=PROJECT_ROOT / "assets"), name="assets")
+# First check if we have dist/assets (production build), otherwise use regular assets
+if (PROJECT_ROOT / "dist" / "assets").exists():
+    app.mount("/assets", StaticFiles(directory=PROJECT_ROOT / "dist" / "assets"), name="assets")
+else:
+    app.mount("/assets", StaticFiles(directory=PROJECT_ROOT / "assets"), name="assets")
+
 app.mount("/node_modules", StaticFiles(directory=PROJECT_ROOT / "node_modules"), name="node_modules")
+app.mount("/wam-visualizer", StaticFiles(directory=PROJECT_ROOT / "wam-visualizer"), name="wam-visualizer")
+
+# Mount the entire dist directory to serve index.html and other files
+if (PROJECT_ROOT / "dist").exists():
+    app.mount("/dist", StaticFiles(directory=PROJECT_ROOT / "dist"), name="dist")
 
 @app.get("/", response_class=HTMLResponse)
 async def read_index():
@@ -389,6 +399,24 @@ async def read_index():
         return FileResponse(root_index)
     else:
         raise HTTPException(status_code=404, detail="index.html not found")
+
+@app.get("/wam-visualizer.html", response_class=HTMLResponse)
+async def serve_wam_visualizer():
+    """Serve the WAM visualizer page"""
+    wam_path = PROJECT_ROOT / "wam-visualizer.html"
+    if wam_path.exists():
+        return FileResponse(wam_path)
+    else:
+        raise HTTPException(status_code=404, detail="WAM visualizer not found")
+
+@app.get("/wam_test_guided.html", response_class=HTMLResponse)
+async def serve_wam_test():
+    """Serve the WAM test page"""
+    wam_test_path = PROJECT_ROOT / "wam_test_guided.html"
+    if wam_test_path.exists():
+        return FileResponse(wam_test_path)
+    else:
+        raise HTTPException(status_code=404, detail="WAM test page not found")
 
 # ====================
 # Health & Status Endpoints

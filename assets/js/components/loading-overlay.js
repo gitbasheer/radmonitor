@@ -51,7 +51,7 @@ class LoadingOverlay {
         <div class="loading-card">
           <div class="loading-animation">
             <div class="loading-ring"></div>
-            <div class="loading-icon">📊</div>
+            <div class="loading-icon"></div>
           </div>
 
           <h2 class="loading-title">${loadingMessage}</h2>

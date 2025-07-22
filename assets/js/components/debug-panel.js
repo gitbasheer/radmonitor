@@ -82,7 +82,7 @@ class DebugPanel {
                     <div class="debug-panel-body">
                         <!-- Overview Stats -->
                         <div class="debug-section">
-                            <h3>📊 Overview</h3>
+                            <h3> Overview</h3>
                             <div class="debug-stats">
                                 <div class="stat-card">
                                     <div class="stat-value">${events.length}</div>

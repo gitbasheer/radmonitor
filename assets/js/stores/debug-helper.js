@@ -24,7 +24,7 @@ window.RADStore = {
   // Subscribe to changes
   subscribe: (callback) => {
     const unsubscribe = appStore.subscribe((state) => {
-      console.log('📊 State changed:', state);
+      console.log(' State changed:', state);
       if (callback) callback(state);
     });
     return unsubscribe;
@@ -37,7 +37,7 @@ window.RADStore = {
     console.log('🔐 Auth:', state.auth);
     console.log('🔌 Connection:', state.connection);
     console.log('🎨 UI:', state.ui);
-    console.log('📊 Data:', {
+    console.log(' Data:', {
       events: state.data.events.length,
       stats: state.data.stats,
       loading: state.data.loading

@@ -3,10 +3,12 @@
  * Fetches and manages WAM data from Elasticsearch
  */
 
+import { wamCache } from './wam-cache.js';
+
 export class WamDataService {
     constructor(config = {}) {
         this.config = {
-            proxyUrl: 'http://localhost:8001',
+            proxyUrl: config.proxyUrl || this.getDefaultProxyUrl(),
             esIndex: '*',
             eidPattern: 'pandc.vnext.recommendations.metricsevolved*',
             cardinalityPrecision: 1000,
@@ -20,6 +22,19 @@ export class WamDataService {
         this.cookie = localStorage.getItem('elastic_cookie') || '';
     }
 
+    getDefaultProxyUrl() {
+        const hostname = window.location.hostname;
+        
+        // Local development
+        if (hostname === 'localhost' || hostname === '127.0.0.1') {
+            return 'http://localhost:8001';
+        }
+        
+        // Production or any other environment - use relative URL
+        // This will work with any reverse proxy setup
+        return '/proxy';
+    }
+
     setCookie(cookie) {
         this.cookie = cookie;
         localStorage.setItem('elastic_cookie', cookie);
@@ -30,9 +45,18 @@ export class WamDataService {
         this.proxyUrl = this.config.proxyUrl;
     }
 
-    async fetchEidTimeline(eid, timeRange = '24h', includeBaseline = true) {
+    async fetchEidTimeline(eid, timeRange = '24h', includeBaseline = true, forceRefresh = false) {
         if (!this.cookie) {
             throw new Error('No authentication cookie set');
+        }
+
+        // Check cache first
+        const cacheKey = wamCache.generateKey('timeline', eid, timeRange, includeBaseline);
+        if (!forceRefresh) {
+            const cached = wamCache.get(cacheKey, includeBaseline ? 'baseline' : 'current');
+            if (cached) {
+                return cached;
+            }
         }
 
         const now = new Date();
@@ -151,15 +175,20 @@ export class WamDataService {
             const currentData = this.transformTimelineData(data.aggregations.timeline.buckets);
             
             // Fetch baseline data if requested
+            let result;
             if (includeBaseline) {
                 const baselineData = await this.fetchBaselineData(eid, timeRange, startTime, now);
-                return {
+                result = {
                     current: currentData,
                     baseline: baselineData
                 };
+            } else {
+                result = { current: currentData, baseline: [] };
             }
             
-            return { current: currentData, baseline: [] };
+            // Cache the result
+            wamCache.set(cacheKey, result);
+            return result;
         } catch (error) {
             console.error('Failed to fetch EID timeline:', error);
             throw error;
@@ -213,22 +242,46 @@ export class WamDataService {
             
             // Calculate percentiles for each time slot
             const baseline = [];
+            const percentileMode = this.config.baselinePercentiles || 'all';
+            
             slotAggregates.forEach((data, index) => {
-                baseline.push({
+                const baselinePoint = {
                     timestamp: data.timestamp,
-                    p10: this.percentile(data.events, 10),
-                    p25: this.percentile(data.events, 25),
-                    p50: this.percentile(data.events, 50),
-                    p75: this.percentile(data.events, 75),
-                    p90: this.percentile(data.events, 90),
                     visitorsP50: this.percentile(data.visitors, 50)
-                });
+                };
+                
+                // Add percentiles based on configuration
+                switch (percentileMode) {
+                    case 'all':
+                        baselinePoint.p10 = this.percentile(data.events, 10);
+                        baselinePoint.p25 = this.percentile(data.events, 25);
+                        baselinePoint.p50 = this.percentile(data.events, 50);
+                        baselinePoint.p75 = this.percentile(data.events, 75);
+                        baselinePoint.p90 = this.percentile(data.events, 90);
+                        break;
+                    case 'quartiles':
+                        baselinePoint.p25 = this.percentile(data.events, 25);
+                        baselinePoint.p50 = this.percentile(data.events, 50);
+                        baselinePoint.p75 = this.percentile(data.events, 75);
+                        break;
+                    case 'median':
+                        baselinePoint.p50 = this.percentile(data.events, 50);
+                        break;
+                    case 'extremes':
+                        baselinePoint.p10 = this.percentile(data.events, 10);
+                        baselinePoint.p90 = this.percentile(data.events, 90);
+                        break;
+                }
+                
+                baseline.push(baselinePoint);
             });
             
-            console.log('Baseline calculation sample:', baseline.slice(0, 3).map(b => ({
-                p50: b.p50,
-                p10: b.p10,
-                p90: b.p90
+            console.log(`Baseline calculation (${percentileMode} mode):`, baseline.slice(0, 3).map(b => ({
+                timestamp: b.timestamp,
+                ...Object.keys(b).filter(k => k.startsWith('p')).reduce((obj, key) => {
+                    obj[key] = b[key];
+                    return obj;
+                }, {})
             })));
             
             return baseline;
@@ -241,25 +294,38 @@ export class WamDataService {
 
     getBaselinePeriods(timeRange, currentStart) {
         const periods = [];
-        const msInWeek = 7 * 24 * 60 * 60 * 1000;
+        const baselineMode = this.config.baselineMode || 'weekly';
+        const periodsToFetch = this.config.baselineWeeks || 3;
         
-        // Use configured baseline weeks or default based on time range
-        const weeksToFetch = this.config.baselineWeeks || (
-            timeRange === '1h' || timeRange === '6h' ? 4 : 
-            timeRange === '24h' ? 3 : 
-            timeRange === '7d' ? 2 : 1
-        );
+        // Calculate duration of the current time range
+        const duration = new Date().getTime() - currentStart.getTime();
         
-        // Get same period from previous weeks
-        for (let i = 1; i <= weeksToFetch; i++) {
-            const weekOffset = i * msInWeek;
-            const start = new Date(currentStart.getTime() - weekOffset);
-            const duration = new Date().getTime() - currentStart.getTime();
-            const end = new Date(start.getTime() + duration);
-            
+        if (baselineMode === 'weekly') {
+            // Get same period from previous weeks (e.g., Monday 3pm from past weeks)
+            const msInWeek = 7 * 24 * 60 * 60 * 1000;
+            for (let i = 1; i <= periodsToFetch; i++) {
+                const weekOffset = i * msInWeek;
+                const start = new Date(currentStart.getTime() - weekOffset);
+                const end = new Date(start.getTime() + duration);
+                periods.push({ start, end });
+            }
+        } else if (baselineMode === 'daily') {
+            // Get same time period from previous days
+            const msInDay = 24 * 60 * 60 * 1000;
+            for (let i = 1; i <= periodsToFetch; i++) {
+                const dayOffset = i * msInDay;
+                const start = new Date(currentStart.getTime() - dayOffset);
+                const end = new Date(start.getTime() + duration);
+                periods.push({ start, end });
+            }
+        } else if (baselineMode === 'rolling') {
+            // Get a continuous rolling window before the current period
+            const end = new Date(currentStart.getTime() - 60 * 60 * 1000); // 1 hour gap
+            const start = new Date(end.getTime() - (periodsToFetch * duration));
             periods.push({ start, end });
         }
         
+        console.log(`Baseline mode: ${baselineMode}, fetching ${periods.length} periods`);
         return periods;
     }
 
@@ -361,9 +427,18 @@ export class WamDataService {
         return baseline;
     }
 
-    async fetchTopEids(timeRange = '1h', limit = 10) {
+    async fetchTopEids(timeRange = '1h', limit = 10, forceRefresh = false) {
         if (!this.cookie) {
             throw new Error('No authentication cookie set');
+        }
+
+        // Check cache first
+        const cacheKey = wamCache.generateKey('topEids', timeRange, limit);
+        if (!forceRefresh) {
+            const cached = wamCache.get(cacheKey, 'topEids');
+            if (cached) {
+                return cached;
+            }
         }
 
         const now = new Date();
@@ -442,11 +517,15 @@ export class WamDataService {
                 return []; // Return empty array instead of throwing to prevent breaking the UI
             }
             
-            return data.aggregations.top_eids.buckets.map(bucket => ({
+            const result = data.aggregations.top_eids.buckets.map(bucket => ({
                 eid: bucket.key,
                 events: bucket.doc_count,
                 visitors: Math.round(bucket.unique_visitors.value)
             }));
+            
+            // Cache the result
+            wamCache.set(cacheKey, result);
+            return result;
         } catch (error) {
             console.error('Failed to fetch top EIDs:', error);
             throw error;
@@ -482,5 +561,68 @@ export class WamDataService {
             events: bucket.doc_count,
             visitors: Math.round(bucket.unique_visitors.value)
         }));
+    }
+    
+    async fetchEidStats(eid, timeRange = '24h', forceRefresh = false) {
+        // Dedicated method for fetching statistics with caching
+        const cacheKey = wamCache.generateKey('eidStats', eid, timeRange);
+        if (!forceRefresh) {
+            const cached = wamCache.get(cacheKey, 'stats');
+            if (cached) {
+                return cached;
+            }
+        }
+        
+        try {
+            // Fetch last hour data
+            const lastHourData = await this.fetchEidTimeline(eid, '1h', false, forceRefresh);
+            
+            // Fetch baseline data for the selected time range
+            const baselineData = await this.fetchEidTimeline(eid, timeRange, false, forceRefresh);
+            
+            // Calculate statistics
+            const lastHourCount = lastHourData.current ? 
+                lastHourData.current.reduce((sum, d) => sum + d.events, 0) : 0;
+            
+            // Calculate baseline average per hour
+            let baselineAvgPerHour = 0;
+            if (baselineData.current && baselineData.current.length > 0) {
+                const totalBaseline = baselineData.current.reduce((sum, d) => sum + d.events, 0);
+                const hours = this.getHoursFromTimeRange(timeRange);
+                baselineAvgPerHour = totalBaseline / hours;
+            }
+            
+            // Calculate percentage change
+            let percentChange = 0;
+            if (baselineAvgPerHour > 0) {
+                percentChange = ((lastHourCount - baselineAvgPerHour) / baselineAvgPerHour) * 100;
+            }
+            
+            const result = {
+                eid: eid,
+                baselineAvgPerHour: Math.round(baselineAvgPerHour),
+                lastHourCount: lastHourCount,
+                percentChange: percentChange
+            };
+            
+            // Cache the result
+            wamCache.set(cacheKey, result);
+            return result;
+            
+        } catch (error) {
+            console.error(`Failed to load stats for ${eid}:`, error);
+            return null;
+        }
+    }
+    
+    getHoursFromTimeRange(timeRange) {
+        switch(timeRange) {
+            case '1h': return 1;
+            case '6h': return 6;
+            case '24h': return 24;
+            case '7d': return 7 * 24;
+            case '30d': return 30 * 24;
+            default: return 24;
+        }
     }
 }

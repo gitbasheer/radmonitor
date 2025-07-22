@@ -113,7 +113,7 @@ rad-monitor/
 - Check EID pattern matches your data
 - Ensure `traffic-*` indices exist
 
-## 📊 Understanding Results
+##  Understanding Results
 
 ### Status Levels
 - 🔴 **CRITICAL**: Traffic drop >80%

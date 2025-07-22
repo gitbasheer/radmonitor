@@ -241,7 +241,7 @@ function runSecurityAudit() {
     }
 
     // Print results
-    console.log(`\n📊 Security Audit Results:\n`);
+    console.log(`\n Security Audit Results:\n`);
     console.log(`Files scanned: ${files.length}`);
     console.log(`Files with issues: ${filesWithIssues}`);
     console.log(`Total issues found: ${allIssues.reduce((sum, { issues }) => sum + issues.length, 0)}\n`);
