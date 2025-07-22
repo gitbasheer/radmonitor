@@ -1,0 +1,257 @@
+/**
+ * Official GoDaddy UXCore Color Standards
+ * Based on GoDaddy Design System (Antares) and UXCore 2400+
+ *
+ * This file contains the official color tokens used across GoDaddy
+ * Reference: https://uxcore.uxp.gdcorp.tools/docs/foundations-design-system/antares/color-system/
+ */
+
+:root {
+    /* ============================================
+       BRAND PALETTE - Official GoDaddy Colors
+       ============================================ */
+
+    /* Primary Brand Colors */
+    --gd-brand-orange: #ff6900;
+    --gd-brand-orange-hover: #e55a00;
+    --gd-brand-orange-pressed: #cc4d00;
+    --gd-brand-orange-light: #fff4ec;
+    --gd-brand-orange-dark: #b33f00;
+
+    /* Brand Blacks & Whites */
+    --gd-brand-black: #111111;
+    --gd-brand-white: #ffffff;
+
+    /* ============================================
+       MONOCHROME PALETTE - Gray Scale System
+       ============================================ */
+
+    /* Stepped Gray Ramp (Recommended by UXCore) */
+    --gd-gray-0: #ffffff;
+    --gd-gray-50: #fafafa;
+    --gd-gray-100: #f5f5f5;
+    --gd-gray-200: #eeeeee;
+    --gd-gray-300: #e0e0e0;
+    --gd-gray-400: #bdbdbd;
+    --gd-gray-500: #9e9e9e;
+    --gd-gray-600: #757575;
+    --gd-gray-700: #616161;
+    --gd-gray-800: #424242;
+    --gd-gray-900: #212121;
+    --gd-gray-1000: #000000;
+
+    /* ============================================
+       SEMANTIC PALETTE - System Status Colors
+       ============================================ */
+
+    /* Success Colors */
+    --gd-success: #00a63f;
+    --gd-success-hover: #00953a;
+    --gd-success-light: #e6f7ed;
+    --gd-success-dark: #007a2f;
+
+    /* Error Colors */
+    --gd-error: #d72c0d;
+    --gd-error-hover: #c5290c;
+    --gd-error-light: #fdeae7;
+    --gd-error-dark: #b8240a;
+
+    /* Warning Colors */
+    --gd-warning: #ffb900;
+    --gd-warning-hover: #e6a700;
+    --gd-warning-light: #fff8e6;
+    --gd-warning-dark: #cc9500;
+
+    /* Info Colors */
+    --gd-info: #0073cf;
+    --gd-info-hover: #0066bb;
+    --gd-info-light: #e6f3fc;
+    --gd-info-dark: #005aa8;
+
+    /* ============================================
+       ACTION PALETTE - Interactive Elements
+       ============================================ */
+
+    /* Primary CTA (Call-to-Action) */
+    --gd-cta-primary: var(--gd-brand-orange);
+    --gd-cta-primary-hover: var(--gd-brand-orange-hover);
+    --gd-cta-primary-pressed: var(--gd-brand-orange-pressed);
+    --gd-cta-primary-light: var(--gd-brand-orange-light);
+
+    /* Secondary CTA */
+    --gd-cta-secondary: var(--gd-gray-600);
+    --gd-cta-secondary-hover: var(--gd-gray-700);
+    --gd-cta-secondary-light: var(--gd-gray-100);
+
+    /* ============================================
+       SEMANTIC TOKENS - Intent-Based Colors
+       ============================================ */
+
+    /* Background Colors */
+    --gd-background-primary: var(--gd-brand-white);
+    --gd-background-secondary: var(--gd-gray-50);
+    --gd-background-tertiary: var(--gd-gray-100);
+    --gd-background-overlay: rgba(0, 0, 0, 0.5);
+
+    /* Surface Colors */
+    --gd-surface-primary: var(--gd-brand-white);
+    --gd-surface-secondary: var(--gd-gray-50);
+    --gd-surface-elevated: var(--gd-brand-white);
+    --gd-surface-sunken: var(--gd-gray-100);
+
+    /* Text Colors */
+    --gd-text-primary: var(--gd-brand-black);
+    --gd-text-secondary: var(--gd-gray-700);
+    --gd-text-tertiary: var(--gd-gray-600);
+    --gd-text-muted: var(--gd-gray-500);
+    --gd-text-placeholder: var(--gd-gray-400);
+    --gd-text-inverse: var(--gd-brand-white);
+    --gd-text-brand: var(--gd-brand-orange);
+
+    /* Border Colors */
+    --gd-border-primary: var(--gd-gray-300);
+    --gd-border-secondary: var(--gd-gray-200);
+    --gd-border-tertiary: var(--gd-gray-100);
+    --gd-border-focus: var(--gd-brand-orange);
+    --gd-border-error: var(--gd-error);
+    --gd-border-success: var(--gd-success);
+
+    /* ============================================
+       DARK THEME OVERRIDES
+       ============================================ */
+
+    /* Background Colors - Dark */
+    --gd-dark-background-primary: var(--gd-gray-900);
+    --gd-dark-background-secondary: var(--gd-gray-800);
+    --gd-dark-background-tertiary: var(--gd-gray-700);
+
+    /* Surface Colors - Dark */
+    --gd-dark-surface-primary: var(--gd-gray-800);
+    --gd-dark-surface-secondary: var(--gd-gray-700);
+    --gd-dark-surface-elevated: var(--gd-gray-700);
+    --gd-dark-surface-sunken: var(--gd-gray-900);
+
+    /* Text Colors - Dark */
+    --gd-dark-text-primary: var(--gd-gray-50);
+    --gd-dark-text-secondary: var(--gd-gray-200);
+    --gd-dark-text-tertiary: var(--gd-gray-300);
+    --gd-dark-text-muted: var(--gd-gray-400);
+    --gd-dark-text-placeholder: var(--gd-gray-500);
+
+    /* Border Colors - Dark */
+    --gd-dark-border-primary: var(--gd-gray-600);
+    --gd-dark-border-secondary: var(--gd-gray-700);
+    --gd-dark-border-tertiary: var(--gd-gray-800);
+
+    /* ============================================
+       SPECIAL PALETTES FROM UXCORE DOCS
+       ============================================ */
+
+    /* Minimal Color Palettes (from GoDaddy Studio) */
+    --gd-palette-hazel-wood-1: #d3c9c2;
+    --gd-palette-hazel-wood-2: #dbdbdb;
+    --gd-palette-hazel-wood-3: #ba9469;
+    --gd-palette-hazel-wood-4: #f9f2e5;
+    --gd-palette-hazel-wood-5: #2e2e2e;
+
+    --gd-palette-ava-1: #ffffff;
+    --gd-palette-ava-2: #f6f6f6;
+    --gd-palette-ava-3: #a2a3a4;
+    --gd-palette-ava-4: #000000;
+
+    --gd-palette-bordeaux-1: #dfd4d7;
+    --gd-palette-bordeaux-2: #e1dbcd;
+    --gd-palette-bordeaux-3: #b38883;
+    --gd-palette-bordeaux-4: #683838;
+}
+
+/* ============================================
+   THEME SWITCHING UTILITIES
+   ============================================ */
+
+/* Light theme (default) */
+[data-theme="light"],
+:root {
+    --current-background-primary: var(--gd-background-primary);
+    --current-background-secondary: var(--gd-background-secondary);
+    --current-surface-primary: var(--gd-surface-primary);
+    --current-text-primary: var(--gd-text-primary);
+    --current-text-secondary: var(--gd-text-secondary);
+    --current-border-primary: var(--gd-border-primary);
+}
+
+/* Dark theme */
+[data-theme="dark"] {
+    --current-background-primary: var(--gd-dark-background-primary);
+    --current-background-secondary: var(--gd-dark-background-secondary);
+    --current-surface-primary: var(--gd-dark-surface-primary);
+    --current-text-primary: var(--gd-dark-text-primary);
+    --current-text-secondary: var(--gd-dark-text-secondary);
+    --current-border-primary: var(--gd-dark-border-primary);
+}
+
+/* ============================================
+   UTILITY CLASSES FOR COLOR APPLICATION
+   ============================================ */
+
+.gd-color-brand { color: var(--gd-brand-orange) !important; }
+.gd-color-success { color: var(--gd-success) !important; }
+.gd-color-error { color: var(--gd-error) !important; }
+.gd-color-warning { color: var(--gd-warning) !important; }
+.gd-color-info { color: var(--gd-info) !important; }
+
+.gd-bg-brand { background-color: var(--gd-brand-orange) !important; }
+.gd-bg-success { background-color: var(--gd-success) !important; }
+.gd-bg-error { background-color: var(--gd-error) !important; }
+.gd-bg-warning { background-color: var(--gd-warning) !important; }
+.gd-bg-info { background-color: var(--gd-info) !important; }
+
+.gd-border-brand { border-color: var(--gd-brand-orange) !important; }
+.gd-border-success { border-color: var(--gd-success) !important; }
+.gd-border-error { border-color: var(--gd-error) !important; }
+.gd-border-warning { border-color: var(--gd-warning) !important; }
+.gd-border-info { border-color: var(--gd-info) !important; }
+
+/* ============================================
+   ACCESSIBILITY HELPERS
+   ============================================ */
+
+.gd-high-contrast {
+    --gd-text-primary: var(--gd-brand-black);
+    --gd-border-primary: var(--gd-gray-600);
+}
+
+.gd-reduced-motion {
+    --gd-transition-duration: 0.01ms !important;
+    --gd-animation-duration: 0.01ms !important;
+}
+
+/* ============================================
+   DOCUMENTATION REFERENCE
+   ============================================ */
+
+/*
+ * COLOR USAGE GUIDELINES:
+ *
+ * 1. Brand Colors:
+ *    - Use --gd-brand-orange for primary actions, links, and brand elements
+ *    - Use hover/pressed states for interactive elements
+ *
+ * 2. Monochrome Palette:
+ *    - Use grays 100-300 for backgrounds
+ *    - Use grays 400-600 for borders and secondary text
+ *    - Use grays 700-900 for primary text
+ *
+ * 3. Semantic Colors:
+ *    - Use semantic colors consistently across the app
+ *    - Always pair with appropriate light variants for backgrounds
+ *
+ * 4. Dark Theme:
+ *    - Flip the lightness values
+ *    - Maintain contrast ratios for accessibility
+ *
+ * 5. Accessibility:
+ *    - Ensure minimum 4.5:1 contrast ratio for normal text
+ *    - Ensure minimum 3:1 contrast ratio for large text
+ *    - Test with color blindness simulators
+ */

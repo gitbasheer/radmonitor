@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EID Registry Debug Panel</title>
+    <style>
+        /* CSS Variables */
+        :root {
+            --color-bg: #ffffff;
+            --color-surface: #f8f9fa;
+            --color-border: #dee2e6;
+            --color-text: #212529;
+            --color-text-secondary: #6c757d;
+            --color-primary: #0066cc;
+            --color-normal: #28a745;
+            --color-warning: #ffc107;
+            --color-critical: #dc3545;
+            --border-radius: 8px;
+            --spacing-xs: 4px;
+            --spacing-sm: 8px;
+            --spacing-md: 16px;
+            --spacing-lg: 24px;
+            --spacing-xl: 32px;
+            --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            --font-size-sm: 0.875rem;
+        }
+
+        /* Dark theme */
+        [data-theme="dark"] {
+            --color-bg: #1a1a1a;
+            --color-surface: #2a2a2a;
+            --color-border: #3a3a3a;
+            --color-text: #ffffff;
+            --color-text-secondary: #aaaaaa;
+        }
+
+        /* Base styles */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--color-bg);
+            color: var(--color-text);
+            line-height: 1.6;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* Button styles */
+        .btn {
+            display: inline-block;
+            padding: 8px 16px;
+            background: var(--color-surface);
+            border: 1px solid var(--color-border);
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+            text-decoration: none;
+            color: var(--color-text);
+        }
+
+        .btn:hover {
+            background: var(--color-border);
+        }
+
+        .btn-primary {
+            background: var(--color-primary);
+            color: white;
+            border-color: var(--color-primary);
+        }
+
+        .btn-primary:hover {
+            background: #0052a3;
+        }
+
+        .btn-secondary {
+            background: var(--color-surface);
+            color: var(--color-text);
+        }
+
+        .btn-sm {
+            padding: 4px 8px;
+            font-size: 12px;
+        }
+
+        /* Include debug panel styles */
+    </style>
+    <link rel="stylesheet" href="src/styles/debug-panel.css">
+</head>
+<body>
+    <div class="container">
+        <h1>
+            🐛 EID Registry Debug Panel
+            <button class="btn btn-sm" onclick="toggleTheme()">Toggle Theme</button>
+        </h1>
+        
+        <div id="debug-container"></div>
+    </div>
+
+    <script>
+        // Theme toggle
+        function toggleTheme() {
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+        }
+
+        // Load saved theme
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+
+        // Simple store mock for standalone usage
+        const mockStore = {
+            events: [],
+            loadData: async function() {
+                try {
+                    const response = await fetch('/api/v1/dashboard/query', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            query: {
+                                size: 100,
+                                query: { match_all: {} }
+                            },
+                            force_refresh: true
+                        })
+                    });
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        this.events = data.data || [];
+                    }
+                } catch (error) {
+                    console.error('Failed to load data:', error);
+                    // Use mock data
+                    this.events = [
+                        { id: 'USER_LOGIN_EVENT', name: 'User Login', radType: 'login' },
+                        { id: 'API_HEALTH_CHECK', name: 'API Health', radType: 'api_call' },
+                        { id: 'PAGE_HOME_VIEW', name: 'Home Page', radType: 'page_view' },
+                        { id: 'UNKNOWN_EVENT_123', name: 'Unknown Event', radType: null }
+                    ];
+                }
+            },
+            refresh: async function() {
+                await this.loadData();
+            }
+        };
+
+        // Mock useStore for the debug panel
+        window.useStore = {
+            getState: () => mockStore
+        };
+    </script>
+
+    <script type="module">
+        // Import and initialize the debug panel
+        import { DebugPanel } from './src/components/DebugPanel.js';
+        
+        async function init() {
+            // Load initial data
+            await mockStore.loadData();
+            
+            // Create and mount debug panel
+            const debugPanel = new DebugPanel();
+            const container = document.getElementById('debug-container');
+            
+            // Open the panel by default
+            debugPanel.isOpen = true;
+            container.appendChild(debugPanel.render());
+            
+            // Make it globally accessible
+            window.debugPanel = debugPanel;
+        }
+        
+        // Initialize when DOM is ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', init);
+        } else {
+            init();
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,619 @@
+/**
+ * Formula Builder - Antares Design System Implementation
+ * Replaces formula-builder.css with Antares-compliant styles
+ */
+
+@import './antares-theme.css';
+
+/* ============================================
+   Container & Layout
+   ============================================ */
+
+.formula-editor-container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background: var(--gd-color-background);
+    font-family: var(--gd-font-family-primary);
+}
+
+.formula-builder-section {
+    display: flex;
+    flex: 1;
+    gap: var(--gd-spacing-lg);
+    padding: var(--gd-spacing-lg);
+}
+
+/* ============================================
+   Function Palette - Left Sidebar
+   ============================================ */
+
+.function-palette {
+    width: 320px;
+    background: var(--gd-color-surface);
+    border-radius: var(--gd-radius-lg);
+    box-shadow: var(--gd-shadow-sm);
+    padding: var(--gd-spacing-lg);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.function-palette h3 {
+    margin: 0 0 var(--gd-spacing-md) 0;
+    font-size: var(--gd-font-size-xl);
+    font-weight: var(--gd-font-weight-bold);
+    color: var(--gd-color-text-primary);
+}
+
+/* Function Search */
+.function-search {
+    margin-bottom: var(--gd-spacing-md);
+}
+
+.function-search-input {
+    width: 100%;
+    height: 52px;
+    padding: 0 var(--gd-spacing-md);
+    border: 2px solid var(--gd-color-border);
+    border-radius: var(--gd-radius-md);
+    font-size: var(--gd-font-size-md);
+    font-family: var(--gd-font-family-primary);
+    color: var(--gd-color-text-primary);
+    background: var(--gd-color-background);
+    transition: all var(--gd-transition-fast);
+}
+
+.function-search-input::placeholder {
+    color: var(--gd-color-text-muted);
+}
+
+.function-search-input:focus {
+    outline: none;
+    border-color: var(--gd-color-orange-primary);
+    box-shadow: 0 0 0 3px var(--gd-color-orange-light);
+}
+
+/* Category Tabs */
+.function-categories {
+    display: flex;
+    gap: var(--gd-spacing-xs);
+    margin-bottom: var(--gd-spacing-md);
+    flex-wrap: wrap;
+}
+
+.category-tab {
+    padding: var(--gd-spacing-xs) var(--gd-spacing-sm);
+    border-radius: var(--gd-radius-sm);
+    background: var(--gd-color-surface-variant);
+    cursor: pointer;
+    font-size: var(--gd-font-size-sm);
+    font-weight: var(--gd-font-weight-medium);
+    color: var(--gd-color-text-secondary);
+    transition: all var(--gd-transition-fast);
+    white-space: nowrap;
+    border: 2px solid transparent;
+}
+
+.category-tab:hover {
+    background: var(--gd-color-gray-200);
+    color: var(--gd-color-text-primary);
+}
+
+.category-tab.active {
+    background: var(--gd-color-orange-primary);
+    color: var(--gd-color-white);
+    border-color: var(--gd-color-orange-primary);
+}
+
+/* Function List */
+.function-list {
+    flex: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: var(--gd-spacing-sm);
+}
+
+.function-item {
+    padding: var(--gd-spacing-md);
+    background: var(--gd-color-surface-variant);
+    border-radius: var(--gd-radius-md);
+    cursor: pointer;
+    transition: all var(--gd-transition-fast);
+    border: 1px solid var(--gd-color-border);
+}
+
+.function-item:hover {
+    background: var(--gd-color-surface);
+    border-color: var(--gd-color-orange-primary);
+    transform: translateY(-1px);
+    box-shadow: var(--gd-shadow-sm);
+}
+
+.function-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--gd-spacing-xs);
+}
+
+.function-name {
+    font-weight: var(--gd-font-weight-bold);
+    color: var(--gd-color-text-primary);
+    font-size: var(--gd-font-size-md);
+}
+
+.function-category {
+    font-size: var(--gd-font-size-xs);
+    padding: var(--gd-spacing-xxs) var(--gd-spacing-xs);
+    border-radius: var(--gd-radius-sm);
+    background: var(--gd-color-gray-200);
+    color: var(--gd-color-text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.function-description {
+    font-size: var(--gd-font-size-sm);
+    color: var(--gd-color-text-secondary);
+    margin-bottom: var(--gd-spacing-xs);
+    line-height: var(--gd-line-height-paragraph);
+}
+
+.function-signature {
+    font-size: var(--gd-font-size-xs);
+    font-family: var(--gd-font-family-mono);
+    color: var(--gd-color-text-muted);
+    background: var(--gd-color-background);
+    padding: var(--gd-spacing-xxs) var(--gd-spacing-xs);
+    border-radius: var(--gd-radius-sm);
+    display: inline-block;
+}
+
+/* ============================================
+   Editor Area - Main Content
+   ============================================ */
+
+.editor-area {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: var(--gd-spacing-lg);
+}
+
+/* Formula Input Section */
+.formula-input-section {
+    background: var(--gd-color-surface);
+    border-radius: var(--gd-radius-lg);
+    box-shadow: var(--gd-shadow-sm);
+    padding: var(--gd-spacing-lg);
+}
+
+.formula-input-section h3 {
+    margin: 0 0 var(--gd-spacing-md) 0;
+    font-size: var(--gd-font-size-xl);
+    font-weight: var(--gd-font-weight-bold);
+    color: var(--gd-color-text-primary);
+}
+
+/* Formula Toolbar */
+.formula-toolbar {
+    display: flex;
+    gap: var(--gd-spacing-sm);
+    margin-bottom: var(--gd-spacing-md);
+}
+
+.formula-toolbar button {
+    height: 40px;
+    padding: 0 var(--gd-spacing-md);
+    border: 2px solid var(--gd-color-border);
+    border-radius: var(--gd-radius-md);
+    background: var(--gd-color-background);
+    color: var(--gd-color-text-primary);
+    cursor: pointer;
+    font-size: var(--gd-font-size-sm);
+    font-weight: var(--gd-font-weight-medium);
+    transition: all var(--gd-transition-fast);
+    display: inline-flex;
+    align-items: center;
+    gap: var(--gd-spacing-xs);
+}
+
+.formula-toolbar button:hover {
+    background: var(--gd-color-surface-variant);
+    border-color: var(--gd-color-orange-primary);
+}
+
+.formula-toolbar button.active {
+    background: var(--gd-color-orange-primary);
+    color: var(--gd-color-white);
+    border-color: var(--gd-color-orange-primary);
+}
+
+/* Formula Input Textarea */
+.formula-input {
+    width: 100%;
+    min-height: 120px;
+    padding: var(--gd-spacing-md);
+    border: 2px solid var(--gd-color-border);
+    border-radius: var(--gd-radius-md);
+    font-family: var(--gd-font-family-mono);
+    font-size: var(--gd-font-size-md);
+    line-height: var(--gd-line-height-paragraph);
+    resize: vertical;
+    background: var(--gd-color-background);
+    color: var(--gd-color-text-primary);
+    transition: all var(--gd-transition-fast);
+}
+
+.formula-input:focus {
+    outline: none;
+    border-color: var(--gd-color-orange-primary);
+    box-shadow: 0 0 0 3px var(--gd-color-orange-light);
+}
+
+/* Formula Status */
+.formula-status {
+    display: flex;
+    align-items: center;
+    gap: var(--gd-spacing-sm);
+    margin-top: var(--gd-spacing-sm);
+}
+
+.status-indicator {
+    width: 10px;
+    height: 10px;
+    border-radius: var(--gd-radius-round);
+    background: var(--gd-color-gray-400);
+    transition: background-color var(--gd-transition-fast);
+}
+
+.status-indicator.valid {
+    background: var(--gd-color-success);
+}
+
+.status-indicator.error {
+    background: var(--gd-color-error);
+}
+
+.status-indicator.info {
+    background: var(--gd-color-info);
+}
+
+.status-message {
+    font-size: var(--gd-font-size-sm);
+    color: var(--gd-color-text-secondary);
+}
+
+/* ============================================
+   Preview Section
+   ============================================ */
+
+.preview-section {
+    flex: 1;
+    background: var(--gd-color-surface);
+    border-radius: var(--gd-radius-lg);
+    box-shadow: var(--gd-shadow-sm);
+    padding: var(--gd-spacing-lg);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.preview-section h3 {
+    margin: 0 0 var(--gd-spacing-md) 0;
+    font-size: var(--gd-font-size-xl);
+    font-weight: var(--gd-font-weight-bold);
+    color: var(--gd-color-text-primary);
+}
+
+/* Preview Tabs */
+.preview-tabs {
+    display: flex;
+    gap: var(--gd-spacing-xs);
+    margin-bottom: var(--gd-spacing-md);
+    border-bottom: 1px solid var(--gd-color-border);
+    padding-bottom: var(--gd-spacing-sm);
+}
+
+.preview-tab {
+    padding: var(--gd-spacing-xs) var(--gd-spacing-md);
+    cursor: pointer;
+    font-size: var(--gd-font-size-md);
+    color: var(--gd-color-text-secondary);
+    transition: all var(--gd-transition-fast);
+    border-bottom: 3px solid transparent;
+    margin-bottom: calc(var(--gd-spacing-sm) * -1 - 1px);
+    font-weight: var(--gd-font-weight-medium);
+}
+
+.preview-tab:hover {
+    color: var(--gd-color-text-primary);
+}
+
+.preview-tab.active {
+    color: var(--gd-color-orange-primary);
+    border-bottom-color: var(--gd-color-orange-primary);
+}
+
+/* Preview Content */
+.preview-content {
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+}
+
+.preview-pane {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    overflow: auto;
+    display: none;
+    padding: var(--gd-spacing-sm);
+    background: var(--gd-color-surface-variant);
+    border-radius: var(--gd-radius-sm);
+}
+
+.preview-pane.active {
+    display: block;
+}
+
+.preview-pane pre {
+    margin: 0;
+    font-family: var(--gd-font-family-mono);
+    font-size: var(--gd-font-size-sm);
+    line-height: var(--gd-line-height-paragraph);
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    color: var(--gd-color-text-primary);
+}
+
+.preview-pane p {
+    color: var(--gd-color-text-muted);
+    font-style: italic;
+    text-align: center;
+    margin-top: var(--gd-spacing-2xl);
+}
+
+/* Math View */
+.math-expression {
+    padding: var(--gd-spacing-lg);
+}
+
+.math-expression h4 {
+    margin: 0 0 var(--gd-spacing-md) 0;
+    font-size: var(--gd-font-size-lg);
+    font-weight: var(--gd-font-weight-bold);
+    color: var(--gd-color-text-primary);
+}
+
+.math-content {
+    font-size: var(--gd-font-size-lg);
+    line-height: var(--gd-line-height-paragraph);
+}
+
+.math-content code {
+    background: var(--gd-color-background);
+    padding: var(--gd-spacing-xxs) var(--gd-spacing-xs);
+    border-radius: var(--gd-radius-sm);
+    font-family: var(--gd-font-family-mono);
+    color: var(--gd-color-orange-primary);
+}
+
+/* ============================================
+   Examples Section
+   ============================================ */
+
+.formula-examples {
+    background: var(--gd-color-surface);
+    border-radius: var(--gd-radius-lg);
+    box-shadow: var(--gd-shadow-sm);
+    padding: var(--gd-spacing-lg);
+    margin: 0 var(--gd-spacing-lg) var(--gd-spacing-lg) var(--gd-spacing-lg);
+}
+
+.formula-examples h3 {
+    margin: 0 0 var(--gd-spacing-md) 0;
+    font-size: var(--gd-font-size-xl);
+    font-weight: var(--gd-font-weight-bold);
+    color: var(--gd-color-text-primary);
+}
+
+.example-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: var(--gd-spacing-md);
+}
+
+.example-item {
+    padding: var(--gd-spacing-md);
+    background: var(--gd-color-surface-variant);
+    border-radius: var(--gd-radius-md);
+    cursor: pointer;
+    transition: all var(--gd-transition-fast);
+    border: 1px solid var(--gd-color-border);
+}
+
+.example-item:hover {
+    background: var(--gd-color-surface);
+    border-color: var(--gd-color-orange-primary);
+    transform: translateY(-1px);
+    box-shadow: var(--gd-shadow-sm);
+}
+
+.example-item strong {
+    display: block;
+    margin-bottom: var(--gd-spacing-xs);
+    color: var(--gd-color-text-primary);
+    font-size: var(--gd-font-size-md);
+    font-weight: var(--gd-font-weight-bold);
+}
+
+.example-item code {
+    font-size: var(--gd-font-size-sm);
+    color: var(--gd-color-text-secondary);
+    font-family: var(--gd-font-family-mono);
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* ============================================
+   Enhanced Formula Editor Component
+   ============================================ */
+
+enhanced-formula-editor {
+    display: block;
+    width: 100%;
+}
+
+enhanced-formula-editor .editor-container {
+    background: var(--gd-color-background);
+    border: 2px solid var(--gd-color-border);
+    border-radius: var(--gd-radius-md);
+    overflow: hidden;
+    transition: all var(--gd-transition-fast);
+}
+
+enhanced-formula-editor .editor-container:focus-within {
+    border-color: var(--gd-color-orange-primary);
+    box-shadow: 0 0 0 3px var(--gd-color-orange-light);
+}
+
+enhanced-formula-editor .editor-wrapper {
+    display: flex;
+    min-height: 100px;
+}
+
+enhanced-formula-editor .line-numbers {
+    background: var(--gd-color-surface-variant);
+    color: var(--gd-color-text-muted);
+    padding: var(--gd-spacing-sm);
+    font-family: var(--gd-font-family-mono);
+    font-size: var(--gd-font-size-sm);
+    line-height: var(--gd-line-height-paragraph);
+    user-select: none;
+    text-align: right;
+    min-width: 40px;
+}
+
+enhanced-formula-editor .editor-input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    padding: var(--gd-spacing-sm);
+    font-family: var(--gd-font-family-mono);
+    font-size: var(--gd-font-size-sm);
+    line-height: var(--gd-line-height-paragraph);
+    color: var(--gd-color-text-primary);
+    resize: none;
+    outline: none;
+}
+
+enhanced-formula-editor .status-bar {
+    background: var(--gd-color-surface-variant);
+    padding: var(--gd-spacing-xxs) var(--gd-spacing-sm);
+    font-size: var(--gd-font-size-xs);
+    color: var(--gd-color-text-muted);
+    display: flex;
+    justify-content: space-between;
+}
+
+enhanced-formula-editor .autocomplete-container {
+    position: absolute;
+    background: var(--gd-color-surface);
+    border: 1px solid var(--gd-color-border);
+    border-radius: var(--gd-radius-md);
+    box-shadow: var(--gd-shadow-md);
+    max-height: 200px;
+    overflow-y: auto;
+    z-index: var(--gd-z-index-dropdown);
+}
+
+enhanced-formula-editor .autocomplete-item {
+    padding: var(--gd-spacing-sm);
+    cursor: pointer;
+    transition: background-color var(--gd-transition-fast);
+}
+
+enhanced-formula-editor .autocomplete-item:hover,
+enhanced-formula-editor .autocomplete-item.selected {
+    background: var(--gd-color-surface-variant);
+}
+
+enhanced-formula-editor .autocomplete-name {
+    font-weight: var(--gd-font-weight-medium);
+    color: var(--gd-color-text-primary);
+}
+
+enhanced-formula-editor .autocomplete-description {
+    font-size: var(--gd-font-size-xs);
+    color: var(--gd-color-text-muted);
+}
+
+/* ============================================
+   Responsive Design
+   ============================================ */
+
+@media (max-width: 1024px) {
+    .formula-builder-section {
+        flex-direction: column;
+    }
+
+    .function-palette {
+        width: 100%;
+        max-height: 300px;
+    }
+
+    .example-list {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .formula-builder-section {
+        padding: var(--gd-spacing-md);
+        gap: var(--gd-spacing-md);
+    }
+
+    .function-palette,
+    .formula-input-section,
+    .preview-section,
+    .formula-examples {
+        padding: var(--gd-spacing-md);
+    }
+
+    .formula-toolbar {
+        flex-wrap: wrap;
+    }
+}
+
+/* ============================================
+   Scrollbar Styling
+   ============================================ */
+
+.function-list::-webkit-scrollbar,
+.preview-pane::-webkit-scrollbar {
+    width: 8px;
+}
+
+.function-list::-webkit-scrollbar-track,
+.preview-pane::-webkit-scrollbar-track {
+    background: var(--gd-color-surface-variant);
+    border-radius: var(--gd-radius-sm);
+}
+
+.function-list::-webkit-scrollbar-thumb,
+.preview-pane::-webkit-scrollbar-thumb {
+    background: var(--gd-color-border);
+    border-radius: var(--gd-radius-sm);
+}
+
+.function-list::-webkit-scrollbar-thumb:hover,
+.preview-pane::-webkit-scrollbar-thumb:hover {
+    background: var(--gd-color-gray-400);
+}

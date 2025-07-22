@@ -1,0 +1,23 @@
+{
+  "name": "@vh-rad/mcp-query-engine",
+  "version": "1.0.0",
+  "description": "MCP for direct Elasticsearch query execution and search",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node index.js",
+    "test": "node test.js"
+  },
+  "keywords": [
+    "mcp",
+    "elasticsearch",
+    "query",
+    "search",
+    "rad"
+  ],
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "zod": "^3.25.67",
+    "zod-to-json-schema": "^3.24.6"
+  }
+}

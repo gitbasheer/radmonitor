@@ -18,10 +18,26 @@ temp/
 
 # Sensitive data
 .env
+.env.local
+.env.development
+.env.test
+.env.production.local
 secrets/
+config/shared-cookie.json
 
 # Node modules
 node_modules/
+
+# pnpm
+pnpm-lock.yaml
+.pnpm-store/
+.pnpm-debug.log*
+
+# Package manager files
+yarn-error.log*
+npm-debug.log*
+yarn-debug.log*
+package-lock.json
 
 # Test coverage and artifacts
 coverage/
@@ -42,11 +58,147 @@ dev_index.html
 # Legacy scripts (preserved but not in active use)
 scripts/legacy/
 docs/G.md
-venv/
 .vercel
 
 # Local Netlify folder
 .netlify
+
+# Documentation archive
+archive/
+.vscode/extensions.json
+
+# Personal/Team specific files
+*.personal
+*.team
+*-personal.*
+*-team.*
+
+# Confluence response files (may contain sensitive data)
+confluence_response.json
+*_response.json
+
+# MCP configuration files
+mcp-cursor-config*.json
+MCP_*.md
+mcp-settings.json
+.mcp/
+
+# MCP logs and temporary files
+mcp-logs/
+*.mcp.log
+.mcp-cache/
+
+# Temporary analysis and audit documentation (not needed in production)
+*_AUDIT_RESULTS.md
+*_SUMMARY.md
+*_STATUS.md
+POST_MORTEM_*.md
+CLEANUP_PROGRESS_SUMMARY.md
+CLEANUP_SUMMARY.md
+CODE_REVIEW_FINDINGS.md
+OUTSTANDING_CODE_REVIEW_ISSUES.md
+COHERENCE_*.md
+MIGRATION_STATUS.md
+UX_MIGRATION_STATUS.md
+
+# Radar/AI experiment files (experimental features)
+radar_*.py
+connect_radar_*.py
+radar_*.json
+radar_*.md
+letter_to_radar.md
+radar_quick_reconnect.sh
+test_simple_process.py
+
+# Test/demo files in root (should be in tests/ directory)
+test-*.html
+demo-antares-features.html
+enhanced-formula-builder-demo.html
+formula-builder-demo.html
+formula-editor-demo.html
+kibana-cookie-sync.html
+kibana-cookie-sync.js
+
+# Temporary files and backups
+distributed_ai_backup_*.tar.gz
+*-test-results.json
+test_results.json
+test-dataprocessing-results.json
+ui-test-results.json
+api-test-results.json
+*.pre-antares
+*.backup
+*-backup.*
+package-lock.json.backup
+package.json.backup
+radar_knowledge_backup.json
+create_master_backup.sh
+
+# Chrome extension (unless specifically required)
+chrome-extension/
+
+# GoDaddy/Antares specific files (may be temporary)
+GODADDY_*.md
+ANTARES_*.md
+
+# Deprecated/legacy files identified for removal
+assets/js/api-client-simplified.js
+assets/js/main.js
+assets/js/dashboard-main.js
+assets/js/config-loader.js
+assets/js/api-client.js
+assets/js/api-client-fastapi.js
+assets/js/main-simplified.js
+assets/js/streamlined-test.js
+bin/dev_server_unified.py
+bin/simple-server.py
+requirements-enhanced.txt
+requirements-minimal.txt
+env.sample
+src/
+
+# Architecture and documentation files
+COMPLETE_ARCHITECTURE_MAP.md
+connect_all_eids.md
+connect_all.md
+proposal_tickets.md
+SECURITY_ARCHITECTURE_ANALYSIS.md
+spike_eval_2.md
+spike_eval_3.md
+spike_eval.md
+sprint_work.md
+test-memory-fixes.js
+agent_collab.md
+
+# Old/deprecated HTML files
+index-old.html
+set-cookie.html
+debug-state.html
+emil-demo.html
+emil-esql-demo.html
+
+# Migration and cleanup scripts
+migrate_to_refactored.sh
+cleanup-old-templates.sh
+cleanup-legacy.sh
+cleanup-unused-files.sh
+sync-cookie.sh
+deploy-production.sh
+start-correct-server.sh
+
+# Elasticsearch directory (if using MCP instead)
+elasticsearch/
+
+# PNPM migration docs (if migration complete)
+PNPM_MIGRATION.md
+
+# Old auth files (replaced by auth-manager.js)
+assets/js/auth-service.js
+assets/js/centralized-auth.js
+
+# PID files
+*.pid
+.*.pid
 
 # IDE specific files
 .vscode/
@@ -58,18 +210,6 @@ venv/
 # Build artifacts
 dist/
 build/
-
-# Environment files
-*.env.local
-*.env.development.local
-*.env.test.local
-*.env.production.local
-
-# Package manager files
-yarn-error.log*
-npm-debug.log*
-yarn-debug.log*
-pnpm-debug.log*
 
 # TypeScript
 *.tsbuildinfo
